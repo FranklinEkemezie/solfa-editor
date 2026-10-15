@@ -166,21 +166,28 @@ export function App() {
     <>
       <div className="app-shell">
         <header className="app-header">
-          <div className="brand-lockup"><span className="brand-mark">∿</span><span>solfa</span><small>studio</small></div>
-          <div className="header-center"><span className="header-status-dot" /> Unsaved composition</div>
-          <div className="header-actions"><Button variant="ghost" onClick={() => addToast('Your score is stored locally in this prototype.', 'info')}>Local draft</Button><span className="avatar">C</span></div>
+          <div className="brand-lockup">
+            <span className="brand-mark">∿</span>
+            <span>solfa</span>
+          </div>
+          <div className="header-actions">
+            <Button variant="ghost" onClick={() => addToast('Score saved locally in this prototype.', 'info')}>Local draft</Button>
+          </div>
         </header>
         <main className="workspace">
-          <div className="workspace-top"><ScoreHeader document={store.document} /><Button variant="ghost" className="metadata-toggle" onClick={() => setMetadataOpen((open) => !open)}>{isMetadataOpen ? 'Hide details' : 'Edit details'} <span>{isMetadataOpen ? '⌃' : '⌄'}</span></Button></div>
+          <div className="workspace-top">
+            <ScoreHeader document={store.document} />
+            <Button variant="ghost" className="metadata-toggle" onClick={() => setMetadataOpen((open) => !open)}>{isMetadataOpen ? 'Hide details' : 'Edit details'} <span>{isMetadataOpen ? '⌃' : '⌄'}</span></Button>
+          </div>
           {isMetadataOpen ? <ScoreMetadata document={store.document} onChange={changeMetadata} /> : null}
           <div className="score-actions">
             <ScoreToolbar canUndo={store.canUndo} canRedo={store.canRedo} onUndo={store.undo} onRedo={store.redo} onAddMeasure={store.addMeasure} onRemoveMeasure={() => { if (!store.removeMeasure()) addToast('Keep at least one measure in the score.'); }} onExport={printResult} />
             <PlaybackControls isPlaying={isPlaying} onPlayPause={handlePlaybackToggle} onStop={handlePlaybackStop} />
           </div>
           {editor ? <ScoreCanvas document={store.document} position={store.position} editor={editor} onPositionChange={(next) => store.commit(store.document, next)} onKeyDown={handleKeyDown} /> : null}
-          <div className="workspace-footnote"><span><i className="legend-dot legend-active" /> active position</span><span><i className="legend-dot legend-empty" /> empty rhythmic position</span><span className="measure-count">{measureCount} {measureCount === 1 ? 'measure' : 'measures'} · four-part score</span></div>
+          <div className="workspace-footnote"><span className="measure-count">{measureCount} {measureCount === 1 ? 'measure' : 'measures'} · SATB</span></div>
         </main>
-        <footer className="app-footer"><span>Built for clear musical thinking.</span><span>Keyboard-first · structured score · print-ready</span></footer>
+        <footer className="app-footer"><span>Prototype</span><span>Keyboard-first solfa editor</span></footer>
       </div>
       <PrintScore document={store.document} />
       <ToastViewport messages={toasts} dismiss={(id) => setToasts((current) => current.filter((toast) => toast.id !== id))} />

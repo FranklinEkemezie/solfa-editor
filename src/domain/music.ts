@@ -285,7 +285,7 @@ export class Score {
   public readonly key: Key;
   public readonly tempo: Tempo;
   public readonly measures: Measure[];
-  public readonly lyrics: Partial<Record<PartId, string>>;
+  public readonly lyrics: string;
 
   public constructor(
     title: string,
@@ -294,7 +294,7 @@ export class Score {
     tempo: Tempo,
     measures: Measure[],
     author = '',
-    lyrics: Partial<Record<PartId, string>> = {},
+    lyrics = '',
   ) {
     this.title = title;
     this.author = author;
@@ -302,7 +302,7 @@ export class Score {
     this.key = key;
     this.tempo = tempo;
     this.measures = [...measures];
-    this.lyrics = { ...lyrics };
+    this.lyrics = lyrics;
   }
 }
 

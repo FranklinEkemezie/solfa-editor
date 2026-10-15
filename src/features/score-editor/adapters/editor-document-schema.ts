@@ -29,7 +29,7 @@ export type EditorDocument = {
   timeSignature: TimeSignature;
   key: Key;
   tempo: Tempo;
-  lyrics: Partial<Record<PartId, string>>;
+  lyrics: string;
   measures: EditorMeasure[];
 };
 
@@ -48,7 +48,7 @@ export function toTiptapJson(document: EditorDocument): TiptapNode {
         attrs: {
           title: document.title,
           author: document.author,
-          lyrics: JSON.stringify(document.lyrics ?? {}),
+          lyrics: document.lyrics ?? '',
         },
       },
       ...document.measures.map((measure) => ({
@@ -74,8 +74,8 @@ export function fromTiptapJson(value: unknown, source: EditorDocument): EditorDo
   }
   const metadataNode = value.content.find((node) => isRecord(node) && node.type === 'metadata') as Record<string, unknown> | undefined;
   const lyrics = metadataNode && isRecord(metadataNode.attrs)
-    ? parseLyrics(metadataNode.attrs.lyrics)
-    : source.lyrics ?? {};
+    ? String(metadataNode.attrs.lyrics ?? source.lyrics ?? '')
+    : source.lyrics ?? '';
   const measureById = new Map(source.measures.map((measure) => [measure.id, measure]));
   const measures = value.content
     .filter((node) => isRecord(node) && node.type === 'measure')
@@ -121,16 +121,6 @@ function parseSyllable(value: unknown): SolfaSyllable | undefined {
   return typeof value === 'string' && ['d', 'r', 'm', 'f', 's', 'l', 't'].includes(value)
     ? (value as SolfaSyllable)
     : undefined;
-}
-
-function parseLyrics(value: unknown): Partial<Record<PartId, string>> {
-  if (typeof value !== 'string') return {};
-  try {
-    const parsed = JSON.parse(value) as Partial<Record<PartId, string>>;
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch {
-    return {};
-  }
 }
 
 export function serializeDocument(document: EditorDocument): string {

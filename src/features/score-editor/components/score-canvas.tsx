@@ -20,25 +20,14 @@ export function ScoreCanvas({
 }) {
   const layout = calculateScoreLayout(document);
   const measureById = new Map(document.measures.map((measure) => [measure.id, measure]));
-  const lyricsByPart = PARTS.map((part) => ({
-    part: part.id,
-    lyric: document.lyrics?.[part.id] ?? '',
-  }));
 
   return (
     <section className="score-card" aria-label="SATB score editor">
-      <div className="score-card-topline">
-        <div>
-          <span className="section-kicker">Composition</span>
-          <span className="score-tip">Click a position, then type d r m f s l t</span>
-        </div>
-        <span className="input-hint"><kbd>.</kbd> split beat <kbd>-</kbd> tie forward</span>
-      </div>
       <div className="score-scroll" onKeyDown={onKeyDown} onClick={() => editor.commands.focus()}>
         <div className="score-ruler">
           <div className="part-label-spacer" />
           <div className="measure-sequence measure-sequence-ruler">
-            {layout.measures.map((measure) => <div key={measure.measureId} className="measure-ruler-cell" style={{ width: measure.width }}>measure {measure.number}</div>)}
+            {layout.measures.map((measure) => <div key={measure.measureId} className="measure-ruler-cell" style={{ width: measure.width }}>m{measure.number}</div>)}
           </div>
         </div>
         <div className="score-body">
@@ -57,15 +46,14 @@ export function ScoreCanvas({
             ))}
           </div>
         </div>
-        <div className="score-footer-line" />
-        <div className="lyrics-panel">
-          {lyricsByPart.map(({ part, lyric }) => (
-            <div key={part} className="lyrics-row">
-              <span className="lyrics-label">{part}</span>
-              <div className="lyrics-value">{lyric || '—'}</div>
+        {document.lyrics ? (
+          <div className="lyrics-panel">
+            <div className="lyrics-row">
+              <span className="lyrics-label">Lyrics</span>
+              <div className="lyrics-value">{document.lyrics}</div>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : null}
         <EditorContent editor={editor} className="editor-capture" />
       </div>
     </section>

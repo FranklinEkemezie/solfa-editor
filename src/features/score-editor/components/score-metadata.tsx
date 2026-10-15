@@ -1,4 +1,4 @@
-import { Accidental, Letter, Mode, NoteValue, PARTS } from '../../../domain/music';
+import { Accidental, Letter, Mode, NoteValue } from '../../../domain/music';
 import type { EditorDocument } from '../adapters/editor-document-schema';
 import { Field, SelectField, TextField } from '../../../components/ui/field';
 import { makeKey, makeTempo, makeTimeSignature, patchMetadata } from '../state/score-commands';
@@ -7,8 +7,8 @@ export function ScoreMetadata({ document, onChange }: { document: EditorDocument
   return (
     <section className="metadata-card" aria-label="Score metadata">
       <div className="metadata-intro">
-        <span className="section-kicker">Score details</span>
-        <p>Shape the page before you start writing.</p>
+        <span className="section-kicker">Score</span>
+        <p>Minimal score details.</p>
       </div>
       <div className="metadata-fields metadata-fields-wide">
         <Field label="Title">
@@ -62,26 +62,13 @@ export function ScoreMetadata({ document, onChange }: { document: EditorDocument
             }}
           />
         </Field>
-        <Field label="Character" hint="Optional">
-          <TextField value={document.tempo.description} placeholder="e.g. Andante" onChange={(event) => onChange(patchMetadata(document, { tempo: makeTempo(NoteValue.QUARTER, document.tempo.beatsPerMinute, event.target.value) }))} />
+        <Field label="Lyrics" hint="One line">
+          <TextField
+            value={document.lyrics}
+            placeholder="e.g. Holy, holy, holy"
+            onChange={(event) => onChange({ ...document, lyrics: event.target.value })}
+          />
         </Field>
-      </div>
-      <div className="metadata-fields">
-        {PARTS.map((part) => (
-          <Field key={part.id} label={`${part.label} lyrics`} hint="Optional">
-            <TextField
-              value={document.lyrics?.[part.id] ?? ''}
-              placeholder={`${part.label} lyric line`}
-              onChange={(event) => onChange({
-                ...document,
-                lyrics: {
-                  ...document.lyrics,
-                  [part.id]: event.target.value,
-                },
-              })}
-            />
-          </Field>
-        ))}
       </div>
     </section>
   );
