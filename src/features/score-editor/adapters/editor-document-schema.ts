@@ -29,6 +29,7 @@ export type EditorDocument = {
   timeSignature: TimeSignature;
   key: Key;
   tempo: Tempo;
+  lyrics: Partial<Record<PartId, string>>;
   measures: EditorMeasure[];
 };
 
@@ -41,19 +42,29 @@ export type TiptapNode = {
 export function toTiptapJson(document: EditorDocument): TiptapNode {
   return {
     type: 'doc',
-    content: document.measures.map((measure) => ({
-      type: 'measure',
-      attrs: { id: measure.id, part: measure.part, number: measure.number },
-      content: measure.slots.map((slot) => ({
-        type: 'slot',
+    content: [
+      {
+        type: 'metadata',
         attrs: {
-          id: slot.id,
-          noteValue: slot.noteValue,
-          syllable: slot.syllable ?? null,
-          continuation: slot.continuation ?? false,
+          title: document.title,
+          author: document.author,
+          lyrics: JSON.stringify(document.lyrics ?? {}),
         },
+      },
+      ...document.measures.map((measure) => ({
+        type: 'measure',
+        attrs: { id: measure.id, part: measure.part, number: measure.number },
+        content: measure.slots.map((slot) => ({
+          type: 'slot',
+          attrs: {
+            id: slot.id,
+            noteValue: slot.noteValue,
+            syllable: slot.syllable ?? null,
+            continuation: slot.continuation ?? false,
+          },
+        })),
       })),
-    })),
+    ],
   };
 }
 
@@ -61,32 +72,38 @@ export function fromTiptapJson(value: unknown, source: EditorDocument): EditorDo
   if (!isRecord(value) || value.type !== 'doc' || !Array.isArray(value.content)) {
     throw new Error('The editor document is not a valid Tiptap document.');
   }
+  const metadataNode = value.content.find((node) => isRecord(node) && node.type === 'metadata') as Record<string, unknown> | undefined;
+  const lyrics = metadataNode && isRecord(metadataNode.attrs)
+    ? parseLyrics(metadataNode.attrs.lyrics)
+    : source.lyrics ?? {};
   const measureById = new Map(source.measures.map((measure) => [measure.id, measure]));
-  const measures = value.content.map((node, measureIndex) => {
-    if (!isRecord(node) || node.type !== 'measure' || !isRecord(node.attrs)) {
-      throw new Error(`Invalid measure at editor position ${measureIndex + 1}.`);
-    }
-    const sourceMeasure = measureById.get(String(node.attrs.id));
-    if (!sourceMeasure || !Array.isArray(node.content)) {
-      throw new Error(`Unknown or incomplete measure at editor position ${measureIndex + 1}.`);
-    }
-    const slots = node.content.map((slotNode, slotIndex) => {
-      if (!isRecord(slotNode) || slotNode.type !== 'slot' || !isRecord(slotNode.attrs)) {
-        throw new Error(`Invalid rhythmic position ${slotIndex + 1}.`);
+  const measures = value.content
+    .filter((node) => isRecord(node) && node.type === 'measure')
+    .map((node, measureIndex) => {
+      if (!isRecord(node) || node.type !== 'measure' || !isRecord(node.attrs)) {
+        throw new Error(`Invalid measure at editor position ${measureIndex + 1}.`);
       }
-      const attrs = slotNode.attrs;
-      const noteValue = parseNoteValue(attrs.noteValue);
-      const syllable = parseSyllable(attrs.syllable);
-      return {
-        id: String(attrs.id),
-        noteValue,
-        ...(syllable ? { syllable } : {}),
-        continuation: attrs.continuation === true,
-      } satisfies EditorSlot;
+      const sourceMeasure = measureById.get(String(node.attrs.id));
+      if (!sourceMeasure || !Array.isArray(node.content)) {
+        throw new Error(`Unknown or incomplete measure at editor position ${measureIndex + 1}.`);
+      }
+      const slots = node.content.map((slotNode, slotIndex) => {
+        if (!isRecord(slotNode) || slotNode.type !== 'slot' || !isRecord(slotNode.attrs)) {
+          throw new Error(`Invalid rhythmic position ${slotIndex + 1}.`);
+        }
+        const attrs = slotNode.attrs;
+        const noteValue = parseNoteValue(attrs.noteValue);
+        const syllable = parseSyllable(attrs.syllable);
+        return {
+          id: String(attrs.id),
+          noteValue,
+          ...(syllable ? { syllable } : {}),
+          continuation: attrs.continuation === true,
+        } satisfies EditorSlot;
+      });
+      return { ...sourceMeasure, slots };
     });
-    return { ...sourceMeasure, slots };
-  });
-  return { ...source, measures };
+  return { ...source, lyrics, measures };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -104,6 +121,16 @@ function parseSyllable(value: unknown): SolfaSyllable | undefined {
   return typeof value === 'string' && ['d', 'r', 'm', 'f', 's', 'l', 't'].includes(value)
     ? (value as SolfaSyllable)
     : undefined;
+}
+
+function parseLyrics(value: unknown): Partial<Record<PartId, string>> {
+  if (typeof value !== 'string') return {};
+  try {
+    const parsed = JSON.parse(value) as Partial<Record<PartId, string>>;
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
 }
 
 export function serializeDocument(document: EditorDocument): string {

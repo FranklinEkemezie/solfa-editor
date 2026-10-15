@@ -1,4 +1,4 @@
-import { Accidental, Letter, Mode, NoteValue } from '../../../domain/music';
+import { Accidental, Letter, Mode, NoteValue, PARTS } from '../../../domain/music';
 import type { EditorDocument } from '../adapters/editor-document-schema';
 import { Field, SelectField, TextField } from '../../../components/ui/field';
 import { makeKey, makeTempo, makeTimeSignature, patchMetadata } from '../state/score-commands';
@@ -65,6 +65,23 @@ export function ScoreMetadata({ document, onChange }: { document: EditorDocument
         <Field label="Character" hint="Optional">
           <TextField value={document.tempo.description} placeholder="e.g. Andante" onChange={(event) => onChange(patchMetadata(document, { tempo: makeTempo(NoteValue.QUARTER, document.tempo.beatsPerMinute, event.target.value) }))} />
         </Field>
+      </div>
+      <div className="metadata-fields">
+        {PARTS.map((part) => (
+          <Field key={part.id} label={`${part.label} lyrics`} hint="Optional">
+            <TextField
+              value={document.lyrics?.[part.id] ?? ''}
+              placeholder={`${part.label} lyric line`}
+              onChange={(event) => onChange({
+                ...document,
+                lyrics: {
+                  ...document.lyrics,
+                  [part.id]: event.target.value,
+                },
+              })}
+            />
+          </Field>
+        ))}
       </div>
     </section>
   );

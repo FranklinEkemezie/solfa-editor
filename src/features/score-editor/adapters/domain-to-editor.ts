@@ -28,6 +28,7 @@ export function domainToEditor(score: Score): EditorDocument {
     timeSignature: score.timeSignature,
     key: score.key,
     tempo: score.tempo,
+    lyrics: score.lyrics,
     measures,
   };
 }

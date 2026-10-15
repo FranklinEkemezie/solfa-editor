@@ -27,6 +27,7 @@ export function editorToDomain(document: EditorDocument): Score {
     document.tempo,
     measures,
     document.author,
+    document.lyrics,
   );
   const errors = validateScore(score);
   if (errors.length > 0) throw new EditorDocumentError(errors.join(' '));

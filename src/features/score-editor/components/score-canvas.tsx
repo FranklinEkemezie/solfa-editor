@@ -20,6 +20,10 @@ export function ScoreCanvas({
 }) {
   const layout = calculateScoreLayout(document);
   const measureById = new Map(document.measures.map((measure) => [measure.id, measure]));
+  const lyricsByPart = PARTS.map((part) => ({
+    part: part.id,
+    lyric: document.lyrics?.[part.id] ?? '',
+  }));
 
   return (
     <section className="score-card" aria-label="SATB score editor">
@@ -54,6 +58,14 @@ export function ScoreCanvas({
           </div>
         </div>
         <div className="score-footer-line" />
+        <div className="lyrics-panel">
+          {lyricsByPart.map(({ part, lyric }) => (
+            <div key={part} className="lyrics-row">
+              <span className="lyrics-label">{part}</span>
+              <div className="lyrics-value">{lyric || '—'}</div>
+            </div>
+          ))}
+        </div>
         <EditorContent editor={editor} className="editor-capture" />
       </div>
     </section>

@@ -152,7 +152,7 @@ export function removeLastMeasure(document: EditorDocument): EditorDocument | nu
   return { ...document, measures: document.measures.filter((measure) => measure.number !== lastNumber) };
 }
 
-export type MetadataPatch = Partial<Pick<EditorDocument, 'title' | 'author' | 'timeSignature' | 'key' | 'tempo'>>;
+export type MetadataPatch = Partial<Pick<EditorDocument, 'title' | 'author' | 'timeSignature' | 'key' | 'tempo' | 'lyrics'>>;
 
 export function patchMetadata(document: EditorDocument, patch: MetadataPatch): EditorDocument {
   return { ...document, ...patch };
