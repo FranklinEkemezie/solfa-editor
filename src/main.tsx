@@ -5,7 +5,7 @@ import './styles/globals.css';
 import './features/pdf-export/print.css';
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+    <StrictMode>
+        <App />
+    </StrictMode>,
 );

@@ -1,0 +1,1 @@
+export { Accidental } from './music';
