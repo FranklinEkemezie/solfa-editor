@@ -50,6 +50,10 @@ export const PARTS: ReadonlyArray<{ id: PartId; label: string; shortLabel: strin
 export const SOLFA_SYLLABLES = ['d', 'r', 'm', 'f', 's', 'l', 't'] as const;
 export type SolfaSyllable = (typeof SOLFA_SYLLABLES)[number];
 
+import type { MusicalEvent } from './musical-event';
+import { Measure } from './measure';
+import { Score } from './score';
+
 export type Fraction = Readonly<{ numerator: number; denominator: number }>;
 
 function gcd(left: number, right: number): number {
@@ -90,7 +94,7 @@ export function fractionToNumber(value: Fraction): number {
     return value.numerator / value.denominator;
 }
 
-const NOTE_VALUE_UNITS: Record<NoteValue, Fraction> = {
+export const NOTE_VALUE_UNITS: Record<NoteValue, Fraction> = {
     [NoteValue.WHOLE]: fraction(4),
     [NoteValue.HALF]: fraction(2),
     [NoteValue.QUARTER]: fraction(1),
@@ -200,109 +204,11 @@ export class Pitch {
         return (this.octave + 1) * 12 + semitone[this.letter] + accidentalOffset[this.accidental];
     }
 }
-
-export abstract class MusicalEvent {
-    public readonly duration: Duration;
-
-    protected constructor(duration: Duration) {
-        this.duration = duration;
-    }
-}
-
-export class Note extends MusicalEvent {
-    public readonly pitch: Pitch;
-    public readonly syllable: SolfaSyllable;
-    public readonly continuation: boolean;
-    public readonly lyric: string;
-
-    public constructor(
-        pitch: Pitch,
-        duration: Duration,
-        syllable: SolfaSyllable,
-        continuation = false,
-        lyric = '',
-    ) {
-        super(duration);
-        this.pitch = pitch;
-        this.syllable = syllable;
-        this.continuation = continuation;
-        this.lyric = lyric;
-    }
-}
-
-export class Tuplet extends MusicalEvent {
-    public readonly notes: Note[];
-
-    public constructor(notes: Note[], duration = new Duration(NoteValue.QUARTER)) {
-        super(duration);
-        this.notes = [...notes];
-    }
-}
-
-export class Triplet extends Tuplet {
-    public constructor(notes: [Note, Note, Note], duration?: Duration) {
-        super(notes, duration);
-    }
-}
-
-export class Quintuplet extends Tuplet {
-    public constructor(notes: Note[], duration?: Duration) {
-        super(notes, duration);
-    }
-}
-
-export class Sextuplet extends Tuplet {
-    public constructor(notes: [Note, Note, Note, Note, Note, Note], duration?: Duration) {
-        super(notes, duration);
-    }
-}
-
-export class Measure<T extends TimeSignature = TimeSignature> {
-    public readonly timeSignature: T;
-    public readonly events: MusicalEvent[];
-    public readonly part: PartId;
-    public readonly number: number;
-
-    public constructor(
-        timeSignature: T,
-        events: MusicalEvent[] = [],
-        part: PartId = 'soprano',
-        number = 1,
-    ) {
-        this.timeSignature = timeSignature;
-        this.events = [...events];
-        this.part = part;
-        this.number = number;
-    }
-}
-
-export class Score {
-    public readonly title: string;
-    public readonly author: string;
-    public readonly timeSignature: TimeSignature;
-    public readonly key: Key;
-    public readonly tempo: Tempo;
-    public readonly measures: Measure[];
-    public readonly lyrics: string;
-
-    public constructor(
-        title: string,
-        timeSignature: TimeSignature,
-        key: Key,
-        tempo: Tempo,
-        measures: Measure[],
-        author = '',
-        lyrics = '',
-    ) {
-        this.title = title;
-        this.author = author;
-        this.timeSignature = timeSignature;
-        this.key = key;
-        this.tempo = tempo;
-        this.measures = [...measures];
-        this.lyrics = lyrics;
-    }
-}
+export { MusicalEvent } from './musical-event';
+export { Note } from './note';
+export { Tuplet, Triplet, Quintuplet, Sextuplet } from './tuplet';
+export { Measure } from './measure';
+export { Score } from './score';
 
 export function durationOfEvents(events: ReadonlyArray<MusicalEvent>): Fraction {
     return events.reduce<Fraction>(
