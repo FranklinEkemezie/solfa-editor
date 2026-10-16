@@ -1,12 +1,5 @@
 import type { Key, PartId, SolfaSyllable, Tempo, TimeSignature } from '@/domain/music';
-import {
-    Accidental,
-    Duration,
-    Key as DomainKey,
-    Letter,
-    Mode,
-    NoteValue,
-} from '@/domain/music';
+import { Accidental, Duration, Key as DomainKey, Letter, Mode, NoteValue } from '@/domain/music';
 
 export type EditorSlot = {
     id: string;

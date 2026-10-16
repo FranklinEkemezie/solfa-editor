@@ -1,7 +1,7 @@
 import { MusicalEvent } from './musical-event';
 import { Note } from './note';
 import { Duration } from './duration';
-import { NoteValue } from './music';
+import { NoteValue } from './note-value';
 
 export class Tuplet extends MusicalEvent {
     public readonly notes: Note[];

@@ -1,4 +1,4 @@
-import { NoteValue } from './music';
+import { NoteValue } from './note-value';
 
 export class Tempo {
     public readonly beatUnit: NoteValue;

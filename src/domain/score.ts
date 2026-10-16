@@ -1,4 +1,6 @@
-import { TimeSignature, Key, Tempo } from './music';
+import { Key } from './key';
+import { Tempo } from './tempo';
+import { TimeSignature } from './time-signature';
 import { Measure } from './measure';
 
 export class Score {

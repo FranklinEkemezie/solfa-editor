@@ -1,4 +1,5 @@
-import { Letter, Mode } from './music';
+import { Letter } from './letter';
+import { Mode } from './mode';
 import { KeySignature } from './key-signature';
 
 export class Key {

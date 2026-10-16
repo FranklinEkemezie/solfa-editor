@@ -1,4 +1,4 @@
-import { Accidental } from './music';
+import { Accidental } from './accidental';
 
 export class KeySignature {
     public readonly accidental: Accidental;

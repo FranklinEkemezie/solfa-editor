@@ -1,1 +1,4 @@
-export { Mode } from './music';
+export enum Mode {
+    MAJOR = 'MAJOR',
+    MINOR = 'MINOR',
+}

@@ -1,4 +1,5 @@
-import { NoteValue, fraction, NOTE_VALUE_UNITS } from './music';
+import { fraction } from './fraction';
+import { NoteValue, NOTE_VALUE_UNITS } from './note-value';
 
 export class Duration {
     public readonly noteValue: NoteValue;

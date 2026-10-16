@@ -1,7 +1,6 @@
-import { TimeSignature } from './music';
+import type { PartId } from './parts';
+import { TimeSignature } from './time-signature';
 import { MusicalEvent } from './musical-event';
-
-import type { PartId } from './music';
 
 export class Measure<T extends TimeSignature = TimeSignature> {
     public readonly timeSignature: T;

@@ -12,10 +12,17 @@ export function ScoreMetadata({
     onChange: (next: EditorDocument) => void;
 }) {
     return (
-        <section className="grid gap-6 grid-cols-1 lg:grid-cols-[1.1fr_2.4fr] mt-7 p-6 border border-line rounded-lg bg-paper" aria-label="Score metadata">
+        <section
+            className="grid gap-6 grid-cols-1 lg:grid-cols-[1.1fr_2.4fr] mt-7 p-6 border border-line rounded-lg bg-paper"
+            aria-label="Score metadata"
+        >
             <div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-green">Score</span>
-                <p className="mt-2 text-sm leading-6 text-muted max-w-[160px]">Minimal score details.</p>
+                <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-green">
+                    Score
+                </span>
+                <p className="mt-2 text-sm leading-6 text-muted max-w-[160px]">
+                    Minimal score details.
+                </p>
             </div>
             <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
                 <Field label="Title">
@@ -53,7 +60,10 @@ export function ScoreMetadata({
                             );
                         }}
                         options={[
-                            ...Object.values(Letter).map((letter) => ({ label: `${letter} major`, value: `${letter}-MAJOR-NATURAL-0` })),
+                            ...Object.values(Letter).map((letter) => ({
+                                label: `${letter} major`,
+                                value: `${letter}-MAJOR-NATURAL-0`,
+                            })),
                             { label: 'A minor', value: 'A-MINOR-NATURAL-0' },
                             { label: 'D minor', value: 'D-MINOR-NATURAL-1' },
                             { label: 'G major', value: 'G-MAJOR-SHARP-1' },

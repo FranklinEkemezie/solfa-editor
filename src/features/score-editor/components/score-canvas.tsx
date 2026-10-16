@@ -98,7 +98,10 @@ export function ScoreCanvas({
                     </div>
                 </div>
 
-                <EditorContent editor={editor} className="pointer-events-none absolute inset-0 opacity-0" />
+                <EditorContent
+                    editor={editor}
+                    className="pointer-events-none absolute inset-0 opacity-0"
+                />
             </div>
         </section>
     );

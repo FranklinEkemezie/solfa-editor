@@ -1,7 +1,7 @@
 import { MusicalEvent } from './musical-event';
 import { Pitch } from './pitch';
 import { Duration } from './duration';
-import { SolfaSyllable } from './music';
+import type { SolfaSyllable } from './solfa';
 
 export class Note extends MusicalEvent {
     public readonly pitch: Pitch;

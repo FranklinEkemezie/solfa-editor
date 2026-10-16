@@ -1,4 +1,5 @@
-import { Letter, Accidental } from './music';
+import { Letter } from './letter';
+import { Accidental } from './accidental';
 
 export class Pitch {
     public readonly letter: Letter;
