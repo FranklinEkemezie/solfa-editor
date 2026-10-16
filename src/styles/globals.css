@@ -96,57 +96,7 @@ button:disabled {
     gap: 16px;
 }
 
-.score-heading {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.eyebrow, .section-kicker {
-    color: var(--green);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .17em;
-    margin: 0;
-    text-transform: uppercase;
-}
-
-.score-heading h1 {
-    color: var(--ink);
-    font: 500 clamp(32px, 4vw, 48px)/1.03 Georgia, serif;
-    letter-spacing: -.045em;
-    margin: 0;
-    text-align: center;
-}
-
-.score-author {
-    color: var(--muted);
-    font: italic 16px Georgia, serif;
-    margin: 0;
-    text-align: center;
-}
-
-.score-summary {
-    align-items: center;
-    color: var(--green-dark);
-    display: flex;
-    flex-wrap: wrap;
-    font: 14px Georgia, serif;
-    gap: 9px;
-    justify-content: center;
-    margin-top: 6px;
-}
-
-.summary-separator {
-    color: #a3b2a5;
-}
-
-.tempo-description {
-    color: var(--muted);
-    font-style: italic;
-    margin-left: 6px;
-}
+/* Score header moved to Tailwind in ScoreHeader component; keep tokens above. */
 
 .details-toggle {
     align-items: center;

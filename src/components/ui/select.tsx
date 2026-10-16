@@ -1,26 +1,3 @@
-import React from 'react';
-
-type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
-    options: { value: string; label: string }[];
-    label?: string;
-};
-
-export function Select({ options, label, className = '', ...rest }: SelectProps) {
-    return (
-        <label className="block">
-            {label ? <div className="text-sm text-muted mb-1">{label}</div> : null}
-            <select className={`w-full border border-line rounded-md px-3 py-2 bg-white text-ink ${className}`} {...rest}>
-                {options.map((o) => (
-                    <option key={o.value} value={o.value}>
-                        {o.label}
-                    </option>
-                ))}
-            </select>
-        </label>
-    );
-}
-
-export default Select;
 import type { SelectHTMLAttributes, ReactNode } from 'react';
 
 type Option = { label: string; value: string };

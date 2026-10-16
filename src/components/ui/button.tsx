@@ -3,6 +3,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
     children: ReactNode;
     variant?: 'primary' | 'secondary' | 'ghost' | 'icon' | 'danger';
+    size?: 'sm' | 'md' | 'lg';
 };
 
 export function Button({
