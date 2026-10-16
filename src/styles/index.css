@@ -23,6 +23,12 @@
     --editor-mono: "JetBrains Mono", "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
 }
 
+@theme {
+
+    --green-dark: var(--green-dark);
+    --green-wash: var(--green-wash);
+}
+
 * {
     box-sizing: border-box;
 }
