@@ -7,7 +7,11 @@ import {
     Score,
     type SolfaSyllable,
 } from '@/domain/music';
-import type { EditorDocument, EditorMeasure, EditorSlot } from './editor-document-schema';
+import type {
+    EditorDocument,
+    EditorMeasure,
+    EditorSlot,
+} from '@/features/score-editor/adapters/editor-document-schema';
 
 const BEATS_PER_MEASURE_LIMIT = 32;
 
@@ -22,7 +26,7 @@ export function domainToEditor(score: Score): EditorDocument {
         }
     }
     return {
-        type: 'solfa-document',
+        type: 'sol-fa-document',
         title: score.title,
         author: score.author,
         timeSignature: score.timeSignature,
