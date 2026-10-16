@@ -11,7 +11,7 @@ export function PlaybackControls({
     onStop: () => void;
 }) {
     return (
-        <div className="playback-controls">
+        <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={onPlayPause}>
                 {isPlaying ? (
                     <Pause size={15} strokeWidth={2} />

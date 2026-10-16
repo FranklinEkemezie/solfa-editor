@@ -10,35 +10,43 @@ export function PrintScore({ document }: { document: EditorDocument }) {
 
     return (
         <main className="print-sheet" id="print-view">
-            <header className="print-header">
-                <p className="print-eyebrow">SATB tonic sol-fa</p>
-                <h1>{document.title || 'Untitled solfa'}</h1>
-                <p className="print-author">
+            <header className="border-b border-[#d4dbd6] pb-[10pt] mb-[18pt] text-center">
+                <p className="mb-[6pt] text-[8pt] font-bold uppercase tracking-[0.18em] text-[#597b68]">SATB tonic sol-fa</p>
+                <h1 className="m-0 mb-[4pt] text-[24pt] font-medium">{document.title || 'Untitled solfa'}</h1>
+                <p className="m-0 italic text-[#5a6f63]">
                     {document.author ? `by ${document.author}` : 'Anonymous composition'}
                 </p>
-                <p className="print-meta">
+                <p className="mt-[6pt] text-[11pt]">
                     {metadataKeyLabel(document)} · {document.timeSignature.count}/
                     {denominator(document.timeSignature.note)} · ♩ = {document.tempo.beatsPerMinute}
                 </p>
                 {document.tempo.description ? (
-                    <p className="print-tempo">{document.tempo.description}</p>
+                    <p className="mt-[6pt] text-[11pt] italic text-[#4d685d]">{document.tempo.description}</p>
                 ) : null}
             </header>
 
             <div
-                className="print-score"
+                className="overflow-hidden rounded-lg border border-[#dfe7e1]"
                 style={{ ['--print-measures' as string]: String(totalMeasures) }}
             >
-                <div className="print-measure-numbers">
-                    <div className="print-part-name" />
+                <div className="grid items-center border-b border-[#dfe7e1] bg-[#f3f7f3] py-1.5 text-[8pt] font-bold uppercase tracking-[0.08em] text-[#76877d]" style={{ gridTemplateColumns: `26pt repeat(${totalMeasures}, minmax(48pt, 1fr))` }}>
+                    <div />
                     {measures.map((measure) => (
-                        <span key={measure.id}>m{measure.number}</span>
+                        <span key={measure.id} className="text-center">
+                            m{measure.number}
+                        </span>
                     ))}
                 </div>
 
                 {PARTS.map((part) => (
-                    <div className="print-row" key={part.id}>
-                        <strong>{part.shortLabel}</strong>
+                    <div
+                        key={part.id}
+                        className="grid min-h-[34pt] items-center border-t border-[#e4ebdf]"
+                        style={{ gridTemplateColumns: `26pt repeat(${totalMeasures}, minmax(48pt, 1fr))` }}
+                    >
+                        <strong className="self-center px-2 text-[11pt] font-bold uppercase tracking-[0.08em] text-[#1e352d]">
+                            {part.shortLabel}
+                        </strong>
                         {measures.map((measure) => {
                             const partMeasure = document.measures.find(
                                 (candidate) =>
@@ -46,11 +54,14 @@ export function PrintScore({ document }: { document: EditorDocument }) {
                                     candidate.number === measure.number,
                             );
                             return (
-                                <div className="print-measure" key={`${part.id}-${measure.number}`}>
+                                <div
+                                    key={`${part.id}-${measure.number}`}
+                                    className="flex min-h-[34pt] items-center gap-2 border-l border-[#d4dad3] px-2 py-[2pt] last:border-r last:border-[#d4dad3]"
+                                >
                                     {(partMeasure?.slots ?? []).map((slot) => (
                                         <span
                                             key={slot.id}
-                                            className={`print-slot ${slot.syllable ? 'print-slot-note' : 'print-slot-empty'}`}
+                                            className={`inline-block min-w-[14pt] text-center text-[17pt] leading-none ${slot.syllable ? 'text-[#20362a]' : 'text-[#b7c2bb]'}`}
                                         >
                                             {slot.continuation ? '—' : (slot.syllable ?? ':')}
                                         </span>
@@ -62,7 +73,9 @@ export function PrintScore({ document }: { document: EditorDocument }) {
                 ))}
             </div>
 
-            <footer className="print-footer">Solfa editor · composed in the browser</footer>
+            <footer className="mt-5 border-t border-[#d7ddd8] pt-[7pt] text-right text-[8pt] text-[#77877d]">
+                Solfa editor · composed in the browser
+            </footer>
         </main>
     );
 }

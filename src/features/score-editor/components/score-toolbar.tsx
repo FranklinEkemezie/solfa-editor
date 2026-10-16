@@ -19,8 +19,8 @@ export function ScoreToolbar({
     onExport: () => void;
 }) {
     return (
-        <div className="score-toolbar">
-            <div className="toolbar-group">
+        <div className="flex flex-wrap items-center justify-between gap-4 my-6">
+            <div className="flex flex-wrap items-center gap-1">
                 <Button
                     variant="icon"
                     title="Undo"
@@ -39,7 +39,7 @@ export function ScoreToolbar({
                 >
                     <RotateCw size={16} strokeWidth={2} />
                 </Button>
-                <span className="toolbar-divider" />
+                <span className="mx-2 h-5 w-px bg-line" />
                 <Button variant="ghost" onClick={onAddMeasure}>
                     <FilePlus2 size={15} strokeWidth={2} />
                     <span>Measure</span>

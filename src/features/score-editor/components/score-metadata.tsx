@@ -12,12 +12,12 @@ export function ScoreMetadata({
     onChange: (next: EditorDocument) => void;
 }) {
     return (
-        <section className="metadata-card" aria-label="Score metadata">
-            <div className="metadata-intro">
-                <span className="section-kicker">Score</span>
-                <p>Minimal score details.</p>
+        <section className="grid gap-6 grid-cols-1 lg:grid-cols-[1.1fr_2.4fr] mt-7 p-6 border border-line rounded-lg bg-paper" aria-label="Score metadata">
+            <div>
+                <span className="text-[10px] font-bold uppercase tracking-[0.17em] text-green">Score</span>
+                <p className="mt-2 text-sm leading-6 text-muted max-w-[160px]">Minimal score details.</p>
             </div>
-            <div className="metadata-fields metadata-fields-wide">
+            <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
                 <Field label="Title">
                     <TextField
                         value={document.title}
@@ -35,7 +35,7 @@ export function ScoreMetadata({
                     />
                 </Field>
             </div>
-            <div className="metadata-fields">
+            <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:col-start-2">
                 <Field label="Key">
                     <Select
                         value={`${document.key.letter}-${document.key.mode}-${document.key.signature.accidental}-${document.key.signature.count}`}
