@@ -47,68 +47,13 @@ button:disabled {
     opacity: .4;
 }
 
-.app-shell {
-    min-height: 100vh;
-}
+/* Header and shell layout moved to Tailwind utilities in App component. */
 
-.app-header {
-    align-items: center;
-    border-bottom: 1px solid var(--line);
-    display: flex;
-    height: 68px;
-    justify-content: space-between;
-    padding: 0 clamp(22px, 5vw, 76px);
-}
-
-.brand-lockup {
-    align-items: baseline;
-    color: var(--ink);
-    display: flex;
-    font-family: Georgia, serif;
-    font-size: 24px;
-    gap: 6px;
-    letter-spacing: -.05em;
-}
-
-.brand-mark {
-    color: var(--green);
-    font-size: 28px;
-    line-height: 0;
-    transform: rotate(-8deg);
-}
-
-.header-actions {
-    align-items: center;
-    display: flex;
-    gap: 14px;
-}
-
-.workspace {
-    margin: 0 auto;
-    max-width: 1260px;
-    padding: 40px 30px 26px;
-}
-
-.workspace-top {
-    align-items: center;
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-}
+/* Workspace layout moved to Tailwind utilities in App component. */
 
 /* Score header moved to Tailwind in ScoreHeader component; keep tokens above. */
 
-.details-toggle {
-    align-items: center;
-    background: transparent;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    color: var(--green-dark);
-    display: inline-flex;
-    gap: 8px;
-    min-height: 34px;
-    padding: 0 12px;
-}
+/* details-toggle replaced with Tailwind utilities in App component */
 
 
 .metadata-card {

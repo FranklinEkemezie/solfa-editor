@@ -56,6 +56,7 @@ import { Score } from './score';
 import { TimeSignature } from './time-signature';
 import { Key } from './key';
 import { KeySignature } from './key-signature';
+import { Pitch } from './pitch';
 
 export type Fraction = Readonly<{ numerator: number; denominator: number }>;
 
@@ -107,27 +108,7 @@ export const NOTE_VALUE_UNITS: Record<NoteValue, Fraction> = {
     [NoteValue.SIXTY_FOURTH]: fraction(1, 16),
 };
 
-export class Duration {
-    public readonly noteValue: NoteValue;
-    public readonly dots: number;
-
-    public constructor(noteValue: NoteValue, dots = 0) {
-        if (!Number.isInteger(dots) || dots < 0 || dots > 3) {
-            throw new Error('A duration can have between zero and three dots.');
-        }
-        this.noteValue = noteValue;
-        this.dots = dots;
-    }
-
-    public toQuarterUnits(): Fraction {
-        const base = NOTE_VALUE_UNITS[this.noteValue];
-        if (this.dots === 0) return base;
-        return fraction(
-            base.numerator * (2 ** (this.dots + 1) - 1),
-            base.denominator * 2 ** this.dots,
-        );
-    }
-}
+export { Duration } from './duration';
 
 export { KeySignature } from './key-signature';
 export { TimeSignature } from './time-signature';
@@ -135,37 +116,7 @@ export { Key } from './key';
 
 export { Tempo } from './tempo';
 
-export class Pitch {
-    public readonly letter: Letter;
-    public readonly accidental: Accidental;
-    public readonly octave: number;
-
-    public constructor(letter: Letter, accidental = Accidental.NATURAL, octave = 4) {
-        this.letter = letter;
-        this.accidental = accidental;
-        this.octave = octave;
-    }
-
-    public toMidi(): number {
-        const semitone: Record<Letter, number> = {
-            [Letter.C]: 0,
-            [Letter.D]: 2,
-            [Letter.E]: 4,
-            [Letter.F]: 5,
-            [Letter.G]: 7,
-            [Letter.A]: 9,
-            [Letter.B]: 11,
-        };
-        const accidentalOffset: Record<Accidental, number> = {
-            [Accidental.DOUBLE_FLAT]: -2,
-            [Accidental.FLAT]: -1,
-            [Accidental.NATURAL]: 0,
-            [Accidental.SHARP]: 1,
-            [Accidental.DOUBLE_SHARP]: 2,
-        };
-        return (this.octave + 1) * 12 + semitone[this.letter] + accidentalOffset[this.accidental];
-    }
-}
+export { Pitch } from './pitch';
 export { MusicalEvent } from './musical-event';
 export { Note } from './note';
 export { Tuplet, Triplet, Quintuplet, Sextuplet } from './tuplet';

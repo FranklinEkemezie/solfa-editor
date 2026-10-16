@@ -225,19 +225,19 @@ export function App() {
 
     return (
         <>
-            <div className="app-shell">
-                <header className="app-header">
-                    <div className="brand-lockup">
-                        <span className="brand-mark">∿</span>
+            <div className="min-h-screen">
+                <header className="flex items-center border-b border-line h-16 justify-between px-6 md:px-20">
+                    <div className="flex items-baseline text-ink font-serif text-2xl gap-1">
+                        <span className="text-green text-3xl leading-none -rotate-6">∿</span>
                         <span>solfa</span>
                     </div>
                 </header>
-                <main className="workspace">
-                    <div className="workspace-top">
+                <main className="mx-auto max-w-[1260px] px-6 md:px-20 py-10">
+                    <div className="flex items-center justify-between gap-4">
                         <ScoreHeader document={store.document} />
                         <button
                             type="button"
-                            className="details-toggle"
+                            className="inline-flex items-center gap-2 border border-line rounded-full text-green-dark px-3 h-9"
                             onClick={() => setMetadataOpen((open) => !open)}
                             aria-label={
                                 isMetadataOpen ? 'Hide score details' : 'Show score details'
@@ -254,7 +254,7 @@ export function App() {
                         <div className={`transition-all duration-300 ${isMetadataOpen ? 'max-h-[1400px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`} aria-hidden={!isMetadataOpen}>
                             <ScoreMetadata document={store.document} onChange={changeMetadata} />
                         </div>
-                    <div className="score-actions">
+                    <div className="flex items-center justify-between my-5">
                         <ScoreToolbar
                             canUndo={store.canUndo}
                             canRedo={store.canRedo}
@@ -283,13 +283,13 @@ export function App() {
                             activeSlotId={activeSopranoSlotId}
                         />
                     ) : null}
-                    <div className="workspace-footnote">
-                        <span className="measure-count">
+                    <div className="flex justify-center mt-2">
+                        <span className="text-sm text-muted uppercase tracking-wide">
                             {measureCount} {measureCount === 1 ? 'measure' : 'measures'} · SATB
                         </span>
                     </div>
                 </main>
-                <footer className="app-footer">
+                <footer className="flex items-center text-muted text-sm gap-2 justify-center uppercase py-3">
                     <span>Sheet music</span>
                     <span>·</span>
                     <span>Keyboard editing</span>
