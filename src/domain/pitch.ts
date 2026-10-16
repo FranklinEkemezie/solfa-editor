@@ -1,5 +1,5 @@
-import { Letter } from './letter';
-import { Accidental } from './accidental';
+import { Letter } from '@/domain/letter';
+import { Accidental } from '@/domain/accidental';
 
 export class Pitch {
     public readonly letter: Letter;

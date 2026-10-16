@@ -1,6 +1,6 @@
-import { Letter } from './letter';
-import { Accidental } from './accidental';
-import { Pitch } from './pitch';
+import { Letter } from '@/domain/letter';
+import { Accidental } from '@/domain/accidental';
+import { Pitch } from '@/domain/pitch';
 
 export const SOLFA_SYLLABLES = ['d', 'r', 'm', 'f', 's', 'l', 't'] as const;
 export type SolfaSyllable = (typeof SOLFA_SYLLABLES)[number];

@@ -1,4 +1,4 @@
-import { fraction, type Fraction } from './fraction';
+import { fraction, type Fraction } from '@/domain/fraction';
 
 export enum NoteValue {
     WHOLE = 'WHOLE',

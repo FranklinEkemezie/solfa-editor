@@ -1,7 +1,7 @@
-import { Key } from './key';
-import { Tempo } from './tempo';
-import { TimeSignature } from './time-signature';
-import { Measure } from './measure';
+import { Key } from '@/domain/key';
+import { Tempo } from '@/domain/tempo';
+import { TimeSignature } from '@/domain/time-signature';
+import { Measure } from '@/domain/measure';
 
 export class Score {
     public readonly title: string;

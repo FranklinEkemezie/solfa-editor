@@ -1,8 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from './app/app';
-import './styles/globals.css';
-import './features/pdf-export/print.css';
+import { App } from '@/app/app';
+import '@/styles/index.css';
+import '@/features/pdf-export/print.css';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>

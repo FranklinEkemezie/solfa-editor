@@ -1,4 +1,4 @@
-import { Accidental } from './accidental';
+import { Accidental } from '@/domain/accidental';
 
 export class KeySignature {
     public readonly accidental: Accidental;

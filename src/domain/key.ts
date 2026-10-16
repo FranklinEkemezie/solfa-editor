@@ -1,6 +1,6 @@
-import { Letter } from './letter';
-import { Mode } from './mode';
-import { KeySignature } from './key-signature';
+import { Letter } from '@/domain/letter';
+import { Mode } from '@/domain/mode';
+import { KeySignature } from '@/domain/key-signature';
 
 export class Key {
     public readonly letter: Letter;

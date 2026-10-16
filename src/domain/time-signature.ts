@@ -1,5 +1,5 @@
-import { fraction } from './fraction';
-import { NoteValue, NOTE_VALUE_UNITS } from './note-value';
+import { fraction } from '@/domain/fraction';
+import { NoteValue, NOTE_VALUE_UNITS } from '@/domain/note-value';
 
 export class TimeSignature {
     public readonly note: NoteValue;

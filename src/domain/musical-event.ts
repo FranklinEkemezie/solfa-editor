@@ -1,4 +1,4 @@
-import { Duration } from './duration';
+import { Duration } from '@/domain/duration';
 
 export abstract class MusicalEvent {
     public readonly duration: Duration;
