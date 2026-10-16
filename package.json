@@ -12,9 +12,11 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@tiptap/core": "^2.11.5",
+    "@tiptap/core": "^3.32.0",
+    "@tiptap/extension-document": "^3.32.0",
     "@tiptap/extension-history": "^2.11.5",
-    "@tiptap/react": "^2.11.5",
+    "@tiptap/extension-text": "^3.32.0",
+    "@tiptap/react": "^3.32.0",
     "@tiptap/starter-kit": "^2.11.5",
     "lucide-react": "^1.57.0",
     "pagedjs": "^0.4.3",

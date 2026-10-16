@@ -46,7 +46,8 @@ export function App() {
     const syncEditor = useCallback(
         (document: EditorDocument) => {
             if (!editor) return;
-            editor.commands.setContent(toTiptapJson(document), false);
+            // Tiptap typings expect an options object; omit the second arg for compatibility.
+            editor.commands.setContent(toTiptapJson(document));
         },
         [editor],
     );
