@@ -53,6 +53,9 @@ export type SolfaSyllable = (typeof SOLFA_SYLLABLES)[number];
 import type { MusicalEvent } from './musical-event';
 import { Measure } from './measure';
 import { Score } from './score';
+import { TimeSignature } from './time-signature';
+import { Key } from './key';
+import { KeySignature } from './key-signature';
 
 export type Fraction = Readonly<{ numerator: number; denominator: number }>;
 
@@ -126,50 +129,9 @@ export class Duration {
     }
 }
 
-export class KeySignature {
-    public readonly accidental: Accidental;
-    public readonly count: number;
-
-    public constructor(accidental = Accidental.NATURAL, count = 0) {
-        if (!Number.isInteger(count) || count < 0 || count > 7) {
-            throw new Error('A key signature must contain between zero and seven accidentals.');
-        }
-        this.accidental = accidental;
-        this.count = count;
-    }
-}
-
-export class TimeSignature {
-    public readonly note: NoteValue;
-    public readonly count: number;
-
-    public constructor(note = NoteValue.QUARTER, count = 4) {
-        if (!Number.isInteger(count) || count < 1 || count > 32) {
-            throw new Error('A time signature count must be between one and thirty-two.');
-        }
-        this.note = note;
-        this.count = count;
-    }
-
-    public capacity(): Fraction {
-        return fraction(
-            NOTE_VALUE_UNITS[this.note].numerator * this.count,
-            NOTE_VALUE_UNITS[this.note].denominator,
-        );
-    }
-}
-
-export class Key {
-    public readonly letter: Letter;
-    public readonly signature: KeySignature;
-    public readonly mode: Mode;
-
-    public constructor(letter = Letter.C, signature = new KeySignature(), mode = Mode.MAJOR) {
-        this.letter = letter;
-        this.signature = signature;
-        this.mode = mode;
-    }
-}
+export { KeySignature } from './key-signature';
+export { TimeSignature } from './time-signature';
+export { Key } from './key';
 
 export { Tempo } from './tempo';
 
