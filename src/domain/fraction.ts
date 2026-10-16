@@ -33,7 +33,3 @@ export function addFractions(left: Fraction, right: Fraction): Fraction {
 export function compareFractions(left: Fraction, right: Fraction): number {
     return left.numerator * right.denominator - right.numerator * left.denominator;
 }
-
-export function fractionToNumber(value: Fraction): number {
-    return value.numerator / value.denominator;
-}
