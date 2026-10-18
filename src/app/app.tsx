@@ -51,7 +51,6 @@ export function App() {
             <div className="app-shell min-h-screen overflow-x-clip">
                 <AppHeader />
                 <main className="mx-auto max-w-[1260px] px-4 py-6 sm:px-6 sm:py-10 md:px-20">
-                    <ScoreHeader document={store.document} onChange={changeMetadata} />
                     <div className="my-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <ScoreToolbar
                             canUndo={store.canUndo}
@@ -72,6 +71,9 @@ export function App() {
                         document={store.document}
                         position={store.position}
                         editor={editor}
+                        masthead={
+                            <ScoreHeader document={store.document} onChange={changeMetadata} />
+                        }
                         onPositionChange={(next) => store.commit(store.document, next)}
                         onKeyDown={keyboard.handleKeyDown}
                         activeSlotId={activeSlotId}

@@ -1,20 +1,28 @@
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import type { Editor } from '@tiptap/core';
 import { EditorContent } from '@tiptap/react';
 import type {
     EditorDocument,
     EditorMeasure,
 } from '@/features/score-editor/adapters/editor-document-schema';
-import { MeasureColumn } from '@/features/score-editor/components/score-canvas/measure-column';
-import { MeasureHeadings } from '@/features/score-editor/components/score-canvas/measure-headings';
-import { PartLabels } from '@/features/score-editor/components/score-canvas/part-labels';
-import { calculateScoreLayout } from '@/features/score-editor/layout/calculate-score-layout';
+import { ScorePage } from '@/features/score-editor/components/score-canvas/score-page';
+import { calculateScoreLayout } from '@/features/score-editor/layout/score-layout';
 import type { EditorPosition } from '@/features/score-editor/state/editor-position';
 
+/**
+ * The score, as a stack of A4 sheets.
+ *
+ * The page breaks are decided here and nowhere else, so the editor and the
+ * printer agree on where the music falls. The hidden Tiptap surface stays in
+ * the tree because it is what the physical keyboard is captured by, and what
+ * undo and redo are kept in. How the sheets are looked at is the stage's
+ * business, not this component's.
+ */
 export function ScoreCanvas({
     document,
     position,
     editor,
+    masthead,
     onPositionChange,
     onKeyDown,
     activeSlotId,
@@ -22,6 +30,8 @@ export function ScoreCanvas({
     document: EditorDocument;
     position: EditorPosition;
     editor: Editor;
+    /** The editable title block, drawn on the first sheet. */
+    masthead: ReactNode;
     onPositionChange: (position: EditorPosition) => void;
     onKeyDown: (event: KeyboardEvent) => void;
     activeSlotId?: string | null;
@@ -33,39 +43,30 @@ export function ScoreCanvas({
 
     return (
         <section
-            className="overflow-hidden rounded-xl border border-line bg-paper shadow-panel"
+            className="relative"
             aria-label="SATB score editor"
+            onKeyDown={onKeyDown}
+            onClick={() => editor.commands.focus()}
         >
-            <div
-                className="relative min-h-[313px] overflow-x-auto px-2 pb-4 pt-3 sm:px-4 sm:pb-5"
-                onKeyDown={onKeyDown}
-                onClick={() => editor.commands.focus()}
-            >
-                <MeasureHeadings measures={layout.measures} />
-
-                <div className="mt-0.5 flex min-w-max">
-                    <PartLabels />
-                    <div className="flex min-w-max gap-0">
-                        {layout.measures.map((layoutMeasure, index) => (
-                            <MeasureColumn
-                                key={layoutMeasure.measureId}
-                                layoutMeasure={layoutMeasure}
-                                isFirst={index === 0}
-                                isLast={index === layout.measures.length - 1}
-                                measureById={measureById}
-                                position={position}
-                                onPositionChange={onPositionChange}
-                                activeSlotId={activeSlotId}
-                            />
-                        ))}
-                    </div>
-                </div>
-
-                <EditorContent
-                    editor={editor}
-                    className="pointer-events-none absolute inset-0 opacity-0"
-                />
+            <div className="flex flex-col items-start gap-6">
+                {layout.pages.map((page) => (
+                    <ScorePage
+                        key={page.number}
+                        page={page}
+                        layout={layout}
+                        measureById={measureById}
+                        position={position}
+                        onPositionChange={onPositionChange}
+                        activeSlotId={activeSlotId}
+                    >
+                        {masthead}
+                    </ScorePage>
+                ))}
             </div>
+            <EditorContent
+                editor={editor}
+                className="pointer-events-none absolute h-0 w-0 opacity-0"
+            />
         </section>
     );
 }

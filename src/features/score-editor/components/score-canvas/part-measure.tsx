@@ -1,5 +1,6 @@
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { SlotButton } from '@/features/score-editor/components/score-canvas/slot-button';
+import { PART_ROW_HEIGHT_PX } from '@/features/score-editor/layout/page-geometry';
 import type { EditorPosition } from '@/features/score-editor/state/editor-position';
 
 function beatSummary(notes: EditorDocument['measures'][number]['slots'][number]['notes']): string {
@@ -10,6 +11,7 @@ function beatSummary(notes: EditorDocument['measures'][number]['slots'][number][
     return `, ${written.join(' ')}`;
 }
 
+/** One part's row of beats inside one measure. */
 export function PartMeasure({
     measure,
     position,
@@ -22,7 +24,7 @@ export function PartMeasure({
     activeSlotId?: string | null;
 }) {
     return (
-        <div className="flex h-[52px] items-center border-b border-line-soft px-2 last:border-b-0">
+        <div className="flex items-stretch px-1" style={{ height: PART_ROW_HEIGHT_PX }}>
             {measure.slots.map((slot, slotIndex) => (
                 <SlotButton
                     key={slot.id}
