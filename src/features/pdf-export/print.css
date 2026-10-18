@@ -1,7 +1,8 @@
-@media screen {
-    .print-sheet {
-        display: none;
-    }
+.print-sheet {
+    color: var(--color-ink);
+    display: none;
+    font-family: Georgia, 'Times New Roman', serif;
+    width: 100%;
 }
 
 @media print {
@@ -21,12 +22,13 @@
 
     body.print-mode .print-sheet {
         display: block;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
     }
 
-    .print-sheet {
-        color: var(--color-ink);
-        display: none;
-        font-family: Georgia, 'Times New Roman', serif;
-        width: 100%;
+    /* Keep a system and each of its part rows whole on one page. */
+    .print-system,
+    .print-part-row {
+        break-inside: avoid;
     }
 }

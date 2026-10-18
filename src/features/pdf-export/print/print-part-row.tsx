@@ -4,6 +4,7 @@ import type {
     EditorMeasure,
 } from '@/features/score-editor/adapters/editor-document-schema';
 import { PrintMeasureCell } from '@/features/pdf-export/print/print-measure-cell';
+import { printGridTemplate } from '@/features/pdf-export/print/print-layout';
 
 type Part = (typeof PARTS)[number];
 
@@ -18,23 +19,24 @@ export function PrintPartRow({
 }) {
     return (
         <div
-            className="grid min-h-[34pt] items-center border-t border-line-soft"
-            style={{
-                gridTemplateColumns: `26pt repeat(${measures.length}, minmax(48pt, 1fr))`,
-            }}
+            className="print-part-row grid min-h-[42pt] items-stretch border-t border-line-soft"
+            style={{ gridTemplateColumns: printGridTemplate(document, measures) }}
         >
-            <strong className="self-center px-2 text-[11pt] font-bold uppercase tracking-[0.08em] text-ink">
-                {part.shortLabel}
+            <strong className="flex items-center justify-center">
+                <span className="inline-flex h-[16pt] w-[16pt] items-center justify-center rounded-full bg-green-wash text-[9pt] font-bold uppercase text-green-dark">
+                    {part.shortLabel}
+                </span>
             </strong>
-            {measures.map((measure) => {
-                const partMeasure = document.measures.find(
-                    (candidate) =>
-                        candidate.part === part.id && candidate.number === measure.number,
-                );
-                return (
-                    <PrintMeasureCell key={`${part.id}-${measure.number}`} measure={partMeasure} />
-                );
-            })}
+            {measures.map((measure, index) => (
+                <PrintMeasureCell
+                    key={`${part.id}-${measure.number}`}
+                    measure={document.measures.find(
+                        (candidate) =>
+                            candidate.part === part.id && candidate.number === measure.number,
+                    )}
+                    isLast={index === measures.length - 1}
+                />
+            ))}
         </div>
     );
 }

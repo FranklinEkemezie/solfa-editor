@@ -1,14 +1,22 @@
-import type { EditorMeasure } from '@/features/score-editor/adapters/editor-document-schema';
+import type {
+    EditorDocument,
+    EditorMeasure,
+} from '@/features/score-editor/adapters/editor-document-schema';
+import { printGridTemplate } from '@/features/pdf-export/print/print-layout';
 
-export function PrintMeasureHeadings({ measures }: { measures: EditorMeasure[] }) {
+export function PrintMeasureHeadings({
+    document,
+    measures,
+}: {
+    document: EditorDocument;
+    measures: EditorMeasure[];
+}) {
     return (
         <div
-            className="grid items-center border-b border-line-soft bg-cream py-1.5 text-[8pt] font-bold uppercase tracking-[0.08em] text-muted"
-            style={{
-                gridTemplateColumns: `26pt repeat(${measures.length}, minmax(48pt, 1fr))`,
-            }}
+            className="grid items-end border-b border-line bg-cream pt-[5pt] pb-[3pt] text-[7.5pt] font-bold uppercase tracking-[0.16em] text-muted"
+            style={{ gridTemplateColumns: printGridTemplate(document, measures) }}
         >
-            <div />
+            <span className="pl-[7pt] text-left text-[6.5pt] tracking-[0.14em]">Part</span>
             {measures.map((measure) => (
                 <span key={measure.id} className="text-center">
                     m{measure.number}

@@ -13,11 +13,8 @@ export function PrintScore({ document }: { document: EditorDocument }) {
     return (
         <main className="print-sheet" id="print-view">
             <PrintScoreHeader document={document} />
-            <div
-                className="overflow-hidden rounded-lg border border-line-soft"
-                style={{ ['--print-measures' as string]: String(measures.length) }}
-            >
-                <PrintMeasureHeadings measures={measures} />
+            <div className="print-system overflow-hidden rounded-[3pt] border border-line">
+                <PrintMeasureHeadings document={document} measures={measures} />
                 {PARTS.map((part) => (
                     <PrintPartRow
                         key={part.id}
