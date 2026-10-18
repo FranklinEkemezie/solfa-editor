@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createEmptyScore } from '@/domain/music';
+import { Accidental, createEmptyScore, Key, KeySignature, Letter, Mode } from '@/domain/music';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { domainToEditor } from '@/features/score-editor/adapters/domain-to-editor';
 import { interpretInput } from '@/features/score-editor/editor/input-rules';
@@ -78,5 +78,39 @@ describe('buildPlaybackEvents', () => {
         expect(part(document, 'alto')[0].note).toBe('C4');
         expect(part(document, 'tenor')[0].note).toBe('C3');
         expect(part(document, 'bass')[0].note).toBe('C2');
+    });
+
+    it('sounds doh on the key tonic, leaving the notation alone', () => {
+        const base = domainToEditor(createEmptyScore());
+        const inD: EditorDocument = {
+            ...base,
+            key: new Key(Letter.D, new KeySignature(Accidental.SHARP, 2), Mode.MAJOR),
+        };
+        const written = write(inD, ['d', 'r']);
+
+        expect(written.measures[0].slots[0].notes[0].syllable).toBe('d');
+        expect(part(written, 'soprano').map((event) => event.note)).toEqual(['D5', 'E5']);
+    });
+
+    it('keys a flat score without rewriting a single syllable', () => {
+        const base = domainToEditor(createEmptyScore());
+        const inF: EditorDocument = {
+            ...base,
+            key: new Key(Letter.F, new KeySignature(Accidental.FLAT, 1), Mode.MAJOR),
+        };
+        const written = write(inF, ['d', 'm', 's', 'l']);
+
+        expect(written.measures[0].slots.map((slot) => slot.notes[0].syllable)).toEqual([
+            'd',
+            'm',
+            's',
+            'l',
+        ]);
+        expect(part(written, 'soprano').map((event) => event.note)).toEqual([
+            'F5',
+            'A5',
+            'C6',
+            'D6',
+        ]);
     });
 });

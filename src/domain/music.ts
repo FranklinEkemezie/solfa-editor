@@ -39,6 +39,7 @@ export { Note } from '@/domain/note';
 export { Measure } from '@/domain/measure';
 export { KeySignature } from '@/domain/key-signature';
 export { Key } from '@/domain/key';
+export { tonicPitchClass } from '@/domain/key-tonic';
 export { Tempo } from '@/domain/tempo';
 export { TimeSignature } from '@/domain/time-signature';
 export { Score } from '@/domain/score';

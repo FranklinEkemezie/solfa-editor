@@ -3,6 +3,7 @@ import {
     NOTE_VALUE_UNITS,
     PARTS,
     SOLFA_TO_PITCH,
+    tonicPitchClass,
     type NoteValue,
     type PartId,
     type SolfaSyllable,
@@ -57,12 +58,16 @@ export function secondsPerQuarter(document: EditorDocument): number {
  * Every duration is converted once, into quarter notes, and then into seconds,
  * so a note's length never depends on how the notation happens to spell it. A
  * continuation prolongs the note before it instead of sounding again.
+ *
+ * The key and the part are applied here, to the pitch only: the syllables stay
+ * written as they read, and the transposition never touches the score.
  */
 export function buildPlaybackEvents(document: EditorDocument): PlaybackEvent[] {
     const measureNumbers = [...new Set(document.measures.map((measure) => measure.number))].sort(
         (left, right) => left - right,
     );
     const secondsPer = secondsPerQuarter(document);
+    const keyShift = tonicPitchClass(document.key);
 
     const events: PlaybackEvent[] = [];
     const lastByPart = new Map<PartId, PlaybackEvent>();
@@ -91,7 +96,9 @@ export function buildPlaybackEvents(document: EditorDocument): PlaybackEvent[] {
                     }
 
                     const midi =
-                        SOLFA_TO_PITCH[note.syllable].toMidi() + PART_OCTAVE_OFFSETS[part.id];
+                        SOLFA_TO_PITCH[note.syllable].toMidi() +
+                        keyShift +
+                        PART_OCTAVE_OFFSETS[part.id];
                     const event: PlaybackEvent = {
                         time: (clockQuarters + beatQuarters + index * noteQuarters) * secondsPer,
                         note: Tone.Frequency(midi, 'midi').toNote(),
