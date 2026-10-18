@@ -1,5 +1,5 @@
 import { ArrowDownToLine, FileMinus2, FilePlus2, RotateCcw, RotateCw } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/components/ui/button';
 
 export function ScoreToolbar({
     canUndo,
@@ -40,16 +40,16 @@ export function ScoreToolbar({
                     <RotateCw size={16} strokeWidth={2} />
                 </Button>
                 <span className="mx-2 h-5 w-px bg-line" />
-                <Button variant="ghost" onClick={onAddMeasure}>
+                <Button variant="ghost" onClick={onAddMeasure} className="gap-2">
                     <FilePlus2 size={15} strokeWidth={2} />
                     <span>Measure</span>
                 </Button>
-                <Button variant="ghost" onClick={onRemoveMeasure}>
+                <Button variant="ghost" onClick={onRemoveMeasure} className="gap-2">
                     <FileMinus2 size={15} strokeWidth={2} />
                     <span>Measure</span>
                 </Button>
             </div>
-            <Button variant="primary" onClick={onExport}>
+            <Button variant="primary" onClick={onExport} className="gap-2">
                 <ArrowDownToLine size={16} strokeWidth={2} />
                 <span>Print / PDF</span>
             </Button>

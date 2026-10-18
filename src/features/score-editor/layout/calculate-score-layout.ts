@@ -1,4 +1,7 @@
-import type { EditorDocument, EditorMeasure } from '../adapters/editor-document-schema';
+import type {
+    EditorDocument,
+    EditorMeasure,
+} from '@/features/score-editor/adapters/editor-document-schema';
 
 export type MeasureLayout = {
     measureId: string;

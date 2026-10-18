@@ -1,5 +1,5 @@
-import { editorToDomain } from '../score-editor/adapters/editor-to-domain';
-import type { EditorDocument } from '../score-editor/adapters/editor-document-schema';
+import { editorToDomain } from '@/features/score-editor/adapters/editor-to-domain';
+import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 
 export function exportScoreToPdf(
     scoreDocument: EditorDocument,
