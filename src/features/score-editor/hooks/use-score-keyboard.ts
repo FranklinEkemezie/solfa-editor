@@ -20,6 +20,15 @@ type ScoreKeyboardOptions = {
     onMessage: (message: string, tone?: ToastTone) => void;
 };
 
+export type ScoreKeyboard = {
+    /** Key handler for the physical keyboard, attached to the score canvas. */
+    handleKeyDown: (event: KeyboardEvent) => void;
+    /** Apply a sol-fa input token (`.`, `,`, `-`, or a syllable) at the caret. */
+    input: (token: string) => void;
+    /** Clear the caret's slot, stepping back a slot when it is already empty. */
+    backspace: () => void;
+};
+
 export function useScoreKeyboard({
     document,
     position,
@@ -28,8 +37,33 @@ export function useScoreKeyboard({
     undo,
     redo,
     onMessage,
-}: ScoreKeyboardOptions) {
-    return useCallback(
+}: ScoreKeyboardOptions): ScoreKeyboard {
+    const input = useCallback(
+        (token: string) => {
+            const result = interpretInput(document, position, token);
+            if (result.rejected) {
+                onMessage(result.rejected);
+                void playErrorTone();
+                return;
+            }
+            commit(result.document, result.position);
+            if (result.status) onMessage(result.status, 'info');
+        },
+        [commit, document, onMessage, position],
+    );
+
+    const backspace = useCallback(() => {
+        const currentSlot = document.measures.find((measure) => measure.id === position.measureId)
+            ?.slots[position.slotIndex];
+        if (currentSlot?.syllable) {
+            commit(clearSlot(document, position), position);
+            return;
+        }
+        const previous = previousPosition(document, position);
+        commit(clearSlot(document, previous), previous);
+    }, [commit, document, position]);
+
+    const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
             if (event.metaKey || event.ctrlKey) {
                 if (event.key.toLowerCase() === 'z') {
@@ -58,15 +92,7 @@ export function useScoreKeyboard({
             }
             if (event.key === 'Backspace') {
                 event.preventDefault();
-                const currentSlot = document.measures.find(
-                    (measure) => measure.id === position.measureId,
-                )?.slots[position.slotIndex];
-                if (currentSlot?.syllable) {
-                    commit(clearSlot(document, position), position);
-                } else {
-                    const previous = previousPosition(document, position);
-                    commit(clearSlot(document, previous), previous);
-                }
+                backspace();
                 return;
             }
             if (event.key === 'Delete') {
@@ -77,16 +103,10 @@ export function useScoreKeyboard({
 
             if (event.key.length !== 1) return;
             event.preventDefault();
-
-            const result = interpretInput(document, position, event.key);
-            if (result.rejected) {
-                onMessage(result.rejected);
-                void playErrorTone();
-                return;
-            }
-            commit(result.document, result.position);
-            if (result.status) onMessage(result.status, 'info');
+            input(event.key);
         },
-        [commit, document, moveTo, onMessage, position, redo, undo],
+        [backspace, commit, document, input, moveTo, position, redo, undo],
     );
+
+    return { handleKeyDown, input, backspace };
 }

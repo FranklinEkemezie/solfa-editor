@@ -14,6 +14,7 @@ import { PlaybackControls } from '@/features/playback/playback-controls';
 import { ScoreCanvas } from '@/features/score-editor/components/score-canvas';
 import { ScoreHeader } from '@/features/score-editor/components/score-header';
 import { ScoreToolbar } from '@/features/score-editor/components/score-toolbar';
+import { OnScreenKeyboard } from '@/features/score-editor/components/on-screen-keyboard';
 import { useCommit } from '@/features/score-editor/hooks/use-commit';
 import { useMetadataEditing } from '@/features/score-editor/hooks/use-metadata-editing';
 import { useScoreEditor } from '@/features/score-editor/hooks/use-score-editor';
@@ -30,7 +31,7 @@ export function App() {
     const changeMetadata = useMetadataEditing(store, commit);
     const { isPlaying, activeSlotId, toggle, stop } = usePlayback(store.document, addToast);
 
-    const handleKeyDown = useScoreKeyboard({
+    const keyboard = useScoreKeyboard({
         document: store.document,
         position: store.position,
         commit,
@@ -87,10 +88,11 @@ export function App() {
                         position={store.position}
                         editor={editor}
                         onPositionChange={(next) => store.commit(store.document, next)}
-                        onKeyDown={handleKeyDown}
+                        onKeyDown={keyboard.handleKeyDown}
                         activeSlotId={activeSlotId}
                     />
                     <MeasureCount document={store.document} />
+                    <OnScreenKeyboard onInput={keyboard.input} onBackspace={keyboard.backspace} />
                 </main>
                 <AppFooter />
             </div>
