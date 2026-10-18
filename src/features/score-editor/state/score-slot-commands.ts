@@ -75,10 +75,7 @@ export function clearBeat(document: EditorDocument, position: EditorPosition): E
 }
 
 /** Remove the most recently written note of a beat. */
-export function clearLastNote(
-    document: EditorDocument,
-    position: EditorPosition,
-): EditorDocument {
+export function clearLastNote(document: EditorDocument, position: EditorPosition): EditorDocument {
     return mapBeat(document, position, (slot) => {
         const notes = slot.notes.slice(0, -1);
         return { ...slot, notes, division: notes.length > 0 ? slot.division : 1 };

@@ -108,8 +108,7 @@ export function buildPlaybackEvents(document: EditorDocument): PlaybackEvent[] {
             }
         }
 
-        clockQuarters +=
-            document.timeSignature.count * quarterUnits(document.timeSignature.note);
+        clockQuarters += document.timeSignature.count * quarterUnits(document.timeSignature.note);
     }
 
     return events.sort((left, right) => left.time - right.time);

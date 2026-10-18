@@ -1,10 +1,13 @@
-import { divisionForMark, isSolfaSyllable, refineDivision, type BeatDivision, type SolfaSyllable } from '@/domain/music';
+import {
+    divisionForMark,
+    isSolfaSyllable,
+    refineDivision,
+    type BeatDivision,
+    type SolfaSyllable,
+} from '@/domain/music';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { advanceCursor } from '@/features/score-editor/state/advance-cursor';
-import {
-    findMeasure,
-    type EditorPosition,
-} from '@/features/score-editor/state/editor-position';
+import { findMeasure, type EditorPosition } from '@/features/score-editor/state/editor-position';
 import {
     appendNote,
     continueBeat,

@@ -1,9 +1,6 @@
 import { isSolfaSyllable, SOLFA_SYLLABLES, type SolfaSyllable } from '@/domain/music';
 import { interpretInput, type InputResult } from '@/features/score-editor/editor/input-rules';
-import {
-    findMeasure,
-    type EditorPosition,
-} from '@/features/score-editor/state/editor-position';
+import { findMeasure, type EditorPosition } from '@/features/score-editor/state/editor-position';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { replaceLastNoteSyllable } from '@/features/score-editor/state/score-slot-commands';
 

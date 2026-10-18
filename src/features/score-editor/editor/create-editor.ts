@@ -9,15 +9,7 @@ import { SolfaDocument } from '@/features/score-editor/editor/extensions/solfa-d
 
 export function createScoreEditor(content: JSONContent): Editor {
     return new Editor({
-        extensions: [
-            SolfaDocument,
-            MetadataNode,
-            MeasureNode,
-            SlotNode,
-            NoteNode,
-            Text,
-            History,
-        ],
+        extensions: [SolfaDocument, MetadataNode, MeasureNode, SlotNode, NoteNode, Text, History],
         content,
         editorProps: {
             attributes: {
