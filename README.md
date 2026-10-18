@@ -7,9 +7,12 @@ and presentation-specific concerns.
 ## What this prototype includes
 
 - SATB score composition with soprano, alto, tenor, and bass measures
-- Keyboard-first sol-fa entry using `d r m f s l t`
+- Keyboard-first sol-fa entry for the diatonic (`d r m f s l t`) and chromatic
+  (`de re ma fe ba se ta`) syllables
+- An on-screen keyboard for touch devices that mirrors the physical input keys
 - Rhythmic subdivision and continuation handling
-- Metadata editing for title, author, key, time signature, and tempo
+- Inline editing of the title, composer, key, time signature, and tempo straight from the score masthead
+- Automatic score growth: reaching the last slot of the last measure appends a new one
 - Score layout and printable PDF-style output
 - Structured domain model that mirrors the UML's concepts for notes, pitch, measure, score, and durations
 
@@ -39,7 +42,7 @@ The domain model follows the UML's main concepts:
 - `measure.ts` — `Measure`
 - `score.ts` — `Score`
 - `parts.ts` — `PartId` type and `PARTS` constant
-- `solfa.ts` — `SolfaSyllable`, `SOLFA_SYLLABLES`, `SOLFA_TO_PITCH`
+- `solfa.ts` — diatonic and chromatic syllable vocabulary and their pitches
 - `music.ts` — aggregate re-exports and higher-level helpers (`validateScore`, `createEmptyScore`, label utilities)
 
 We intentionally keep the domain model serializable and minimal. UI and editor adapters convert between the domain and
@@ -64,8 +67,14 @@ are reused by editor validation and export code.
 ### Notable implementation decisions
 
 - `DEFAULT_TIME_SIGNATURE` is set to a usable 4/4 default for a working prototype.
-- The sol-fa input model treats `.` as beat subdivision and `-` as continuation, which keeps the keyboard interaction
-  fast and aligned with a simple composition workflow.
+- Chromatic syllables follow a vowel convention: `e` raises a degree and `a` lowers one, so `re`/`ma`
+  (D♯/E♭) and `fe`/`ba` (F♯/G♭) are enharmonic spellings of the same pitch.
+- The sol-fa input model treats `.` as beat subdivision and `-` as continuation, which keeps the
+  keyboard interaction fast and aligned with a simple composition workflow.
+- Cursor advancement is centralised in `advanceCursor`; when input reaches the final slot of the
+  final measure it appends a fresh measure for every part rather than stopping.
+- Score details are edited inline: the masthead renders plain text and swaps in an input or a
+  shadcn `Select` only when activated, so there is no separate metadata form.
 - Measure-to-slot conversion uses a rhythmic slot array rather than a full note tree so the editor remains responsive
   while still preserving the underlying musical model.
 - PDF output is implemented as a browser print flow with a print-specific stylesheet; this is a sensible prototype
