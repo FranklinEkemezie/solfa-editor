@@ -18,7 +18,10 @@ export function ToastViewport({
     }, [dismiss, messages]);
 
     return (
-        <div className="toast-viewport" aria-live="polite">
+        <div
+            className="toast-viewport fixed bottom-4 right-4 z-[100] flex w-[min(320px,calc(100vw-2rem))] flex-col gap-2"
+            aria-live="polite"
+        >
             {messages.map((toast) => (
                 <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />
             ))}

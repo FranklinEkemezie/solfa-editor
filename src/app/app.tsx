@@ -50,7 +50,7 @@ export function App() {
 
     return (
         <>
-            <div className="min-h-screen">
+            <div className="app-shell min-h-screen">
                 <AppHeader />
                 <main className="mx-auto max-w-[1260px] px-6 md:px-20 py-10">
                     <div className="flex items-center justify-between gap-4">
