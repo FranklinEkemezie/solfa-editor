@@ -8,9 +8,12 @@ and presentation-specific concerns.
 
 - SATB score composition with soprano, alto, tenor, and bass measures
 - Keyboard-first sol-fa entry for the diatonic (`d r m f s l t`) and chromatic
-  (`de re ma fe ba se ta`) syllables
-- An on-screen keyboard for touch devices that mirrors the physical input keys
-- Rhythmic subdivision and continuation handling
+  (`de re ma fe ba se ta`) syllables. A chromatic syllable is typed as its two
+  letters, so `d` then `e` writes `de` rather than two notes.
+- An on-screen keyboard for touch devices that mirrors the physical input keys.
+  It is docked on small screens and hidden from the `lg` breakpoint up, where the
+  hardware keyboard can already type every syllable.
+- Rhythmic subdivision with dots and commas, plus `-` for continuations
 - Inline editing of the title, composer, key, time signature, and tempo straight from the score masthead
 - Automatic score growth: reaching the last slot of the last measure appends a new one
 - Score layout and printable PDF-style output
@@ -69,14 +72,21 @@ are reused by editor validation and export code.
 - `DEFAULT_TIME_SIGNATURE` is set to a usable 4/4 default for a working prototype.
 - Chromatic syllables follow a vowel convention: `e` raises a degree and `a` lowers one, so `re`/`ma`
   (D♯/E♭) and `fe`/`ba` (F♯/G♭) are enharmonic spellings of the same pitch.
-- The sol-fa input model treats `.` as beat subdivision and `-` as continuation, which keeps the
-  keyboard interaction fast and aligned with a simple composition workflow.
+- The sol-fa input model follows Curwen rhythm notation: a dot halves a beat
+  (`d.m`) and a comma quarters it (`d,r.m,f`). A note advances the caret only
+  once the beat it is on is full, so `.` and `,` keep the following notes in the
+  same beat while any other syllable moves on to the next one.
+- A measure is a list of beats, and each beat carries the notes written in it
+  plus its division (1, 2, or 4). The marks between the notes are derived from
+  that division, so the notation always reads the way the method writes it.
 - Cursor advancement is centralised in `advanceCursor`; when input reaches the final slot of the
   final measure it appends a fresh measure for every part rather than stopping.
 - Score details are edited inline: the masthead renders plain text and swaps in an input or a
   shadcn `Select` only when activated, so there is no separate metadata form.
-- Measure-to-slot conversion uses a rhythmic slot array rather than a full note tree so the editor remains responsive
-  while still preserving the underlying musical model.
+- Playback flattens the score into a single time-ordered note list measured in
+  quarter notes, then converts once into seconds, so a note's length never
+  depends on how its duration is spelled. Continuations prolong the note before
+  them instead of sounding it again.
 - PDF output is implemented as a browser print flow with a print-specific stylesheet; this is a sensible prototype
   approach without introducing a large PDF engine.
 
@@ -121,6 +131,7 @@ src/
 ├── components/                 # Shared UI components
 ├── domain/                     # Pure music domain model (no React/Tiptap deps)
 │   ├── accidental.ts
+│   ├── beat-division.ts        # Dot/comma beat subdivisions and their marks
 │   ├── duration.ts
 │   ├── fraction.ts
 │   ├── key-signature.ts
