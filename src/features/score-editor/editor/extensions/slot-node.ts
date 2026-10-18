@@ -2,17 +2,13 @@ import { Node } from '@tiptap/core';
 
 export const SlotNode = Node.create({
     name: 'slot',
-    group: 'inline',
-    inline: true,
-    atom: true,
-    selectable: false,
+    content: 'note*',
+    defining: true,
     addAttributes: () => ({
         id: { default: '' },
         noteValue: { default: 'QUARTER' },
-        syllable: { default: null },
-        continuation: { default: false },
-        lyric: { default: null },
+        division: { default: 1 },
     }),
-    parseHTML: () => [{ tag: 'span[data-solfa-slot]' }],
-    renderHTML: ({ HTMLAttributes }) => ['span', { ...HTMLAttributes, 'data-solfa-slot': '' }],
+    parseHTML: () => [{ tag: 'div[data-solfa-slot]' }],
+    renderHTML: ({ HTMLAttributes }) => ['div', { ...HTMLAttributes, 'data-solfa-slot': '' }, 0],
 });

@@ -26,20 +26,22 @@ export class ScorePlayer {
             (time, value) => {
                 const event = value as PlaybackEvent;
                 this.callbacks.onNoteStart?.(event);
-                this.synth?.triggerAttackRelease(event.note, event.duration, time);
+                this.synth?.triggerAttackRelease(event.note, event.durationSeconds, time);
             },
-            events.map((event) => [event.time, event] as [number, PlaybackEvent]),
+            // Times are given explicitly in seconds so the schedule never depends
+            // on the transport's tempo.
+            events.map((event) => [`${event.time}s`, event] as [string, PlaybackEvent]),
         );
 
-        const finalEventTime = events.length > 0 ? events[events.length - 1].time + 0.25 : 0;
+        const last = events[events.length - 1];
+        const finalEventTime = last ? last.time + last.durationSeconds : 0;
         if (finalEventTime > 0) {
             Tone.Transport.scheduleOnce(() => {
                 this.callbacks.onPlaybackEnded?.();
-            }, finalEventTime);
+            }, `${finalEventTime}s`);
         }
 
         this.part.start(0);
-        Tone.Transport.bpm.value = document.tempo.beatsPerMinute;
         Tone.Transport.start('+0.05');
     }
 

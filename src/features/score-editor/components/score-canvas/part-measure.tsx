@@ -2,6 +2,14 @@ import type { EditorDocument } from '@/features/score-editor/adapters/editor-doc
 import { SlotButton } from '@/features/score-editor/components/score-canvas/slot-button';
 import type { EditorPosition } from '@/features/score-editor/state/editor-position';
 
+function beatSummary(notes: EditorDocument['measures'][number]['slots'][number]['notes']): string {
+    if (notes.length === 0) return ', empty';
+    const written = notes.map((note) =>
+        note.continuation ? 'continuation' : (note.syllable ?? 'rest'),
+    );
+    return `, ${written.join(' ')}`;
+}
+
 export function PartMeasure({
     measure,
     position,
@@ -21,7 +29,7 @@ export function PartMeasure({
                     slot={slot}
                     isActive={position.measureId === measure.id && position.slotIndex === slotIndex}
                     isPlaying={activeSlotId === slot.id}
-                    ariaLabel={`${measure.part}, measure ${measure.number}, position ${slotIndex + 1}${slot.syllable ? `, ${slot.syllable}` : ', empty'}`}
+                    ariaLabel={`${measure.part}, measure ${measure.number}, beat ${slotIndex + 1}${beatSummary(slot.notes)}`}
                     onSelect={() => onPositionChange({ measureId: measure.id, slotIndex })}
                 />
             ))}

@@ -6,6 +6,13 @@ export type TiptapNode = {
     content?: TiptapNode[];
 };
 
+/**
+ * Serialise the editor document for the hidden Tiptap capture surface.
+ *
+ * The shape mirrors the stored document — a masthead, measures, beats, and the
+ * notes inside each beat — so the editor schema and the store never drift
+ * apart.
+ */
 export function toTiptapJson(document: EditorDocument): TiptapNode {
     return {
         type: 'doc',
@@ -26,10 +33,17 @@ export function toTiptapJson(document: EditorDocument): TiptapNode {
                     attrs: {
                         id: slot.id,
                         noteValue: slot.noteValue,
-                        syllable: slot.syllable ?? null,
-                        continuation: slot.continuation ?? false,
-                        lyric: slot.lyric ?? null,
+                        division: slot.division,
                     },
+                    content: slot.notes.map((note) => ({
+                        type: 'note',
+                        attrs: {
+                            id: note.id,
+                            syllable: note.syllable ?? null,
+                            continuation: note.continuation ?? false,
+                            lyric: note.lyric ?? null,
+                        },
+                    })),
                 })),
             })),
         ],

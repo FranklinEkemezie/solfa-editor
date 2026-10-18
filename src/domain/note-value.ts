@@ -10,6 +10,17 @@ export enum NoteValue {
     SIXTY_FOURTH = 'SIXTY_FOURTH',
 }
 
+/** The note values from longest to shortest, used when dividing a beat. */
+export const NOTE_VALUE_ORDER: NoteValue[] = [
+    NoteValue.WHOLE,
+    NoteValue.HALF,
+    NoteValue.QUARTER,
+    NoteValue.EIGHTH,
+    NoteValue.SIXTEENTH,
+    NoteValue.THIRTY_SECOND,
+    NoteValue.SIXTY_FOURTH,
+];
+
 export const NOTE_VALUE_UNITS: Record<NoteValue, Fraction> = {
     [NoteValue.WHOLE]: fraction(4),
     [NoteValue.HALF]: fraction(2),

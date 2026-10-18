@@ -1,4 +1,5 @@
 import {
+    divideNoteValue,
     Duration,
     Measure,
     Note,
@@ -37,17 +38,22 @@ export function editorToDomain(document: EditorDocument): Score {
 
 function toDomainMeasure(measure: EditorMeasure): Measure {
     const events = measure.slots.flatMap((slot) => {
-        if (!slot.syllable) return [];
-        return [
-            new Note(
-                SOLFA_TO_PITCH[slot.syllable],
-                new Duration(slot.noteValue),
-                slot.syllable,
-                slot.continuation ?? false,
-                slot.lyric ?? '',
-            ),
-        ];
+        const duration = new Duration(divideNoteValue(slot.noteValue, slot.division));
+        return slot.notes.flatMap((note) =>
+            note.syllable
+                ? [
+                      new Note(
+                          SOLFA_TO_PITCH[note.syllable],
+                          duration,
+                          note.syllable,
+                          note.continuation ?? false,
+                          note.lyric ?? '',
+                      ),
+                  ]
+                : [],
+        );
     });
+
     return new Measure(
         new TimeSignature(measure.timeSignature.note, measure.timeSignature.count),
         events,

@@ -2,13 +2,14 @@ import { useCallback, type KeyboardEvent } from 'react';
 import type { ToastTone } from '@/components/feedback/toast-message';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { playErrorTone } from '@/features/score-editor/audio/play-error-tone';
-import { interpretInput } from '@/features/score-editor/editor/input-rules';
+import { interpretInput, type InputResult } from '@/features/score-editor/editor/input-rules';
 import { advanceCursor } from '@/features/score-editor/state/advance-cursor';
 import {
+    findMeasure,
     previousPosition,
     type EditorPosition,
 } from '@/features/score-editor/state/editor-position';
-import { clearSlot } from '@/features/score-editor/state/score-slot-commands';
+import { clearBeat, clearLastNote } from '@/features/score-editor/state/score-slot-commands';
 
 type ScoreKeyboardOptions = {
     document: EditorDocument;
@@ -23,9 +24,9 @@ type ScoreKeyboardOptions = {
 export type ScoreKeyboard = {
     /** Key handler for the physical keyboard, attached to the score canvas. */
     handleKeyDown: (event: KeyboardEvent) => void;
-    /** Apply a sol-fa input token (`.`, `,`, `-`, or a syllable) at the caret. */
+    /** Apply a complete sol-fa token (`.`, `,`, `-`, or a syllable) at the caret. */
     input: (token: string) => void;
-    /** Clear the caret's slot, stepping back a slot when it is already empty. */
+    /** Remove the last note of the caret's beat, stepping back a beat when it is empty. */
     backspace: () => void;
 };
 
@@ -38,29 +39,38 @@ export function useScoreKeyboard({
     redo,
     onMessage,
 }: ScoreKeyboardOptions): ScoreKeyboard {
-    const input = useCallback(
-        (token: string) => {
-            const result = interpretInput(document, position, token);
+    const apply = useCallback(
+        (result: InputResult) => {
             if (result.rejected) {
                 onMessage(result.rejected);
                 void playErrorTone();
                 return;
             }
-            commit(result.document, result.position);
+            if (result.document !== document) commit(result.document, result.position);
             if (result.status) onMessage(result.status, 'info');
         },
-        [commit, document, onMessage, position],
+        [commit, document, onMessage],
+    );
+
+    const input = useCallback(
+        (token: string) => {
+            apply(interpretInput(document, position, token));
+        },
+        [apply, document, position],
     );
 
     const backspace = useCallback(() => {
-        const currentSlot = document.measures.find((measure) => measure.id === position.measureId)
-            ?.slots[position.slotIndex];
-        if (currentSlot?.syllable) {
-            commit(clearSlot(document, position), position);
+        const beat = findMeasure(document, position.measureId)?.slots[position.slotIndex];
+        if (beat && beat.notes.length > 0) {
+            commit(clearLastNote(document, position), position);
             return;
         }
+
         const previous = previousPosition(document, position);
-        commit(clearSlot(document, previous), previous);
+        const previousBeat = findMeasure(document, previous.measureId)?.slots[previous.slotIndex];
+        if (previousBeat && previousBeat.notes.length > 0) {
+            commit(clearLastNote(document, previous), previous);
+        }
     }, [commit, document, position]);
 
     const handleKeyDown = useCallback(
@@ -97,15 +107,15 @@ export function useScoreKeyboard({
             }
             if (event.key === 'Delete') {
                 event.preventDefault();
-                commit(clearSlot(document, position), position);
+                commit(clearBeat(document, position), position);
                 return;
             }
 
             if (event.key.length !== 1) return;
             event.preventDefault();
-            input(event.key);
+            apply(interpretInput(document, position, event.key));
         },
-        [backspace, commit, document, input, moveTo, position, redo, undo],
+        [apply, backspace, commit, document, moveTo, position, redo, undo],
     );
 
     return { handleKeyDown, input, backspace };

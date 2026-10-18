@@ -9,7 +9,17 @@
 export { Letter } from '@/domain/letter';
 export { Accidental } from '@/domain/accidental';
 export { Mode } from '@/domain/mode';
-export { NoteValue, NOTE_VALUE_UNITS } from '@/domain/note-value';
+export { NoteValue, NOTE_VALUE_ORDER, NOTE_VALUE_UNITS } from '@/domain/note-value';
+export {
+    type BeatDivision,
+    BEAT_DIVISION_MARKS,
+    beatMarkBetween,
+    divisionForMark,
+    divisionForValues,
+    divideNoteValue,
+    isBeatDivision,
+    refineDivision,
+} from '@/domain/beat-division';
 export { type PartId, PARTS } from '@/domain/parts';
 export {
     type SolfaSyllable,

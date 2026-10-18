@@ -1,8 +1,9 @@
-import { NoteValue, PARTS } from '@/domain/music';
+import { PARTS } from '@/domain/music';
 import type {
     EditorDocument,
     EditorMeasure,
 } from '@/features/score-editor/adapters/editor-document-schema';
+import { emptyMeasure } from '@/features/score-editor/adapters/editor-factories';
 
 function sopranoMeasureNumbers(document: EditorDocument): number[] {
     return document.measures
@@ -12,16 +13,9 @@ function sopranoMeasureNumbers(document: EditorDocument): number[] {
 
 export function addMeasure(document: EditorDocument): EditorDocument {
     const nextNumber = Math.max(0, ...sopranoMeasureNumbers(document)) + 1;
-    const measures: EditorMeasure[] = PARTS.map((part) => ({
-        id: `${part.id}-${nextNumber}`,
-        part: part.id,
-        number: nextNumber,
-        timeSignature: document.timeSignature,
-        slots: Array.from({ length: document.timeSignature.count }, (_, index) => ({
-            id: `${part.id}-${nextNumber}-${index}`,
-            noteValue: NoteValue.QUARTER,
-        })),
-    }));
+    const measures: EditorMeasure[] = PARTS.map((part) =>
+        emptyMeasure(part.id, nextNumber, document.timeSignature),
+    );
     return { ...document, measures: [...document.measures, ...measures] };
 }
 
