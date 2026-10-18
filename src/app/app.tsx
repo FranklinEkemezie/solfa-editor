@@ -1,260 +1,70 @@
-import type { KeyboardEvent } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { type ToastMessage, ToastViewport } from '../components/feedback/toast';
-import { PrintScore } from '../features/pdf-export/print-score';
-import { exportScoreToPdf } from '../features/pdf-export/export-score';
-import { editorToDomain } from '../features/score-editor/adapters/editor-to-domain';
-import type { EditorDocument } from '../features/score-editor/adapters/editor-document-schema';
-import { toTiptapJson } from '../features/score-editor/adapters/editor-document-schema';
-import { createScoreEditor } from '../features/score-editor/editor/create-editor';
-import { createEmptyScore, NoteValue, TimeSignature } from '../domain/music';
-import { domainToEditor } from '../features/score-editor/adapters/domain-to-editor';
-import { interpretInput } from '../features/score-editor/editor/input-rules';
-import { ScoreCanvas } from '../features/score-editor/components/score-canvas';
-import { ScoreHeader } from '../features/score-editor/components/score-header';
-import { ScoreMetadata } from '../features/score-editor/components/score-metadata';
-import { ScoreToolbar } from '../features/score-editor/components/score-toolbar';
-import { useScoreStore } from '../features/score-editor/state/score-store';
-import {
-    advancePosition,
-    clearSlot,
-    type EditorPosition,
-    previousPosition,
-} from '../features/score-editor/state/score-commands';
-import { PlaybackControls } from '../features/playback/playback-controls';
-import { ScorePlayer } from '../features/playback/playback-service';
+import { useState } from 'react';
+import { ToastViewport } from '@/components/feedback/toast-viewport';
+import { useToasts } from '@/components/feedback/use-toasts';
+import { AppFooter } from '@/app/components/app-footer';
+import { AppHeader } from '@/app/components/app-header';
+import { MeasureCount } from '@/app/components/measure-count';
+import { MetadataPanel } from '@/app/components/metadata-panel';
+import { MetadataToggle } from '@/app/components/metadata-toggle';
+import { exportScoreToPdf } from '@/features/pdf-export/export-score';
+import { PrintScore } from '@/features/pdf-export/print-score';
+import { usePlayback } from '@/features/playback/hooks/use-playback';
+import { PlaybackControls } from '@/features/playback/playback-controls';
+import { ScoreCanvas } from '@/features/score-editor/components/score-canvas';
+import { ScoreHeader } from '@/features/score-editor/components/score-header';
+import { ScoreToolbar } from '@/features/score-editor/components/score-toolbar';
+import { useCommit } from '@/features/score-editor/hooks/use-commit';
+import { useMetadataEditing } from '@/features/score-editor/hooks/use-metadata-editing';
+import { useScoreEditor } from '@/features/score-editor/hooks/use-score-editor';
+import { useScoreKeyboard } from '@/features/score-editor/hooks/use-score-keyboard';
+import { useScoreStore } from '@/features/score-editor/state/score-store';
 
 export function App() {
     const store = useScoreStore();
-    const [toasts, setToasts] = useState<ToastMessage[]>([]);
+    const { toasts, addToast, dismiss } = useToasts();
     const [isMetadataOpen, setMetadataOpen] = useState(true);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [activeSopranoSlotId, setActiveSopranoSlotId] = useState<string | null>(null);
-    const playerRef = useRef<ScorePlayer | null>(null);
-    const [editor] = useState(() =>
-        createScoreEditor(toTiptapJson(domainToEditor(createEmptyScore()))),
-    );
 
-    const addToast = useCallback((message: string, tone: ToastMessage['tone'] = 'warning') => {
-        setToasts((current) => {
-            if (current.some((toast) => toast.message === message)) return current;
-            return [...current.slice(-2), { id: Date.now(), tone, message }];
-        });
-    }, []);
+    const editor = useScoreEditor(store.document);
+    const commit = useCommit(store, addToast);
+    const changeMetadata = useMetadataEditing(store, commit);
+    const { isPlaying, activeSlotId, toggle, stop } = usePlayback(store.document, addToast);
 
-    const syncEditor = useCallback(
-        (document: EditorDocument) => {
-            if (!editor) return;
-            // Tiptap typings expect an options object; omit the second arg for compatibility.
-            editor.commands.setContent(toTiptapJson(document));
-        },
-        [editor],
-    );
-
-    useEffect(() => syncEditor(store.document), [store.document, syncEditor]);
-
-    useEffect(() => {
-        playerRef.current?.stop();
-        setIsPlaying(false);
-        setActiveSopranoSlotId(null);
-        return () => {
-            playerRef.current?.dispose();
-            playerRef.current = null;
-        };
-    }, []);
-
-    const commit = useCallback(
-        (document: EditorDocument, position?: EditorPosition) => {
-            try {
-                editorToDomain(document);
-                store.commit(document, position);
-            } catch (error) {
-                addToast(
-                    error instanceof Error
-                        ? error.message
-                        : 'That edit would make the score invalid.',
-                );
-            }
-        },
-        [addToast, store],
-    );
-
-    const handlePlaybackToggle = useCallback(async () => {
-        if (isPlaying) {
-            playerRef.current?.stop();
-            setIsPlaying(false);
-            setActiveSopranoSlotId(null);
-            return;
-        }
-
-        if (!playerRef.current) {
-            playerRef.current = new ScorePlayer();
-        }
-
-        try {
-            const player = playerRef.current;
-            await player.start(store.document, {
-                onNoteStart: (event) => {
-                    if (event.part === 'soprano') {
-                        setActiveSopranoSlotId(event.slotId ?? null);
-                    }
-                },
-                onPlaybackEnded: () => {
-                    setIsPlaying(false);
-                    setActiveSopranoSlotId(null);
-                },
-            });
-            setIsPlaying(true);
-        } catch (error) {
-            addToast(error instanceof Error ? error.message : 'Playback could not start.');
-        }
-    }, [addToast, isPlaying, store.document]);
-
-    const handlePlaybackStop = useCallback(() => {
-        playerRef.current?.stop();
-        setIsPlaying(false);
-        setActiveSopranoSlotId(null);
-    }, []);
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.metaKey || event.ctrlKey) {
-            if (event.key.toLowerCase() === 'z') {
-                event.preventDefault();
-                if (event.shiftKey) store.redo();
-                else store.undo();
-            }
-            if (event.key.toLowerCase() === 'y') {
-                event.preventDefault();
-                store.redo();
-            }
-            return;
-        }
-
-        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-            event.preventDefault();
-            store.commit(store.document, advancePosition(store.document, store.position));
-            return;
-        }
-        if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-            event.preventDefault();
-            store.commit(store.document, previousPosition(store.document, store.position));
-            return;
-        }
-        if (event.key === 'Backspace') {
-            event.preventDefault();
-            const currentSlot = store.document.measures.find(
-                (measure) => measure.id === store.position.measureId,
-            )?.slots[store.position.slotIndex];
-            if (currentSlot?.syllable) {
-                commit(clearSlot(store.document, store.position), store.position);
-            } else {
-                const previous = previousPosition(store.document, store.position);
-                commit(clearSlot(store.document, previous), previous);
-            }
-            return;
-        }
-        if (event.key === 'Delete') {
-            event.preventDefault();
-            commit(clearSlot(store.document, store.position), store.position);
-            return;
-        }
-        if (event.key.length !== 1) return;
-
-        event.preventDefault();
-        const result = interpretInput(store.document, store.position, event.key);
-        if (result.rejected) {
-            addToast(result.rejected);
-            void playErrorTone();
-            return;
-        }
-        commit(result.document, result.position);
-        if (result.status) addToast(result.status, 'info');
-    };
-
-    const changeMetadata = (document: EditorDocument) => {
-        const timeChanged =
-            document.timeSignature.count !== store.document.timeSignature.count ||
-            document.timeSignature.note !== store.document.timeSignature.note;
-        if (timeChanged) {
-            const slotsPerMeasure =
-                document.timeSignature.note === NoteValue.EIGHTH
-                    ? document.timeSignature.count
-                    : document.timeSignature.count;
-            document = {
-                ...document,
-                measures: document.measures.map((measure) => ({
-                    ...measure,
-                    timeSignature: new TimeSignature(
-                        document.timeSignature.note,
-                        document.timeSignature.count,
-                    ),
-                    slots:
-                        measure.slots.length === slotsPerMeasure
-                            ? measure.slots
-                            : Array.from(
-                                  { length: slotsPerMeasure },
-                                  (_, index) =>
-                                      measure.slots[index] ?? {
-                                          id: `${measure.part}-${measure.number}-${index}`,
-                                          noteValue:
-                                              document.timeSignature.note === NoteValue.EIGHTH
-                                                  ? NoteValue.EIGHTH
-                                                  : NoteValue.QUARTER,
-                                      },
-                              ),
-                })),
-            };
-        }
-        commit(document, store.position);
-    };
+    const handleKeyDown = useScoreKeyboard({
+        document: store.document,
+        position: store.position,
+        commit,
+        moveTo: (position) => store.commit(store.document, position),
+        undo: store.undo,
+        redo: store.redo,
+        onMessage: addToast,
+    });
 
     const printResult = () => {
         const result = exportScoreToPdf(store.document);
         if (!result.ok) addToast(result.message);
     };
 
-    const measureCount = useMemo(
-        () =>
-            new Set(
-                store.document.measures
-                    .filter((measure) => measure.part === 'soprano')
-                    .map((measure) => measure.number),
-            ).size,
-        [store.document],
-    );
+    const removeMeasure = () => {
+        if (!store.removeMeasure()) addToast('Keep at least one measure in the score.');
+    };
 
     return (
         <>
             <div className="min-h-screen">
-                <header className="flex items-center border-b border-line h-16 justify-between px-6 md:px-20">
-                    <div className="flex items-baseline text-ink font-serif text-2xl gap-1">
-                        <span className="text-green text-3xl leading-none -rotate-6">∿</span>
-                        <span>solfa</span>
-                    </div>
-                </header>
+                <AppHeader />
                 <main className="mx-auto max-w-[1260px] px-6 md:px-20 py-10">
                     <div className="flex items-center justify-between gap-4">
                         <ScoreHeader document={store.document} />
-                        <button
-                            type="button"
-                            className="inline-flex items-center gap-2 border border-line rounded-full text-green-dark px-3 h-9"
-                            onClick={() => setMetadataOpen((open) => !open)}
-                            aria-label={
-                                isMetadataOpen ? 'Hide score details' : 'Show score details'
-                            }
-                        >
-                            {isMetadataOpen ? (
-                                <PanelLeftClose size={16} strokeWidth={2} />
-                            ) : (
-                                <PanelLeftOpen size={16} strokeWidth={2} />
-                            )}
-                            <span>{isMetadataOpen ? 'Hide' : 'Details'}</span>
-                        </button>
+                        <MetadataToggle
+                            isOpen={isMetadataOpen}
+                            onToggle={() => setMetadataOpen((open) => !open)}
+                        />
                     </div>
-                        <div className={`transition-all duration-300 ${isMetadataOpen ? 'max-h-[1400px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`} aria-hidden={!isMetadataOpen}>
-                            <ScoreMetadata document={store.document} onChange={changeMetadata} />
-                        </div>
+                    <MetadataPanel
+                        isOpen={isMetadataOpen}
+                        document={store.document}
+                        onChange={changeMetadata}
+                    />
                     <div className="flex items-center justify-between my-5">
                         <ScoreToolbar
                             canUndo={store.canUndo}
@@ -262,66 +72,29 @@ export function App() {
                             onUndo={store.undo}
                             onRedo={store.redo}
                             onAddMeasure={store.addMeasure}
-                            onRemoveMeasure={() => {
-                                if (!store.removeMeasure())
-                                    addToast('Keep at least one measure in the score.');
-                            }}
+                            onRemoveMeasure={removeMeasure}
                             onExport={printResult}
                         />
                         <PlaybackControls
                             isPlaying={isPlaying}
-                            onPlayPause={handlePlaybackToggle}
-                            onStop={handlePlaybackStop}
+                            onPlayPause={toggle}
+                            onStop={stop}
                         />
                     </div>
-                    {editor ? (
-                        <ScoreCanvas
-                            document={store.document}
-                            position={store.position}
-                            editor={editor}
-                            onPositionChange={(next) => store.commit(store.document, next)}
-                            onKeyDown={handleKeyDown}
-                            activeSlotId={activeSopranoSlotId}
-                        />
-                    ) : null}
-                    <div className="flex justify-center mt-2">
-                        <span className="text-sm text-muted uppercase tracking-wide">
-                            {measureCount} {measureCount === 1 ? 'measure' : 'measures'} · SATB
-                        </span>
-                    </div>
+                    <ScoreCanvas
+                        document={store.document}
+                        position={store.position}
+                        editor={editor}
+                        onPositionChange={(next) => store.commit(store.document, next)}
+                        onKeyDown={handleKeyDown}
+                        activeSlotId={activeSlotId}
+                    />
+                    <MeasureCount document={store.document} />
                 </main>
-                <footer className="flex items-center text-muted text-sm gap-2 justify-center uppercase py-3">
-                    <span>Sheet music</span>
-                    <span>·</span>
-                    <span>Keyboard editing</span>
-                </footer>
+                <AppFooter />
             </div>
             <PrintScore document={store.document} />
-            <ToastViewport
-                messages={toasts}
-                dismiss={(id) => setToasts((current) => current.filter((toast) => toast.id !== id))}
-            />
+            <ToastViewport messages={toasts} dismiss={dismiss} />
         </>
     );
-}
-
-async function playErrorTone(): Promise<void> {
-    try {
-        const AudioContextConstructor =
-            window.AudioContext ??
-            (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        if (!AudioContextConstructor) return;
-        const context = new AudioContextConstructor();
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.frequency.value = 170;
-        gain.gain.setValueAtTime(0.025, context.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.08);
-        oscillator.connect(gain).connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.08);
-        window.setTimeout(() => void context.close(), 150);
-    } catch {
-        // Audio feedback is optional and can be blocked by browser policy.
-    }
 }
