@@ -1,36 +1,9 @@
-import { Editor, type JSONContent, Node } from '@tiptap/core';
-import Document from '@tiptap/extension-document';
+import { Editor, type JSONContent } from '@tiptap/core';
 import History from '@tiptap/extension-history';
 import Text from '@tiptap/extension-text';
-
-const SolfaDocument = Document.extend({
-    content: 'measure*',
-});
-
-const MeasureNode = Node.create({
-    name: 'measure',
-    group: 'block',
-    content: 'slot*',
-    defining: true,
-    parseHTML: () => [{ tag: 'div[data-solfa-measure]' }],
-    renderHTML: ({ HTMLAttributes }) => ['div', { ...HTMLAttributes, 'data-solfa-measure': '' }, 0],
-});
-
-const SlotNode = Node.create({
-    name: 'slot',
-    group: 'inline',
-    inline: true,
-    atom: true,
-    selectable: false,
-    addAttributes: () => ({
-        id: { default: '' },
-        noteValue: { default: 'QUARTER' },
-        syllable: { default: null },
-        continuation: { default: false },
-    }),
-    parseHTML: () => [{ tag: 'span[data-solfa-slot]' }],
-    renderHTML: ({ HTMLAttributes }) => ['span', { ...HTMLAttributes, 'data-solfa-slot': '' }],
-});
+import { MeasureNode } from '@/features/score-editor/editor/extensions/measure-node';
+import { SlotNode } from '@/features/score-editor/editor/extensions/slot-node';
+import { SolfaDocument } from '@/features/score-editor/editor/extensions/solfa-document';
 
 export function createScoreEditor(content: JSONContent): Editor {
     return new Editor({
