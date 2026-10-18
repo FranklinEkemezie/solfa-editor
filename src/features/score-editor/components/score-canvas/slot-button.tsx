@@ -16,7 +16,7 @@ export function SlotButton({
     return (
         <button
             type="button"
-            className={`group relative flex h-10 min-w-[38px] flex-1 items-center justify-center rounded-lg border-0 bg-transparent text-[#aab4ab] focus:outline-none ${slot.syllable ? 'text-ink' : 'text-[#c0c8c1]'}`}
+            className={`group relative flex h-10 min-w-[38px] flex-1 items-center justify-center rounded-lg border-0 bg-transparent text-faint focus:outline-none ${slot.syllable ? 'text-ink' : 'text-ghost'}`}
             onClick={(event) => {
                 event.stopPropagation();
                 onSelect();
@@ -27,7 +27,7 @@ export function SlotButton({
                 {slot.continuation ? '—' : (slot.syllable ?? ' ')}
             </span>
             {slot.lyric ? (
-                <span className="absolute -bottom-3 text-[10px] font-bold uppercase tracking-[0.08em] text-[#4f5f58]">
+                <span className="absolute -bottom-3 text-[10px] font-bold uppercase tracking-[0.08em] text-ink-muted">
                     {slot.lyric}
                 </span>
             ) : null}
@@ -40,7 +40,7 @@ export function SlotButton({
                 :
             </span>
             {isActive || isPlaying ? (
-                <span className="absolute bottom-2 w-2/4 h-2 border-b-2 border-1.5 border-green-dark animate-pulse" />
+                <span className="absolute bottom-2 w-2/4 h-2 border-b-2 border-green-dark animate-pulse" />
             ) : null}
         </button>
     );

@@ -33,7 +33,7 @@ export function ScoreCanvas({
 
     return (
         <section
-            className="overflow-hidden rounded-xl border border-line bg-paper shadow-[0_8px_18px_rgba(48,70,55,0.05)]"
+            className="overflow-hidden rounded-xl border border-line bg-paper shadow-panel"
             aria-label="SATB score editor"
         >
             <div

@@ -8,7 +8,7 @@ export function MeasureHeadings({ measures }: { measures: MeasureLayout[] }) {
                 {measures.map((measure) => (
                     <div
                         key={measure.measureId}
-                        className="px-3 pb-2 text-right text-[10px] uppercase tracking-[0.08em] text-[#9aa69c]"
+                        className="px-3 pb-2 text-right text-[10px] uppercase tracking-[0.08em] text-faint"
                         style={{ width: measure.width }}
                     >
                         {measure.number}

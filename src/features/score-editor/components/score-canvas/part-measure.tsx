@@ -14,7 +14,7 @@ export function PartMeasure({
     activeSlotId?: string | null;
 }) {
     return (
-        <div className="flex h-[52px] items-center border-b border-[#e5e9e4] px-2 last:border-b-0">
+        <div className="flex h-[52px] items-center border-b border-line-soft px-2 last:border-b-0">
             {measure.slots.map((slot, slotIndex) => (
                 <SlotButton
                     key={slot.id}

@@ -22,8 +22,8 @@ export function MeasureColumn({
     activeSlotId?: string | null;
 }) {
     const columnClasses = [
-        'relative border-l border-r border-[#87988c] bg-[linear-gradient(180deg,rgba(93,130,109,0.03),rgba(93,130,109,0.01))]',
-        isLast ? 'border-r-[3px] border-r-[#52695a]' : '',
+        'relative border-l border-r border-muted bg-linear-to-b from-green/3 to-green/1',
+        isLast ? 'border-r-[3px] border-r-ink-muted' : '',
         isFirst ? '' : 'border-l-0',
     ]
         .filter(Boolean)
