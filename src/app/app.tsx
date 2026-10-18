@@ -1,18 +1,18 @@
+import { useRef, useState } from 'react';
 import { ToastViewport } from '@/components/feedback/toast-viewport';
 import { useToasts } from '@/components/feedback/use-toasts';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AppFooter } from '@/app/components/app-footer';
 import { AppHeader } from '@/app/components/app-header';
-import { MeasureCount } from '@/app/components/measure-count';
+import { ToolRail } from '@/app/components/tool-rail';
+import { buildScoreToolGroups } from '@/app/score-tools';
 import { exportScoreToPdf } from '@/features/pdf-export/export-score';
 import { PrintScore } from '@/features/pdf-export/print-score';
 import { usePlayback } from '@/features/playback/hooks/use-playback';
 import { PlaybackControls } from '@/features/playback/playback-controls';
+import { OnScreenKeyboard } from '@/features/score-editor/components/on-screen-keyboard';
 import { ScoreCanvas } from '@/features/score-editor/components/score-canvas';
 import { ScoreHeader } from '@/features/score-editor/components/score-header';
-import { ScoreStage } from '@/features/score-editor/components/score-stage';
-import { ScoreToolbar } from '@/features/score-editor/components/score-toolbar';
-import { OnScreenKeyboard } from '@/features/score-editor/components/on-screen-keyboard';
+import { ScoreStage, type ScoreStageHandle } from '@/features/score-editor/components/score-stage';
 import { useCommit } from '@/features/score-editor/hooks/use-commit';
 import { useMetadataEditing } from '@/features/score-editor/hooks/use-metadata-editing';
 import { useScoreEditor } from '@/features/score-editor/hooks/use-score-editor';
@@ -22,6 +22,9 @@ import { useScoreStore } from '@/features/score-editor/state/score-store';
 export function App() {
     const store = useScoreStore();
     const { toasts, addToast, dismiss } = useToasts();
+    const stage = useRef<ScoreStageHandle>(null);
+    const [scale, setScale] = useState(1);
+    const [toolsOpen, setToolsOpen] = useState(true);
 
     const editor = useScoreEditor(store.document);
     const commit = useCommit(store, addToast);
@@ -47,29 +50,36 @@ export function App() {
         if (!store.removeMeasure()) addToast('Keep at least one measure in the score.');
     };
 
+    const tools = buildScoreToolGroups({
+        canUndo: store.canUndo,
+        canRedo: store.canRedo,
+        onUndo: store.undo,
+        onRedo: store.redo,
+        onAddMeasure: store.addMeasure,
+        onRemoveMeasure: removeMeasure,
+        onExport: printResult,
+        onZoomIn: () => stage.current?.zoomIn(),
+        onZoomOut: () => stage.current?.zoomOut(),
+        onFitPage: () => stage.current?.fitToPage(),
+        onActualSize: () => stage.current?.actualSize(),
+        zoomPercent: Math.round(scale * 100),
+    });
+
     return (
         <TooltipProvider delayDuration={200}>
-            <div className="app-shell min-h-screen overflow-x-clip">
-                <AppHeader />
-                <main className="mx-auto max-w-[1260px] px-4 py-6 sm:px-6 sm:py-10 md:px-20">
-                    <div className="my-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <ScoreToolbar
-                            canUndo={store.canUndo}
-                            canRedo={store.canRedo}
-                            onUndo={store.undo}
-                            onRedo={store.redo}
-                            onAddMeasure={store.addMeasure}
-                            onRemoveMeasure={removeMeasure}
-                            onExport={printResult}
-                        />
+            <div className="app-shell flex h-dvh flex-col overflow-hidden">
+                <AppHeader
+                    actions={
                         <PlaybackControls
                             isPlaying={isPlaying}
                             onPlayPause={toggle}
                             onStop={stop}
                         />
-                    </div>
-                    <div className="h-[74vh] min-h-[420px] overflow-hidden rounded-2xl border border-line">
-                        <ScoreStage>
+                    }
+                />
+                <div className="relative flex min-h-0 flex-1">
+                    <main className="min-w-0 flex-1">
+                        <ScoreStage ref={stage} onScaleChange={setScale}>
                             <ScoreCanvas
                                 document={store.document}
                                 position={store.position}
@@ -85,11 +95,14 @@ export function App() {
                                 activeSlotId={activeSlotId}
                             />
                         </ScoreStage>
-                    </div>
-                    <MeasureCount document={store.document} />
-                    <OnScreenKeyboard onInput={keyboard.input} onBackspace={keyboard.backspace} />
-                </main>
-                <AppFooter />
+                    </main>
+                    <ToolRail
+                        groups={tools}
+                        open={toolsOpen}
+                        onToggle={() => setToolsOpen((open) => !open)}
+                    />
+                </div>
+                <OnScreenKeyboard onInput={keyboard.input} onBackspace={keyboard.backspace} />
             </div>
             <PrintScore document={store.document} />
             <ToastViewport messages={toasts} dismiss={dismiss} />

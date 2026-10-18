@@ -11,7 +11,7 @@ export function PlaybackControls({
     onStop: () => void;
 }) {
     return (
-        <div className="flex items-center gap-2">
+        <>
             <IconButton
                 label={isPlaying ? 'Pause' : 'Play'}
                 variant="ghost"
@@ -29,6 +29,6 @@ export function PlaybackControls({
                 <Square size={14} strokeWidth={2} />
                 <span className="hidden sm:inline">Stop</span>
             </IconButton>
-        </div>
+        </>
     );
 }

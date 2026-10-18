@@ -77,7 +77,7 @@ export function OnScreenKeyboard({
     return (
         <section
             aria-label="On-screen sol-fa keyboard"
-            className="sticky bottom-0 z-30 mt-6 -mx-4 border-t border-line bg-paper/95 px-3 pb-3 pt-2.5 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:px-4 sm:shadow-panel lg:hidden"
+            className="z-30 flex-none border-t border-line bg-paper/95 px-3 pb-3 pt-2.5 backdrop-blur lg:hidden"
         >
             <div className="grid grid-cols-7 gap-1.5">
                 {NATURAL_SOLFA_SYLLABLES.map((syllable) => (
