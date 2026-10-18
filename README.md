@@ -14,10 +14,31 @@ and presentation-specific concerns.
   It is docked on small screens and hidden from the `lg` breakpoint up, where the
   hardware keyboard can already type every syllable.
 - Rhythmic subdivision with dots and commas, plus `-` for continuations
-- Inline editing of the title, composer, key, time signature, and tempo straight from the score masthead
+- Inline editing of the title, subtitle, composer, key, time signature, and tempo straight from the score
+  masthead
 - Automatic score growth: reaching the last slot of the last measure appends a new one
-- Score layout and printable PDF-style output
+- Real A4 sheets, panned and zoomed on a canvas. A score too tall for one page breaks across as many
+  sheets as it needs, the way a score is read, instead of scrolling like a web page
+- A tool rail down the right for undo and redo, adding and removing measures, zooming, and printing.
+  Every control is an icon with a tooltip, and the rail can be put away to give the score the whole
+  window
+- Playback that sounds the score in its own key and at its own tempo
+- Score layout and printable PDF-style output that share the same page breaks
 - Structured domain model that mirrors the UML's concepts for notes, pitch, measure, score, and durations
+
+## Opening with a sample score
+
+The editor opens on the score named in `src/features/score-editor/presets/index.ts`:
+
+```ts
+export const ACTIVE_PRESET: ScorePreset | null = hallelujahChorus;
+```
+
+Presets are written in the app's own tonic sol-fa text notation and parsed by
+`presets/score-preset.ts`, so a score can be typed in, swapped, or dropped without touching a
+component. Comment that one line out to start from the empty default — an untitled score with two
+silent measures — or name another preset (`gloriaJudeNnam` ships alongside the default for exactly
+that) to open on that one instead. `presets/score-preset.ts` documents the notation.
 
 ## Architecture and design decisions
 
@@ -63,9 +84,15 @@ This ensures the music domain does not depend on Tiptap or React.
 
 ### Presentation boundary
 
-The rendering layer (`components/score-canvas.tsx`, `layout/calculate-score-layout.ts`, `print-score.tsx`) is
-responsible for layout decisions and the on-screen visual structure. Domain calculations remain in the domain layer and
-are reused by editor validation and export code.
+The rendering layer decides where the music falls and how it is looked at, and nothing else does.
+`layout/page-geometry.ts` holds the sheet's measurements — A4 at 96 pixels to the inch, its margin, its
+rows — `layout/score-layout.ts` turns a document into pages, systems and measures, and
+`components/score-canvas/` draws them. `components/score-stage.tsx` carries the pan and zoom around
+those pages. Domain calculations remain in the domain layer and are reused by editor validation and
+export code.
+
+Because there is one layout and two consumers, the printed sheet is the page that was on screen: the
+printer prints the editor's pages, system for system and measure for measure.
 
 ### Notable implementation decisions
 
@@ -91,8 +118,29 @@ are reused by editor validation and export code.
   quarter notes, then converts once into seconds, so a note's length never
   depends on how its duration is spelled. Continuations prolong the note before
   them instead of sounding it again.
-- PDF output is implemented as a browser print flow with a print-specific stylesheet; this is a sensible prototype
-  approach without introducing a large PDF engine.
+- Playback also follows the score's key as moveable doh. Every syllable is written as though doh were
+  C, so the sounding pitch is the written pitch shifted by the key's tonic — the shift is applied to
+  the notes handed to Tone.js, never written back into the notation, which keeps it off the render
+  path.
+- The score is laid out as real sheets: one uniform measure width for the whole score (the widest
+  beat anywhere in it), never justified to fill the page, so bars stay as narrow as the music needs
+  and the beats of one system line up with every other. Measures per system and systems per page come
+  out of `layout/score-layout.ts`.
+- The sheet is a real A4 page, so the canvas pans and zooms the pages instead of scrolling them.
+  `react-zoom-pan-pinch` provides those gestures; it is wrapped in `components/score-stage.tsx` so no
+  other module imports it and the library stays replaceable.
+- PDF output is implemented as a browser print flow with a print-specific stylesheet; this is a
+  sensible prototype approach without introducing a large PDF engine. Paged.js is not used: pagination
+  is already decided by the layout module, and all the print stylesheet has to add is that each of the
+  editor's pages starts a fresh sheet and that a system is never split across two.
+- The printed page box is the editor's page box — A4 with a 64px margin, which is A4 with a 16.93mm
+  margin — so the printable width is the width the layout was measured against.
+- The printed sheet carries no colour: ink, hairlines and barlines only. The subdivision marks (`.`,
+  `,`) and the colon that closes a beat are notation rather than decoration, so they are set at the
+  note's own size, colour and mono face.
+- The app is a fixed workspace rather than a document: the header carries the app name and playback,
+  the tool rail carries the commands, and the score fills what is left, so the page never scrolls
+  under the score. `app/score-tools.tsx` decides which commands the rail offers.
 
 ## Prerequisites
 
@@ -159,6 +207,9 @@ src/
 │   ├── pdf-export/             # Print / PDF export
 │   ├── playback/               # Tone.js audio playback
 │   └── score-editor/           # Tiptap editor, adapters, and UI
+│       ├── components/         # Sheets, stage, keyboard, masthead
+│       ├── layout/             # Page geometry and pagination
+│       └── presets/            # Sample scores and their notation parser
 └── styles/                     # Global CSS and Tailwind entry
 ```
 
