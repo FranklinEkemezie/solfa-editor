@@ -1,8 +1,9 @@
-import { useCallback, type KeyboardEvent } from 'react';
+import { useCallback, useRef, type KeyboardEvent } from 'react';
 import type { ToastTone } from '@/components/feedback/toast-message';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { playErrorTone } from '@/features/score-editor/audio/play-error-tone';
 import { interpretInput, type InputResult } from '@/features/score-editor/editor/input-rules';
+import { composeKey, type PendingSyllable } from '@/features/score-editor/editor/syllable-input';
 import { advanceCursor } from '@/features/score-editor/state/advance-cursor';
 import {
     findMeasure,
@@ -39,6 +40,10 @@ export function useScoreKeyboard({
     redo,
     onMessage,
 }: ScoreKeyboardOptions): ScoreKeyboard {
+    // A first letter that only becomes a syllable once its second letter
+    // arrives (`b` → `ba`). Reset whenever the caret moves or the edit fails.
+    const pending = useRef<PendingSyllable>(null);
+
     const apply = useCallback(
         (result: InputResult) => {
             if (result.rejected) {
@@ -54,12 +59,14 @@ export function useScoreKeyboard({
 
     const input = useCallback(
         (token: string) => {
+            pending.current = null;
             apply(interpretInput(document, position, token));
         },
         [apply, document, position],
     );
 
     const backspace = useCallback(() => {
+        pending.current = null;
         const beat = findMeasure(document, position.measureId)?.slots[position.slotIndex];
         if (beat && beat.notes.length > 0) {
             commit(clearLastNote(document, position), position);
@@ -76,6 +83,7 @@ export function useScoreKeyboard({
     const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
             if (event.metaKey || event.ctrlKey) {
+                pending.current = null;
                 if (event.key.toLowerCase() === 'z') {
                     event.preventDefault();
                     if (event.shiftKey) redo();
@@ -90,6 +98,7 @@ export function useScoreKeyboard({
 
             if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
                 event.preventDefault();
+                pending.current = null;
                 const step = advanceCursor(document, position);
                 if (step.document !== document) commit(step.document, step.position);
                 else moveTo(step.position);
@@ -97,6 +106,7 @@ export function useScoreKeyboard({
             }
             if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
                 event.preventDefault();
+                pending.current = null;
                 moveTo(previousPosition(document, position));
                 return;
             }
@@ -107,13 +117,16 @@ export function useScoreKeyboard({
             }
             if (event.key === 'Delete') {
                 event.preventDefault();
+                pending.current = null;
                 commit(clearBeat(document, position), position);
                 return;
             }
 
             if (event.key.length !== 1) return;
             event.preventDefault();
-            apply(interpretInput(document, position, event.key));
+            const result = composeKey(document, position, pending.current, event.key);
+            pending.current = result.pending;
+            apply(result);
         },
         [apply, backspace, commit, document, moveTo, position, redo, undo],
     );

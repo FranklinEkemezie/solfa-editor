@@ -63,7 +63,9 @@ function KeyboardKey({
  *
  * It carries the full syllable vocabulary (diatonic and chromatic) plus the
  * rhythmic and editing keys that the physical keyboard otherwise provides, so
- * the whole editor is usable on a device without a hardware keyboard.
+ * the whole editor is usable on a device without a hardware keyboard. On a
+ * desktop the physical keyboard types every syllable, including the chromatic
+ * ones, so the dock is hidden from the `lg` breakpoint up.
  */
 export function OnScreenKeyboard({
     onInput,
@@ -75,7 +77,7 @@ export function OnScreenKeyboard({
     return (
         <section
             aria-label="On-screen sol-fa keyboard"
-            className="sticky bottom-0 z-30 mt-6 -mx-4 border-t border-line bg-paper/95 px-3 pb-3 pt-2.5 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:px-4 sm:shadow-panel"
+            className="sticky bottom-0 z-30 mt-6 -mx-4 border-t border-line bg-paper/95 px-3 pb-3 pt-2.5 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:px-4 sm:shadow-panel lg:hidden"
         >
             <div className="grid grid-cols-7 gap-1.5">
                 {NATURAL_SOLFA_SYLLABLES.map((syllable) => (
@@ -105,16 +107,16 @@ export function OnScreenKeyboard({
             </div>
             <div className="mt-1.5 grid grid-cols-4 gap-1.5">
                 <KeyboardKey
-                    label="Half-length note"
-                    tooltip="Halve the note value (.)"
+                    label="Dot — divide the beat in two"
+                    tooltip="Divide this beat in two (.)"
                     onPress={() => onInput('.')}
                     className="h-11 text-lg font-semibold"
                 >
                     .
                 </KeyboardKey>
                 <KeyboardKey
-                    label="Quarter-note value"
-                    tooltip="Reset the note value (,)"
+                    label="Comma — divide the beat in four"
+                    tooltip="Divide this beat in four (,)"
                     onPress={() => onInput(',')}
                     className="h-11 text-lg font-semibold"
                 >
