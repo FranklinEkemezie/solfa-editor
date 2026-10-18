@@ -1,3 +1,14 @@
+/**
+ * The printed score.
+ *
+ * The sheet is hidden on screen and shown only while the browser is printing,
+ * when the app is taken out of the way altogether.
+ *
+ * The page box is the same box the editor draws: A4 with a 64px margin, which
+ * is 16.93mm, so the printable width is the width the layout was measured
+ * against and a system breaks where it did on screen. Everything else here is
+ * about not splitting a system across two sheets.
+ */
 .print-sheet {
     color: var(--color-ink);
     display: none;
@@ -8,7 +19,7 @@
 @media print {
     @page {
         size: A4 portrait;
-        margin: 14mm 15mm 16mm;
+        margin: 64px;
     }
 
     body.print-mode {
@@ -22,8 +33,11 @@
 
     body.print-mode .print-sheet {
         display: block;
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
+    }
+
+    /* Every sheet after the first starts a fresh page of paper. */
+    .print-page + .print-page {
+        break-before: page;
     }
 
     /* Keep a system and each of its part rows whole on one page. */
