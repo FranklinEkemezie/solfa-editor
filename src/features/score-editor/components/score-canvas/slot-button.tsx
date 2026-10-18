@@ -17,7 +17,7 @@ export function SlotButton({
     return (
         <button
             type="button"
-            className={`group relative flex h-10 min-w-[38px] flex-1 items-center justify-center rounded-lg border-0 bg-transparent font-mono text-[1.2rem] font-normal leading-none focus:outline-none ${slot.notes.length > 0 ? 'text-ink' : 'text-ghost'}`}
+            className={`group relative flex h-10 min-w-[32px] flex-1 items-center justify-center rounded-lg border-0 bg-transparent font-mono text-[1rem] font-normal leading-none focus:outline-none ${slot.notes.length > 0 ? 'text-ink' : 'text-ghost'}`}
             onClick={(event) => {
                 event.stopPropagation();
                 onSelect();
@@ -28,7 +28,7 @@ export function SlotButton({
                 slot.notes.map((note, index) => (
                     <span key={note.id} className="flex items-baseline">
                         {index > 0 ? (
-                            <span aria-hidden="true" className="px-[1px] text-ink-muted">
+                            <span aria-hidden="true" className="px-[1px] text-[0.72em] text-faint">
                                 {beatMarkBetween(slot.division, index - 1)}
                             </span>
                         ) : null}
@@ -47,7 +47,7 @@ export function SlotButton({
             ) : (
                 <span aria-hidden="true"> </span>
             )}
-            <span className="group-last:hidden absolute right-[-2px] top-1/2 z-[2] inline-block -translate-y-1/2 text-[1.2rem] leading-none text-ink">
+            <span className="group-last:hidden absolute right-[-2px] top-1/2 z-[2] inline-block -translate-y-1/2 text-[1rem] leading-none text-faint">
                 :
             </span>
             {isActive || isPlaying ? (

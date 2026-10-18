@@ -17,6 +17,8 @@ export type ScoreLayout = {
 
 const MINIMUM_MEASURE_WIDTH = 156;
 const SLOT_WIDTH = 46;
+/** Extra room each subdivision mark needs inside a beat. */
+const SUBDIVISION_MARK_WIDTH = 8;
 
 export function calculateScoreLayout(document: EditorDocument): ScoreLayout {
     const measures = document.measures
@@ -29,11 +31,25 @@ export function calculateScoreLayout(document: EditorDocument): ScoreLayout {
     };
 }
 
+/**
+ * The beats of a measure share its width evenly, which is what keeps the four
+ * parts lined up beat for beat. So every beat has to be as wide as the fullest
+ * one: a measure of `d,r.m,f` gives all four of its beats room for a divided
+ * beat rather than squeezing the four notes of the first one together.
+ */
 function toMeasureLayout(measure: EditorMeasure): MeasureLayout {
+    const widestBeat = measure.slots.reduce(
+        (widest, slot) =>
+            Math.max(
+                widest,
+                SLOT_WIDTH + Math.max(0, slot.notes.length - 1) * SUBDIVISION_MARK_WIDTH,
+            ),
+        SLOT_WIDTH,
+    );
     return {
         measureId: measure.id,
         number: measure.number,
         slotCount: measure.slots.length,
-        width: Math.max(MINIMUM_MEASURE_WIDTH, measure.slots.length * SLOT_WIDTH + 18),
+        width: Math.max(MINIMUM_MEASURE_WIDTH, measure.slots.length * widestBeat + 18),
     };
 }
