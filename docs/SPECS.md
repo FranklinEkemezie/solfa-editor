@@ -4,13 +4,17 @@
 
 Build a working prototype of a browser-based tonic sol-fa score editor.
 
-The application should let a user compose a simple four-part SATB score using mostly keyboard input, display the score in a clean musical layout, represent the music using a structured domain model, and export the score as a PDF.
+The application should let a user compose a simple four-part SATB score using mostly keyboard input, display the score
+in a clean musical layout, represent the music using a structured domain model, and export the score as a PDF.
 
-This is a prototype, but its architecture must be suitable for further development into a mature, cross-platform music application.
+This is a prototype, but its architecture must be suitable for further development into a mature, cross-platform music
+application.
 
-The primary objective is to validate the editing experience and the separation between the music domain, editor, rendering system, and export system.
+The primary objective is to validate the editing experience and the separation between the music domain, editor,
+rendering system, and export system.
 
-Do not attempt to implement a complete music engraving application. Prioritize the specified functionality and make reasonable, documented decisions where details are missing.
+Do not attempt to implement a complete music engraving application. Prioritize the specified functionality and make
+reasonable, documented decisions where details are missing.
 
 ## 2. Start by Examining My UML Diagram
 
@@ -21,18 +25,21 @@ I will provide a UML diagram describing my music representation.
 Before writing implementation code:
 
 1. Examine the complete UML diagram.
-2. Identify its classes, interfaces, enumerations, attributes, relationships, multiplicities, and inheritance structures.
+2. Identify its classes, interfaces, enumerations, attributes, relationships, multiplicities, and inheritance
+   structures.
 3. Implement the model represented by the diagram.
 4. Do not silently replace it with a different model based on assumptions or a generic music-library design.
 5. Identify ambiguities, missing details, and implementation decisions that the UML does not specify.
 6. Resolve omissions using reasonable decisions consistent with the diagram and this specification.
 7. Document significant decisions in the README or a short architecture document.
 
-I have made changes to the UML during the design process. Do not assume that earlier descriptions of the model, previous conversations, or generic music-domain conventions accurately represent its current contents.
+I have made changes to the UML during the design process. Do not assume that earlier descriptions of the model, previous
+conversations, or generic music-domain conventions accurately represent its current contents.
 
 **Use the supplied diagram, not previous descriptions, as the source of truth.**
 
-If a significant contradiction exists between the diagram and this specification, identify it and explain the proposed resolution before proceeding.
+If a significant contradiction exists between the diagram and this specification, identify it and explain the proposed
+resolution before proceeding.
 
 Do not block progress over minor omissions. Make reasonable decisions, document them, and continue.
 
@@ -50,27 +57,32 @@ Use the following technologies:
 
 Use compatible, stable versions of the required dependencies.
 
-Before installation, verify the current installation instructions and compatibility requirements of the selected versions.
+Before installation, verify the current installation instructions and compatibility requirements of the selected
+versions.
 
 ### Responsibilities of the technologies
 
 **React + TypeScript**
+
 - Application composition.
 - UI components.
 - Application state and interactions.
 - Integration between subsystems.
 
 **Tailwind CSS**
+
 - Application styling and layout.
 - Responsive interface.
 - Editor presentation where appropriate.
 
 **shadcn/ui**
+
 - Reusable interface components such as buttons, dialogs, dropdowns, and tooltips.
 - Accessible interaction primitives.
 - Toast notifications, using the supported notification approach for the installed version.
 
 **Tiptap**
+
 - Interactive editing infrastructure.
 - Keyboard input.
 - Cursor management and selection.
@@ -78,20 +90,24 @@ Before installation, verify the current installation instructions and compatibil
 - Custom document structure and editor extensions.
 
 **Paged.js**
+
 - Print pagination where needed.
 - Pagination preview or preparation for PDF output.
 
 **HTML and CSS**
+
 - Ordinary text rendering.
 - Score headings and metadata.
 - Measure layout where appropriate.
 - Print styling.
 
 **SVG**
+
 - Use when useful for graphical notation, particularly connected bar lines spanning multiple parts.
 - Do not use SVG merely to render ordinary sol-fa syllables.
 
-Do not introduce additional large libraries without a clear need. If a dependency is necessary, explain its purpose in the README.
+Do not introduce additional large libraries without a clear need. If a dependency is necessary, explain its purpose in
+the README.
 
 ## 4. Architecture and Modularity
 
@@ -115,7 +131,8 @@ Keep the implementation understandable without introducing unnecessary abstracti
 
 ### Suggested directory structure
 
-Adapt this structure if the UML or framework conventions require a different arrangement, but preserve the separation of responsibilities.
+Adapt this structure if the UML or framework conventions require a different arrangement, but preserve the separation of
+responsibilities.
 
 ```text
 src/
@@ -196,7 +213,8 @@ This is a suggested starting point, not a requirement to create empty files or f
 
 Create files when they have meaningful responsibilities.
 
-Do not create an enormous number of tiny files solely to satisfy a one-class-per-file rule. Prefer one cohesive responsibility per file, with closely related declarations grouped when that improves readability.
+Do not create an enormous number of tiny files solely to satisfy a one-class-per-file rule. Prefer one cohesive
+responsibility per file, with closely related declarations grouped when that improves readability.
 
 ### Strict modularity requirements
 
@@ -214,7 +232,8 @@ Do not create an enormous number of tiny files solely to satisfy a one-class-per
 - Prefer explicit dependencies and clear function interfaces.
 - Avoid premature abstraction, speculative extensibility, and unnecessary design patterns.
 
-A developer should be able to locate the implementation of a particular feature without searching through a giant component.
+A developer should be able to locate the implementation of a particular feature without searching through a giant
+component.
 
 ## 5. The Music Domain Model
 
@@ -260,11 +279,14 @@ Do not duplicate the same musical calculation independently in the editor, rende
 
 ### Duration precision
 
-If the UML models note values or durations, preserve the intended distinction between written note value and effective musical duration.
+If the UML models note values or durations, preserve the intended distinction between written note value and effective
+musical duration.
 
-Use exact rational arithmetic for musical durations where practical. Avoid floating-point accumulation as the primary means of determining whether a measure fits its meter.
+Use exact rational arithmetic for musical durations where practical. Avoid floating-point accumulation as the primary
+means of determining whether a measure fits its meter.
 
-A written note value, an augmentation dot, a rhythmic separator, and a measure's elapsed duration are not interchangeable concepts.
+A written note value, an augmentation dot, a rhythmic separator, and a measure's elapsed duration are not
+interchangeable concepts.
 
 Do not infer musical duration solely from the number of characters typed.
 
@@ -281,9 +303,11 @@ Display the parts in that order, vertically aligned.
 
 For the prototype, the user does not need to create arbitrary numbers of parts.
 
-Initialize the editor with a useful default score containing four measures' worth of editing space? No: initialize with **two measures per part**, using the initial time signature and default measure count defined by the application.
+Initialize the editor with a useful default score containing four measures' worth of editing space? No: initialize with
+**two measures per part**, using the initial time signature and default measure count defined by the application.
 
-Use a default of 3/4 time unless another default is more appropriate to the supplied UML. If the default is changed, document it.
+Use a default of 3/4 time unless another default is more appropriate to the supplied UML. If the default is changed,
+document it.
 
 The exact initial content should be equivalent to:
 
@@ -298,21 +322,26 @@ This is a conceptual illustration, not literal text that must be stored.
 
 The notation above represents empty rhythmic positions, not notes and not rests.
 
-The number of initial rhythmic positions must be derived from the selected time signature and the application's initial rhythmic subdivision policy. Do not hard-code three separators for every time signature.
+The number of initial rhythmic positions must be derived from the selected time signature and the application's initial
+rhythmic subdivision policy. Do not hard-code three separators for every time signature.
 
-For example, with a 3/4 time signature and a policy of one empty position per quarter-note beat, each measure initially contains three empty positions.
+For example, with a 3/4 time signature and a policy of one empty position per quarter-note beat, each measure initially
+contains three empty positions.
 
-The initial measure count is a presentation/editing convenience. It must not be confused with the number of beats in a measure.
+The initial measure count is a presentation/editing convenience. It must not be confused with the number of beats in a
+measure.
 
 ### Empty positions
 
 An empty rhythmic position is not automatically a rest.
 
-The user should be able to enter notes into empty positions. The editor must not silently convert all unfilled positions into rests.
+The user should be able to enter notes into empty positions. The editor must not silently convert all unfilled positions
+into rests.
 
 The editor may use subtle placeholders to show available rhythmic positions.
 
-The domain model should represent only the musical concepts specified by the UML. If an editor-only placeholder is required, do not incorrectly represent it as a musical note or rest.
+The domain model should represent only the musical concepts specified by the UML. If an editor-only placeholder is
+required, do not incorrectly represent it as a musical note or rest.
 
 ### Measure structure
 
@@ -325,7 +354,8 @@ The domain model should represent only the musical concepts specified by the UML
 
 The final bar line may be visually distinct from ordinary bar lines.
 
-The displayed bar lines must be generated from the score structure, not treated as arbitrary characters typed by the user.
+The displayed bar lines must be generated from the score structure, not treated as arbitrary characters typed by the
+user.
 
 ## 7. Score Metadata and Header
 
@@ -395,11 +425,13 @@ Do not build a custom text editor from scratch.
 
 The Tiptap document is not the music domain model.
 
-The editor is an interactive representation of the music. The domain model is the authoritative representation of the score.
+The editor is an interactive representation of the music. The domain model is the authoritative representation of the
+score.
 
 Implement explicit conversion between these representations.
 
-Do not use `editor.getText()` as the sole method of reconstructing the music. Plain text does not reliably preserve all the structure required by the score model.
+Do not use `editor.getText()` as the sole method of reconstructing the music. Plain text does not reliably preserve all
+the structure required by the score model.
 
 Do not treat HTML generated by the editor as the authoritative music representation.
 
@@ -415,7 +447,8 @@ The main supported sol-fa input characters are:
 - `l`
 - `t`
 
-Support the case convention selected for the prototype and document it. Prefer lowercase for note syllables, with the UI displaying them consistently.
+Support the case convention selected for the prototype and document it. Prefer lowercase for note syllables, with the UI
+displaying them consistently.
 
 Support the rhythm-related characters needed by the agreed notation rules:
 
@@ -426,7 +459,8 @@ Do not invent additional notation syntax.
 
 Follow the agreed notation rules and the UML.
 
-If a notation rule is ambiguous, choose a consistent interpretation, document it, and keep the implementation easy to change.
+If a notation rule is ambiguous, choose a consistent interpretation, document it, and keep the implementation easy to
+change.
 
 ### Input validation
 
@@ -486,7 +520,8 @@ Type m:
 | d r m |
 ```
 
-The illustration describes the intended progression of rhythmic positions, not a requirement to store the notation as literal text.
+The illustration describes the intended progression of rhythmic positions, not a requirement to store the notation as
+literal text.
 
 ### Rhythmic separators
 
@@ -494,7 +529,8 @@ The colon `:` is a visual rhythmic separator.
 
 Users must not have to type it.
 
-The application should derive separator placement from the structured rhythmic representation and render it automatically.
+The application should derive separator placement from the structured rhythmic representation and render it
+automatically.
 
 The separator must not become an independent musical event unless the UML explicitly models it that way.
 
@@ -506,17 +542,21 @@ The intended behaviour is:
 
 - Typing a note syllable enters a note.
 - Typing `.` performs the subdivision operation specified by the notation rules.
-- Typing a subsequent note after a subdivision must place it at the next appropriate subdivision position, not automatically advance an entire beat.
+- Typing a subsequent note after a subdivision must place it at the next appropriate subdivision position, not
+  automatically advance an entire beat.
 
-For example, if a beat is initially represented as one empty quarter-note position, subdividing it should create the appropriate smaller positions according to the agreed notation rules.
+For example, if a beat is initially represented as one empty quarter-note position, subdividing it should create the
+appropriate smaller positions according to the agreed notation rules.
 
 The user should then be able to enter multiple notes within that beat.
 
-The editor must derive cursor advancement from the current rhythmic structure and event durations rather than merely counting typed characters.
+The editor must derive cursor advancement from the current rhythmic structure and event durations rather than merely
+counting typed characters.
 
 ### Continuation
 
-Where supported by the UML and notation rules, `-` continues the preceding note rather than creating an unrelated new pitch.
+Where supported by the UML and notation rules, `-` continues the preceding note rather than creating an unrelated new
+pitch.
 
 The editor must not interpret a continuation as a new note with an independent pitch.
 
@@ -593,7 +633,8 @@ Use ordinary HTML text for sol-fa syllables and other textual content.
 
 Use CSS for ordinary alignment and borders where practical.
 
-Use SVG or another appropriate graphical representation for continuous bar lines if that produces a cleaner implementation.
+Use SVG or another appropriate graphical representation for continuous bar lines if that produces a cleaner
+implementation.
 
 Do not force every note into SVG.
 
@@ -665,7 +706,8 @@ Domain Score
 
 The resulting domain score should be semantically equivalent to the original.
 
-Semantic equivalence means preserving the meaningful musical content, structure, and metadata, even if irrelevant editor-specific details differ.
+Semantic equivalence means preserving the meaningful musical content, structure, and metadata, even if irrelevant
+editor-specific details differ.
 
 Write automated tests for this property.
 
@@ -781,17 +823,20 @@ The design should feel like a focused music-writing tool rather than a generic a
 ### Suggested interface
 
 Header:
+
 - Application name or wordmark.
 - Score title.
 - Author.
 
 Metadata area:
+
 - Key.
 - Time signature.
 - Tempo.
 - Optional tempo description.
 
 Editor area:
+
 - SATB labels.
 - Four aligned parts.
 - Visible measure boundaries.
@@ -799,6 +844,7 @@ Editor area:
 - Keyboard-oriented interaction.
 
 Toolbar:
+
 - Add measure.
 - Remove measure, if supported.
 - Undo.
@@ -806,6 +852,7 @@ Toolbar:
 - Export PDF.
 
 Feedback:
+
 - Subtle selection state.
 - Helpful empty-position indicators.
 - Validation toasts.
@@ -1136,7 +1183,8 @@ Include:
 
 Include a simple architecture diagram using Mermaid if useful.
 
-Explain where important behaviours are implemented so that I can continue development without relying on an AI agent to rediscover the project structure.
+Explain where important behaviours are implemented so that I can continue development without relying on an AI agent to
+rediscover the project structure.
 
 Document significant assumptions made where the UML was silent.
 
@@ -1341,6 +1389,8 @@ At completion, provide:
 
 Explain the implementation in a way that helps me understand and continue developing it myself.
 
-Do not merely say that the code is modular or maintainable. Show how the responsibilities are separated and where the important logic lives.
+Do not merely say that the code is modular or maintainable. Show how the responsibilities are separated and where the
+important logic lives.
 
-**Final priority: build a small, working, readable prototype with a sound architecture—not an impressive-looking mock-up with incomplete editing behaviour.**
+**Final priority: build a small, working, readable prototype with a sound architecture—not an impressive-looking mock-up
+with incomplete editing behaviour.**
