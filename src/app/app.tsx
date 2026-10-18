@@ -48,7 +48,7 @@ export function App() {
 
     return (
         <TooltipProvider delayDuration={200}>
-            <div className="app-shell min-h-screen">
+            <div className="app-shell min-h-screen overflow-x-clip">
                 <AppHeader />
                 <main className="mx-auto max-w-[1260px] px-4 py-6 sm:px-6 sm:py-10 md:px-20">
                     <ScoreHeader document={store.document} onChange={changeMetadata} />

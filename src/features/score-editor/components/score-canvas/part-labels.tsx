@@ -2,7 +2,7 @@ import { PARTS } from '@/domain/music';
 
 export function PartLabels() {
     return (
-        <div className="w-[84px] shrink-0 pt-7">
+        <div className="w-[52px] shrink-0 pt-7 sm:w-[84px]">
             {PARTS.map((part) => (
                 <div
                     key={part.id}
@@ -10,7 +10,9 @@ export function PartLabels() {
                     title={part.label}
                 >
                     {part.shortLabel}
-                    <span className="ml-2 text-[11px] font-normal text-muted">{part.label}</span>
+                    <span className="ml-2 hidden text-[11px] font-normal text-muted sm:inline">
+                        {part.label}
+                    </span>
                 </div>
             ))}
         </div>

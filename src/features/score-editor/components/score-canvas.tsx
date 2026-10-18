@@ -37,7 +37,7 @@ export function ScoreCanvas({
             aria-label="SATB score editor"
         >
             <div
-                className="relative min-h-[313px] overflow-x-auto px-4 pb-5 pt-3"
+                className="relative min-h-[313px] overflow-x-auto px-2 pb-4 pt-3 sm:px-4 sm:pb-5"
                 onKeyDown={onKeyDown}
                 onClick={() => editor.commands.focus()}
             >

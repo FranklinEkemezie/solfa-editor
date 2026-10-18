@@ -3,7 +3,7 @@ import type { MeasureLayout } from '@/features/score-editor/layout/calculate-sco
 export function MeasureHeadings({ measures }: { measures: MeasureLayout[] }) {
     return (
         <div className="flex min-w-max items-end">
-            <div className="w-[84px] shrink-0" />
+            <div className="w-[52px] shrink-0 sm:w-[84px]" />
             <div className="flex min-w-max items-end gap-0">
                 {measures.map((measure) => (
                     <div
