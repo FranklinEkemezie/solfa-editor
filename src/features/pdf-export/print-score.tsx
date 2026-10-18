@@ -14,7 +14,7 @@ export function PrintScore({ document }: { document: EditorDocument }) {
         <main className="print-sheet" id="print-view">
             <PrintScoreHeader document={document} />
             <div
-                className="overflow-hidden rounded-lg border border-[#dfe7e1]"
+                className="overflow-hidden rounded-lg border border-line-soft"
                 style={{ ['--print-measures' as string]: String(measures.length) }}
             >
                 <PrintMeasureHeadings measures={measures} />

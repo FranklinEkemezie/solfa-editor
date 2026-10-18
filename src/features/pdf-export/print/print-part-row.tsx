@@ -18,12 +18,12 @@ export function PrintPartRow({
 }) {
     return (
         <div
-            className="grid min-h-[34pt] items-center border-t border-[#e4ebdf]"
+            className="grid min-h-[34pt] items-center border-t border-line-soft"
             style={{
                 gridTemplateColumns: `26pt repeat(${measures.length}, minmax(48pt, 1fr))`,
             }}
         >
-            <strong className="self-center px-2 text-[11pt] font-bold uppercase tracking-[0.08em] text-[#1e352d]">
+            <strong className="self-center px-2 text-[11pt] font-bold uppercase tracking-[0.08em] text-ink">
                 {part.shortLabel}
             </strong>
             {measures.map((measure) => {
