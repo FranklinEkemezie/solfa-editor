@@ -12,7 +12,10 @@ export function findMeasure(
     return document.measures.find((measure) => measure.id === measureId);
 }
 
-function measuresForPart(document: EditorDocument, part: EditorMeasure['part']): EditorMeasure[] {
+export function measuresForPart(
+    document: EditorDocument,
+    part: EditorMeasure['part'],
+): EditorMeasure[] {
     return document.measures
         .filter((measure) => measure.part === part)
         .sort((left, right) => left.number - right.number);

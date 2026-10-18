@@ -3,8 +3,8 @@ import type { ToastTone } from '@/components/feedback/toast-message';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { playErrorTone } from '@/features/score-editor/audio/play-error-tone';
 import { interpretInput } from '@/features/score-editor/editor/input-rules';
+import { advanceCursor } from '@/features/score-editor/state/advance-cursor';
 import {
-    advancePosition,
     previousPosition,
     type EditorPosition,
 } from '@/features/score-editor/state/editor-position';
@@ -46,7 +46,9 @@ export function useScoreKeyboard({
 
             if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
                 event.preventDefault();
-                moveTo(advancePosition(document, position));
+                const step = advanceCursor(document, position);
+                if (step.document !== document) commit(step.document, step.position);
+                else moveTo(step.position);
                 return;
             }
             if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
