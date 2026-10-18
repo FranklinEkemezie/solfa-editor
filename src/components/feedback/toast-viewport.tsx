@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
+import { ToastItem } from '@/components/feedback/toast-item';
+import type { ToastMessage } from '@/components/feedback/toast-message';
 
-export type ToastMessage = { id: number; tone: 'info' | 'warning'; message: string };
+const DISMISS_DELAY_MS = 3600;
 
 export function ToastViewport({
     messages,
@@ -11,21 +13,14 @@ export function ToastViewport({
 }) {
     useEffect(() => {
         if (messages.length === 0) return undefined;
-        const timeout = window.setTimeout(() => dismiss(messages[0].id), 3600);
+        const timeout = window.setTimeout(() => dismiss(messages[0].id), DISMISS_DELAY_MS);
         return () => window.clearTimeout(timeout);
     }, [dismiss, messages]);
 
     return (
         <div className="toast-viewport" aria-live="polite">
             {messages.map((toast) => (
-                <button
-                    key={toast.id}
-                    className={`toast toast-${toast.tone}`}
-                    onClick={() => dismiss(toast.id)}
-                >
-                    <span className="toast-dot" />
-                    {toast.message}
-                </button>
+                <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />
             ))}
         </div>
     );
