@@ -74,15 +74,12 @@ are reused by editor validation and export code.
 ## Prerequisites
 
 - **Node.js** ≥ 18
-- **pnpm** ≥ 9 (preferred) or npm ≥ 10
+- **pnpm** ≥ 9
 
-> **pnpm vs npm** — The project ships a `pnpm-lock.yaml`. Using pnpm is strongly recommended for reproducible installs.
-> If you must use npm, delete `pnpm-lock.yaml` first and use `npm install`; the generated `package-lock.json` is
-> committed as a fallback but may drift from the pnpm lock.
+> This project uses pnpm exclusively. Dependencies are pinned through `pnpm-lock.yaml`, so install with `pnpm install`
+> (or `pnpm install --frozen-lockfile` in CI) instead of npm.
 
 ## Local development
-
-### With pnpm (recommended)
 
 ```bash
 # Install dependencies
@@ -105,18 +102,6 @@ pnpm test
 
 # Production build
 pnpm build
-```
-
-### With npm
-
-```bash
-npm install
-npm run dev
-npm run typecheck
-npm run lint
-npm run format
-npm test
-npm run build
 ```
 
 ## Project structure
