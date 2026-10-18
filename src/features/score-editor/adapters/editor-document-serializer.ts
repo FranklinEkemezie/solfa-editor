@@ -21,6 +21,7 @@ export function toTiptapJson(document: EditorDocument): TiptapNode {
                 type: 'metadata',
                 attrs: {
                     title: document.title,
+                    subtitle: document.subtitle,
                     author: document.author,
                     lyrics: document.lyrics ?? '',
                 },

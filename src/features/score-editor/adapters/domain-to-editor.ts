@@ -29,6 +29,7 @@ export function domainToEditor(score: Score): EditorDocument {
     return {
         type: 'sol-fa-document',
         title: score.title,
+        subtitle: score.subtitle,
         author: score.author,
         timeSignature: score.timeSignature,
         key: score.key,

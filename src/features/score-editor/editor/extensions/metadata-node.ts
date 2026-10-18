@@ -15,6 +15,7 @@ export const MetadataNode = Node.create({
     selectable: false,
     addAttributes: () => ({
         title: { default: '' },
+        subtitle: { default: '' },
         author: { default: '' },
         lyrics: { default: '' },
     }),

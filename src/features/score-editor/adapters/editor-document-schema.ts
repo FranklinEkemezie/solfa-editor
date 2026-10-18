@@ -41,6 +41,7 @@ export type EditorMeasure = {
 export type EditorDocument = {
     type: 'sol-fa-document';
     title: string;
+    subtitle: string;
     author: string;
     timeSignature: TimeSignature;
     key: Key;

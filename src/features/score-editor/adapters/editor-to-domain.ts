@@ -30,6 +30,7 @@ export function editorToDomain(document: EditorDocument): Score {
         measures,
         document.author,
         document.lyrics,
+        document.subtitle,
     );
     const errors = validateScore(score);
     if (errors.length > 0) throw new EditorDocumentError(errors.join(' '));

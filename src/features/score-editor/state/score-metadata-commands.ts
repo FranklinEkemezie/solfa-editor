@@ -2,7 +2,10 @@ import { Accidental, Key, NoteValue, Tempo, TimeSignature } from '@/domain/music
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 
 export type MetadataPatch = Partial<
-    Pick<EditorDocument, 'title' | 'author' | 'timeSignature' | 'key' | 'tempo' | 'lyrics'>
+    Pick<
+        EditorDocument,
+        'title' | 'subtitle' | 'author' | 'timeSignature' | 'key' | 'tempo' | 'lyrics'
+    >
 >;
 
 export function patchMetadata(document: EditorDocument, patch: MetadataPatch): EditorDocument {
