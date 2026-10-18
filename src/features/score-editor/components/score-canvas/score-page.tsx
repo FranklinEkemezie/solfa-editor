@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { EditorMeasure } from '@/features/score-editor/adapters/editor-document-schema';
 import { ScoreSystem } from '@/features/score-editor/components/score-canvas/score-system';
+import { STAGE_INTERACTIVE_CLASS } from '@/features/score-editor/components/score-stage';
 import {
     A4_HEIGHT_PX,
     A4_WIDTH_PX,
@@ -46,7 +47,9 @@ export function ScorePage({
             style={{ width: A4_WIDTH_PX, height: A4_HEIGHT_PX, padding: PAGE_MARGIN_PX }}
         >
             {page.showsMasthead && children ? (
-                <div style={{ marginBottom: SYSTEM_GAP_PX }}>{children}</div>
+                <div className={STAGE_INTERACTIVE_CLASS} style={{ marginBottom: SYSTEM_GAP_PX }}>
+                    {children}
+                </div>
             ) : null}
             <div className="flex flex-col" style={{ gap: SYSTEM_GAP_PX }}>
                 {page.systems.map((system, index) => (

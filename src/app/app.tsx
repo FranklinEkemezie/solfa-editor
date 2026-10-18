@@ -10,6 +10,7 @@ import { usePlayback } from '@/features/playback/hooks/use-playback';
 import { PlaybackControls } from '@/features/playback/playback-controls';
 import { ScoreCanvas } from '@/features/score-editor/components/score-canvas';
 import { ScoreHeader } from '@/features/score-editor/components/score-header';
+import { ScoreStage } from '@/features/score-editor/components/score-stage';
 import { ScoreToolbar } from '@/features/score-editor/components/score-toolbar';
 import { OnScreenKeyboard } from '@/features/score-editor/components/on-screen-keyboard';
 import { useCommit } from '@/features/score-editor/hooks/use-commit';
@@ -67,17 +68,24 @@ export function App() {
                             onStop={stop}
                         />
                     </div>
-                    <ScoreCanvas
-                        document={store.document}
-                        position={store.position}
-                        editor={editor}
-                        masthead={
-                            <ScoreHeader document={store.document} onChange={changeMetadata} />
-                        }
-                        onPositionChange={(next) => store.commit(store.document, next)}
-                        onKeyDown={keyboard.handleKeyDown}
-                        activeSlotId={activeSlotId}
-                    />
+                    <div className="h-[74vh] min-h-[420px] overflow-hidden rounded-2xl border border-line">
+                        <ScoreStage>
+                            <ScoreCanvas
+                                document={store.document}
+                                position={store.position}
+                                editor={editor}
+                                masthead={
+                                    <ScoreHeader
+                                        document={store.document}
+                                        onChange={changeMetadata}
+                                    />
+                                }
+                                onPositionChange={(next) => store.commit(store.document, next)}
+                                onKeyDown={keyboard.handleKeyDown}
+                                activeSlotId={activeSlotId}
+                            />
+                        </ScoreStage>
+                    </div>
                     <MeasureCount document={store.document} />
                     <OnScreenKeyboard onInput={keyboard.input} onBackspace={keyboard.backspace} />
                 </main>
