@@ -1,4 +1,12 @@
-import type { Key, TimeSignature } from '@/domain/music';
+import {
+    Accidental,
+    Key,
+    KeySignature,
+    Letter,
+    Mode,
+    NoteValue,
+    TimeSignature,
+} from '@/domain/music';
 
 export type MetadataOption = { label: string; value: string };
 
@@ -47,8 +55,22 @@ export function keyOptionValue(key: Key): string {
     return `${key.letter}-${key.mode}-${key.signature.accidental}-${key.signature.count}`;
 }
 
+export function keyFromOptionValue(value: string): Key {
+    const [letter, mode, accidental, count] = value.split('-');
+    return new Key(
+        letter as Letter,
+        new KeySignature(accidental as Accidental, Number(count)),
+        mode as Mode,
+    );
+}
+
 export function timeSignatureOptionValue(signature: TimeSignature): string {
     return `${signature.count}/${signature.note}`;
+}
+
+export function timeSignatureFromOptionValue(value: string): TimeSignature {
+    const [count, note] = value.split('/');
+    return new TimeSignature(note as NoteValue, Number(count));
 }
 
 /**

@@ -1,21 +1,18 @@
-import { Accidental, Letter, Mode, NoteValue, timeSignatureLabel } from '@/domain/music';
+import { timeSignatureLabel } from '@/domain/music';
 import { EditableSelect } from '@/components/ui/editable-select';
 import { EditableText } from '@/components/ui/editable-text';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { metadataKeyLabel } from '@/features/score-editor/adapters/metadata-label';
 import {
     KEY_OPTIONS,
+    keyFromOptionValue,
     keyOptionValue,
     TIME_SIGNATURE_OPTIONS,
+    timeSignatureFromOptionValue,
     timeSignatureOptionValue,
     withCurrentOption,
-} from '@/features/score-editor/components/metadata-options';
-import {
-    makeKey,
-    makeTempo,
-    makeTimeSignature,
-    patchMetadata,
-} from '@/features/score-editor/state/score-metadata-commands';
+} from '@/features/score-editor/adapters/metadata-options';
+import { makeTempo, patchMetadata } from '@/features/score-editor/state/score-metadata-commands';
 
 const TEMPO_MIN = 20;
 const TEMPO_MAX = 320;
@@ -46,28 +43,11 @@ export function ScoreHeader({
         timeSignatureLabel(document.timeSignature),
     );
 
-    const setKey = (value: string) => {
-        const [letter, mode, accidental, count] = value.split('-');
-        onChange(
-            patchMetadata(document, {
-                key: makeKey(
-                    letter as Letter,
-                    mode as Mode,
-                    accidental as Accidental,
-                    Number(count),
-                ),
-            }),
-        );
-    };
+    const setKey = (value: string) =>
+        onChange(patchMetadata(document, { key: keyFromOptionValue(value) }));
 
-    const setTimeSignature = (value: string) => {
-        const [count, note] = value.split('/');
-        onChange(
-            patchMetadata(document, {
-                timeSignature: makeTimeSignature(note as NoteValue, Number(count)),
-            }),
-        );
-    };
+    const setTimeSignature = (value: string) =>
+        onChange(patchMetadata(document, { timeSignature: timeSignatureFromOptionValue(value) }));
 
     const setTempoDescription = (description: string) =>
         onChange(
