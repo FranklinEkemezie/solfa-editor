@@ -79,6 +79,10 @@ are reused by editor validation and export code.
 - A measure is a list of beats, and each beat carries the notes written in it
   plus its division (1, 2, or 4). The marks between the notes are derived from
   that division, so the notation always reads the way the method writes it.
+- A continuation belongs to the note right before it, so the two rules follow
+  from that: clearing a note or a beat is refused while the next position still
+  continues it, and writing a syllable over a beat that holds only a continuation
+  replaces that continuation instead of moving on.
 - Cursor advancement is centralised in `advanceCursor`; when input reaches the final slot of the
   final measure it appends a fresh measure for every part rather than stopping.
 - Score details are edited inline: the masthead renders plain text and swaps in an input or a
