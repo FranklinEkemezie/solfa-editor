@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ToastViewport } from '@/components/feedback/toast-viewport';
 import { useToasts } from '@/components/feedback/use-toasts';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppFooter } from '@/app/components/app-footer';
 import { AppHeader } from '@/app/components/app-header';
 import { MeasureCount } from '@/app/components/measure-count';
@@ -49,7 +50,7 @@ export function App() {
     };
 
     return (
-        <>
+        <TooltipProvider delayDuration={200}>
             <div className="app-shell min-h-screen">
                 <AppHeader />
                 <main className="mx-auto max-w-[1260px] px-6 md:px-20 py-10">
@@ -95,6 +96,6 @@ export function App() {
             </div>
             <PrintScore document={store.document} />
             <ToastViewport messages={toasts} dismiss={dismiss} />
-        </>
+        </TooltipProvider>
     );
 }

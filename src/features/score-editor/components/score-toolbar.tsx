@@ -1,5 +1,5 @@
 import { ArrowDownToLine, FileMinus2, FilePlus2, RotateCcw, RotateCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 
 export function ScoreToolbar({
     canUndo,
@@ -21,38 +21,36 @@ export function ScoreToolbar({
     return (
         <div className="flex flex-wrap items-center justify-between gap-4 my-6">
             <div className="flex flex-wrap items-center gap-1">
-                <Button
-                    variant="icon"
-                    title="Undo"
-                    aria-label="Undo"
-                    onClick={onUndo}
-                    disabled={!canUndo}
-                >
+                <IconButton label="Undo" onClick={onUndo} disabled={!canUndo}>
                     <RotateCcw size={16} strokeWidth={2} />
-                </Button>
-                <Button
-                    variant="icon"
-                    title="Redo"
-                    aria-label="Redo"
-                    onClick={onRedo}
-                    disabled={!canRedo}
-                >
+                </IconButton>
+                <IconButton label="Redo" onClick={onRedo} disabled={!canRedo}>
                     <RotateCw size={16} strokeWidth={2} />
-                </Button>
+                </IconButton>
                 <span className="mx-2 h-5 w-px bg-line" />
-                <Button variant="ghost" onClick={onAddMeasure} className="gap-2">
+                <IconButton
+                    label="Add measure"
+                    variant="ghost"
+                    onClick={onAddMeasure}
+                    className="gap-2"
+                >
                     <FilePlus2 size={15} strokeWidth={2} />
-                    <span>Measure</span>
-                </Button>
-                <Button variant="ghost" onClick={onRemoveMeasure} className="gap-2">
+                    <span className="hidden sm:inline">Add measure</span>
+                </IconButton>
+                <IconButton
+                    label="Remove last measure"
+                    variant="ghost"
+                    onClick={onRemoveMeasure}
+                    className="gap-2"
+                >
                     <FileMinus2 size={15} strokeWidth={2} />
-                    <span>Measure</span>
-                </Button>
+                    <span className="hidden sm:inline">Remove measure</span>
+                </IconButton>
             </div>
-            <Button variant="primary" onClick={onExport} className="gap-2">
+            <IconButton label="Print / PDF" variant="primary" onClick={onExport} className="gap-2">
                 <ArrowDownToLine size={16} strokeWidth={2} />
-                <span>Print / PDF</span>
-            </Button>
+                <span className="hidden sm:inline">Print / PDF</span>
+            </IconButton>
         </div>
     );
 }

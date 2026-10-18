@@ -1,5 +1,5 @@
 import { Pause, Play, Square } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 
 export function PlaybackControls({
     isPlaying,
@@ -12,18 +12,23 @@ export function PlaybackControls({
 }) {
     return (
         <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={onPlayPause}>
+            <IconButton
+                label={isPlaying ? 'Pause' : 'Play'}
+                variant="ghost"
+                onClick={onPlayPause}
+                className="gap-2"
+            >
                 {isPlaying ? (
                     <Pause size={15} strokeWidth={2} />
                 ) : (
                     <Play size={15} strokeWidth={2} />
                 )}
-                <span>{isPlaying ? 'Pause' : 'Play'}</span>
-            </Button>
-            <Button variant="ghost" onClick={onStop}>
+                <span className="hidden sm:inline">{isPlaying ? 'Pause' : 'Play'}</span>
+            </IconButton>
+            <IconButton label="Stop" variant="ghost" onClick={onStop} className="gap-2">
                 <Square size={14} strokeWidth={2} />
-                <span>Stop</span>
-            </Button>
+                <span className="hidden sm:inline">Stop</span>
+            </IconButton>
         </div>
     );
 }
