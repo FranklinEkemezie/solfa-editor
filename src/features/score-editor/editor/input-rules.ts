@@ -11,6 +11,8 @@ import { findMeasure, type EditorPosition } from '@/features/score-editor/state/
 import {
     appendNote,
     continueBeat,
+    isContinuationOnly,
+    overrideBeat,
     setBeatDivision,
 } from '@/features/score-editor/state/score-slot-commands';
 
@@ -50,6 +52,21 @@ function beatWithRoom(
 }
 
 /**
+ * The beat a written note belongs to.
+ *
+ * Like `beatWithRoom`, but a beat that holds nothing except a continuation
+ * takes the note as well: a continuation is not a note in its own right, so
+ * writing over it substitutes for it instead of starting the next beat.
+ */
+function beatForNote(
+    document: EditorDocument,
+    position: EditorPosition,
+): { document: EditorDocument; position: EditorPosition } {
+    if (isContinuationOnly(document, position)) return { document, position };
+    return beatWithRoom(document, position);
+}
+
+/**
  * Apply one sol-fa token at the caret.
  *
  * Notes advance the caret only once the beat is full; `.` and `,` never advance
@@ -77,7 +94,16 @@ function placeNote(
     position: EditorPosition,
     syllable: SolfaSyllable,
 ): InputResult {
-    const target = beatWithRoom(document, position);
+    const target = beatForNote(document, position);
+
+    if (isContinuationOnly(target.document, target.position)) {
+        return {
+            document: overrideBeat(target.document, target.position, { syllable }),
+            position: target.position,
+            status: `Continued note replaced with ${syllable}.`,
+        };
+    }
+
     return {
         document: appendNote(target.document, target.position, { syllable }),
         position: target.position,

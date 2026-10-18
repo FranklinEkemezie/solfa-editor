@@ -5,6 +5,7 @@ import type {
     EditorSlot,
 } from '@/features/score-editor/adapters/editor-document-schema';
 import {
+    advancePosition,
     findMeasure,
     previousPosition,
     type EditorPosition,
@@ -106,4 +107,61 @@ export function continueBeat(
     const previous = lastNote(document, position);
     if (!previous?.syllable) return null;
     return appendNote(document, position, { syllable: previous.syllable, continuation: true });
+}
+
+/** True when a beat holds nothing but a continuation of the note before it. */
+export function isContinuationOnly(document: EditorDocument, position: EditorPosition): boolean {
+    const beat = beatAt(document, position);
+    return Boolean(beat && beat.notes.length === 1 && beat.notes[0].continuation);
+}
+
+/**
+ * True when the position right after this one opens with a continuation.
+ *
+ * A continuation sustains the note immediately before it, so emptying this
+ * position would leave that continuation with nothing to sustain.
+ */
+export function isSustainedByNextPosition(
+    document: EditorDocument,
+    position: EditorPosition,
+): boolean {
+    const next = advancePosition(document, position);
+    if (next.measureId === position.measureId && next.slotIndex === position.slotIndex)
+        return false;
+    return Boolean(beatAt(document, next)?.notes[0]?.continuation);
+}
+
+/** Emptying a whole beat is refused while the next position still continues it. */
+export function canClearBeat(document: EditorDocument, position: EditorPosition): boolean {
+    const beat = beatAt(document, position);
+    if (!beat || beat.notes.length === 0) return true;
+    return !isSustainedByNextPosition(document, position);
+}
+
+/** Removing the last note of a beat is refused while the next position continues it. */
+export function canClearLastNote(document: EditorDocument, position: EditorPosition): boolean {
+    const beat = beatAt(document, position);
+    if (!beat || beat.notes.length === 0) return false;
+    if (beat.notes.length > 1) return true;
+    return !isSustainedByNextPosition(document, position);
+}
+
+/**
+ * Replace everything written in a beat with a single note.
+ *
+ * This is how a note overrides a continuation: the continuation is not a note
+ * in its own right, so writing on top of it substitutes rather than follows.
+ */
+export function overrideBeat(
+    document: EditorDocument,
+    position: EditorPosition,
+    note: Omit<EditorNote, 'id'>,
+): EditorDocument {
+    const beat = beatAt(document, position);
+    const id = createNoteId(beat?.id ?? position.measureId);
+    return mapBeat(document, position, (slot) => ({
+        ...slot,
+        division: 1,
+        notes: [{ ...note, id }],
+    }));
 }

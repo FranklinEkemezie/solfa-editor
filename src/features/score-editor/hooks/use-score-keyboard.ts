@@ -10,7 +10,12 @@ import {
     previousPosition,
     type EditorPosition,
 } from '@/features/score-editor/state/editor-position';
-import { clearBeat, clearLastNote } from '@/features/score-editor/state/score-slot-commands';
+import {
+    canClearBeat,
+    canClearLastNote,
+    clearBeat,
+    clearLastNote,
+} from '@/features/score-editor/state/score-slot-commands';
 
 type ScoreKeyboardOptions = {
     document: EditorDocument;
@@ -21,6 +26,9 @@ type ScoreKeyboardOptions = {
     redo: () => void;
     onMessage: (message: string, tone?: ToastTone) => void;
 };
+
+const SUSTAIN_MESSAGE =
+    'The next beat continues this note, so it cannot be cleared yet — remove that continuation first.';
 
 export type ScoreKeyboard = {
     /** Key handler for the physical keyboard, attached to the score canvas. */
@@ -68,7 +76,13 @@ export function useScoreKeyboard({
     const backspace = useCallback(() => {
         pending.current = null;
         const beat = findMeasure(document, position.measureId)?.slots[position.slotIndex];
+
         if (beat && beat.notes.length > 0) {
+            if (!canClearLastNote(document, position)) {
+                onMessage(SUSTAIN_MESSAGE);
+                void playErrorTone();
+                return;
+            }
             commit(clearLastNote(document, position), position);
             return;
         }
@@ -76,9 +90,14 @@ export function useScoreKeyboard({
         const previous = previousPosition(document, position);
         const previousBeat = findMeasure(document, previous.measureId)?.slots[previous.slotIndex];
         if (previousBeat && previousBeat.notes.length > 0) {
+            if (!canClearLastNote(document, previous)) {
+                onMessage(SUSTAIN_MESSAGE);
+                void playErrorTone();
+                return;
+            }
             commit(clearLastNote(document, previous), previous);
         }
-    }, [commit, document, position]);
+    }, [commit, document, onMessage, position]);
 
     const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
@@ -118,6 +137,11 @@ export function useScoreKeyboard({
             if (event.key === 'Delete') {
                 event.preventDefault();
                 pending.current = null;
+                if (!canClearBeat(document, position)) {
+                    onMessage(SUSTAIN_MESSAGE);
+                    void playErrorTone();
+                    return;
+                }
                 commit(clearBeat(document, position), position);
                 return;
             }
@@ -128,7 +152,7 @@ export function useScoreKeyboard({
             pending.current = result.pending;
             apply(result);
         },
-        [apply, backspace, commit, document, moveTo, position, redo, undo],
+        [apply, backspace, commit, document, moveTo, onMessage, position, redo, undo],
     );
 
     return { handleKeyDown, input, backspace };

@@ -105,4 +105,25 @@ describe('interpretInput', () => {
         expect(result.rejected).toBeTruthy();
         expect(result.document).toBe(document);
     });
+
+    it('prolongs a note into the next beat with a continuation', () => {
+        const typed = type(newDocument(), { measureId: 'soprano-1', slotIndex: 0 }, ['d', '-']);
+
+        expect(syllables(typed.document, 'soprano-1', 0)).toEqual(['d']);
+        expect(beat(typed.document, 'soprano-1', 1)?.notes[0]).toMatchObject({
+            syllable: 'd',
+            continuation: true,
+        });
+    });
+
+    it('lets a written note override a continuation', () => {
+        const typed = type(newDocument(), { measureId: 'soprano-1', slotIndex: 0 }, [
+            'd',
+            '-',
+            'm',
+        ]);
+
+        expect(syllables(typed.document, 'soprano-1', 1)).toEqual(['m']);
+        expect(beat(typed.document, 'soprano-1', 1)?.notes[0].continuation).toBeFalsy();
+    });
 });
