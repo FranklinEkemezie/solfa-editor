@@ -11,6 +11,7 @@ export const SlotNode = Node.create({
         noteValue: { default: 'QUARTER' },
         syllable: { default: null },
         continuation: { default: false },
+        lyric: { default: null },
     }),
     parseHTML: () => [{ tag: 'span[data-solfa-slot]' }],
     renderHTML: ({ HTMLAttributes }) => ['span', { ...HTMLAttributes, 'data-solfa-slot': '' }],
