@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { createEmptyScore } from '@/domain/music';
-import { domainToEditor } from '../adapters/domain-to-editor';
-import type { EditorDocument } from '../adapters/editor-document-schema';
-import { addMeasure, type EditorPosition, removeLastMeasure } from './score-commands';
+import { domainToEditor } from '@/features/score-editor/adapters/domain-to-editor';
+import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
+import {
+    addMeasure,
+    removeLastMeasure,
+} from '@/features/score-editor/state/score-measure-commands';
+import type { EditorPosition } from '@/features/score-editor/state/editor-position';
 
 export type ScoreStore = {
     document: EditorDocument;

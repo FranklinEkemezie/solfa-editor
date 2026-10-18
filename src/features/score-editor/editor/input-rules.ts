@@ -1,12 +1,14 @@
-import type { EditorDocument } from '../adapters/editor-document-schema';
+import { NoteValue, SOLFA_SYLLABLES, type SolfaSyllable } from '@/domain/music';
+import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import {
     advancePosition,
-    continueSlot,
     type EditorPosition,
+} from '@/features/score-editor/state/editor-position';
+import {
+    continueSlot,
     replaceSlot,
     setSlotDuration,
-} from '../state/score-commands';
-import { NoteValue, SOLFA_SYLLABLES, type SolfaSyllable } from '@/domain/music';
+} from '@/features/score-editor/state/score-slot-commands';
 
 export type InputResult = {
     document: EditorDocument;
