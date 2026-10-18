@@ -11,7 +11,16 @@ export { Accidental } from '@/domain/accidental';
 export { Mode } from '@/domain/mode';
 export { NoteValue, NOTE_VALUE_UNITS } from '@/domain/note-value';
 export { type PartId, PARTS } from '@/domain/parts';
-export { type SolfaSyllable, SOLFA_SYLLABLES, SOLFA_TO_PITCH } from '@/domain/solfa';
+export {
+    type SolfaSyllable,
+    type NaturalSolfaSyllable,
+    type ChromaticSolfaSyllable,
+    SOLFA_SYLLABLES,
+    NATURAL_SOLFA_SYLLABLES,
+    CHROMATIC_SOLFA_SYLLABLES,
+    SOLFA_TO_PITCH,
+    isSolfaSyllable,
+} from '@/domain/solfa';
 export { type Fraction, fraction, addFractions, compareFractions } from '@/domain/fraction';
 export { Duration } from '@/domain/duration';
 export { Pitch } from '@/domain/pitch';

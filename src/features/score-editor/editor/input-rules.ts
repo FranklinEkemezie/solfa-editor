@@ -1,4 +1,4 @@
-import { NoteValue, SOLFA_SYLLABLES, type SolfaSyllable } from '@/domain/music';
+import { isSolfaSyllable, NoteValue } from '@/domain/music';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import {
     advancePosition,
@@ -24,8 +24,8 @@ export function interpretInput(
 ): InputResult {
     const normalized = key.toLowerCase();
 
-    if (SOLFA_SYLLABLES.includes(normalized as SolfaSyllable)) {
-        const nextDocument = replaceSlot(document, position, normalized as SolfaSyllable);
+    if (isSolfaSyllable(normalized)) {
+        const nextDocument = replaceSlot(document, position, normalized);
         return { document: nextDocument, position: advancePosition(nextDocument, position) };
     }
 
