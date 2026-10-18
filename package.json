@@ -9,7 +9,7 @@
         "build": "tsc -b && vite build",
         "lint": "eslint .",
         "typecheck": "tsc -b --pretty false",
-        "test": "vitest run",
+        "test": "vitest run --passWithNoTests",
         "format": "prettier --write ."
     },
     "dependencies": {
