@@ -2,11 +2,20 @@ import { useState } from 'react';
 import { createEmptyScore } from '@/domain/music';
 import { domainToEditor } from '@/features/score-editor/adapters/domain-to-editor';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
+import { ACTIVE_PRESET, parseScorePreset } from '@/features/score-editor/presets';
 import {
     addMeasure,
     removeLastMeasure,
 } from '@/features/score-editor/state/score-measure-commands';
 import type { EditorPosition } from '@/features/score-editor/state/editor-position';
+
+/**
+ * The document the editor opens with: the active sample when one is selected,
+ * otherwise the empty default of an untitled score with two silent measures.
+ */
+function initialDocument(): EditorDocument {
+    return ACTIVE_PRESET ? parseScorePreset(ACTIVE_PRESET) : domainToEditor(createEmptyScore());
+}
 
 export type ScoreStore = {
     document: EditorDocument;
@@ -21,9 +30,7 @@ export type ScoreStore = {
 };
 
 export function useScoreStore(): ScoreStore {
-    const [document, setDocument] = useState<EditorDocument>(() =>
-        domainToEditor(createEmptyScore()),
-    );
+    const [document, setDocument] = useState<EditorDocument>(initialDocument);
     const [position, setPosition] = useState<EditorPosition>(() => ({
         measureId: 'soprano-1',
         slotIndex: 0,
