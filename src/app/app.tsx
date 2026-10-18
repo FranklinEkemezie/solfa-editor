@@ -1,12 +1,9 @@
-import { useState } from 'react';
 import { ToastViewport } from '@/components/feedback/toast-viewport';
 import { useToasts } from '@/components/feedback/use-toasts';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppFooter } from '@/app/components/app-footer';
 import { AppHeader } from '@/app/components/app-header';
 import { MeasureCount } from '@/app/components/measure-count';
-import { MetadataPanel } from '@/app/components/metadata-panel';
-import { MetadataToggle } from '@/app/components/metadata-toggle';
 import { exportScoreToPdf } from '@/features/pdf-export/export-score';
 import { PrintScore } from '@/features/pdf-export/print-score';
 import { usePlayback } from '@/features/playback/hooks/use-playback';
@@ -24,7 +21,6 @@ import { useScoreStore } from '@/features/score-editor/state/score-store';
 export function App() {
     const store = useScoreStore();
     const { toasts, addToast, dismiss } = useToasts();
-    const [isMetadataOpen, setMetadataOpen] = useState(true);
 
     const editor = useScoreEditor(store.document);
     const commit = useCommit(store, addToast);
@@ -54,20 +50,9 @@ export function App() {
         <TooltipProvider delayDuration={200}>
             <div className="app-shell min-h-screen">
                 <AppHeader />
-                <main className="mx-auto max-w-[1260px] px-6 md:px-20 py-10">
-                    <div className="flex items-center justify-between gap-4">
-                        <ScoreHeader document={store.document} />
-                        <MetadataToggle
-                            isOpen={isMetadataOpen}
-                            onToggle={() => setMetadataOpen((open) => !open)}
-                        />
-                    </div>
-                    <MetadataPanel
-                        isOpen={isMetadataOpen}
-                        document={store.document}
-                        onChange={changeMetadata}
-                    />
-                    <div className="flex items-center justify-between my-5">
+                <main className="mx-auto max-w-[1260px] px-4 py-6 sm:px-6 sm:py-10 md:px-20">
+                    <ScoreHeader document={store.document} onChange={changeMetadata} />
+                    <div className="my-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <ScoreToolbar
                             canUndo={store.canUndo}
                             canRedo={store.canRedo}
