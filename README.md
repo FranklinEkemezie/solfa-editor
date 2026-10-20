@@ -1,7 +1,7 @@
 # Solfa Editor
 
 A browser-based SATB tonic sol-fa score editor built with React, TypeScript, Vite, Tailwind, and a Tiptap-backed editing
-canvas. The project is organized around a domain-first music model so the score remains independent from editor-specific
+surface. The project is organized around a domain-first music model so the score remains independent from editor-specific
 and presentation-specific concerns.
 
 ## What this prototype includes
@@ -17,9 +17,10 @@ and presentation-specific concerns.
 - Inline editing of the title, subtitle, composer, key, time signature, and tempo straight from the score
   masthead
 - Automatic score growth: reaching the last slot of the last measure appends a new one
-- Real A4 sheets, panned and zoomed on a canvas. A score too tall for one page breaks across as many
-  sheets as it needs, the way a score is read, instead of scrolling like a web page
-- A tool rail down the right for undo and redo, adding and removing measures, zooming, and printing.
+- Real A4 sheets, read the way a document is read. A score too tall for one page breaks across as
+  many sheets as it needs; the sheets sit still in the window and scroll past, with a gutter and a
+  shadow between them
+- A tool rail down the left for undo and redo, adding and removing measures, zooming, and printing.
   Every control is an icon with a tooltip, and the rail can be put away to give the score the whole
   window
 - Playback that sounds the score in its own key and at its own tempo
@@ -87,9 +88,10 @@ This ensures the music domain does not depend on Tiptap or React.
 The rendering layer decides where the music falls and how it is looked at, and nothing else does.
 `layout/page-geometry.ts` holds the sheet's measurements — A4 at 96 pixels to the inch, its margin, its
 rows — `layout/score-layout.ts` turns a document into pages, systems and measures, and
-`components/score-canvas/` draws them. `components/score-stage.tsx` carries the pan and zoom around
-those pages. Domain calculations remain in the domain layer and are reused by editor validation and
-export code.
+`components/score-canvas/` draws them. `components/score-document.tsx` stacks those pages in reading
+order, `layout/document-zoom.ts` works out the scale the document is read at, and
+`hooks/use-document-zoom.ts` holds it for the app. Domain calculations remain in the domain layer and
+are reused by editor validation and export code.
 
 Because there is one layout and two consumers, the printed sheet is the page that was on screen: the
 printer prints the editor's pages, system for system and measure for measure.
@@ -126,21 +128,29 @@ printer prints the editor's pages, system for system and measure for measure.
   beat anywhere in it), never justified to fill the page, so bars stay as narrow as the music needs
   and the beats of one system line up with every other. Measures per system and systems per page come
   out of `layout/score-layout.ts`.
-- The sheet is a real A4 page, so the canvas pans and zooms the pages instead of scrolling them.
-  `react-zoom-pan-pinch` provides those gestures; it is wrapped in `components/score-stage.tsx` so no
-  other module imports it and the library stays replaceable.
+- The sheet is a real A4 page, and the sheets are read the way a document is read: they sit still in
+  the middle of the window and the document scrolls past them. Nothing pans the page and the wheel
+  never zooms; a page made wider than the window by the zoom is panned with the scrollbar the overflow
+  already provides. The scrollbar's gutter is reserved, so fitting the page to the window is measured
+  against the width the page will actually have.
+- Zoom follows a fixed ladder of round levels (25%, 33%, 50%, … 300%) rather than multiplying, so a
+  press or two cannot leave the reader at 156%. The editor opens at the page width on a narrow window
+  and at the paper's true size on a wide one; resizing the window afterwards leaves the zoom alone.
 - PDF output is implemented as a browser print flow with a print-specific stylesheet; this is a
   sensible prototype approach without introducing a large PDF engine. Paged.js is not used: pagination
   is already decided by the layout module, and all the print stylesheet has to add is that each of the
   editor's pages starts a fresh sheet and that a system is never split across two.
-- The printed page box is the editor's page box — A4 with a 64px margin, which is A4 with a 16.93mm
-  margin — so the printable width is the width the layout was measured against.
+- The printed page box is the editor's page box — A4 with a 70px margin, which is A4 with a margin of
+  just under 19mm — so the printable width is the width the layout was measured against. The title
+  block is given air above and below it, so a printed heading does not read as a caption on the first
+  system.
 - The printed sheet carries no colour: ink, hairlines and barlines only. The subdivision marks (`.`,
   `,`) and the colon that closes a beat are notation rather than decoration, so they are set at the
   note's own size, colour and mono face.
-- The app is a fixed workspace rather than a document: the header carries the app name and playback,
-  the tool rail carries the commands, and the score fills what is left, so the page never scrolls
-  under the score. `app/score-tools.tsx` decides which commands the rail offers.
+- The app is a fixed frame around a scrolling document: the header carries the app name and playback,
+  the rail down the left carries the commands, the on-screen keyboard is docked at the bottom on
+  small screens, and only the document between them scrolls. `app/score-tools.tsx` decides which
+  commands the rail offers.
 
 ## Prerequisites
 
@@ -207,8 +217,9 @@ src/
 │   ├── pdf-export/             # Print / PDF export
 │   ├── playback/               # Tone.js audio playback
 │   └── score-editor/           # Tiptap editor, adapters, and UI
-│       ├── components/         # Sheets, stage, keyboard, masthead
-│       ├── layout/             # Page geometry and pagination
+│       ├── components/         # Sheets, document, keyboard, masthead
+│       ├── hooks/              # Editor, commit, playback-view and zoom state
+│       ├── layout/             # Page geometry, pagination, document zoom
 │       └── presets/            # Sample scores and their notation parser
 └── styles/                     # Global CSS and Tailwind entry
 ```
