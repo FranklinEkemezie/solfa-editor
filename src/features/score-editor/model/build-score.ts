@@ -179,10 +179,7 @@ type ParsedPart = {
  */
 export function buildScoreView(document: ScoreDocument): ScoreView {
     const capacity = document.timeSignature.capacity();
-    const signature = new TimeSignature(
-        document.timeSignature.note,
-        document.timeSignature.count,
-    );
+    const signature = new TimeSignature(document.timeSignature.note, document.timeSignature.count);
     const parsed: ParsedPart[] = [];
     let derivedCount = 1;
 

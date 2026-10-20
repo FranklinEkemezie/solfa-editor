@@ -60,3 +60,65 @@ export type ScoreView = {
     readonly measureCount: number;
     readonly diagnostics: readonly ScoreDiagnostic[];
 };
+
+export type BeatAddress = {
+    readonly measure: number;
+    readonly beat: number;
+};
+
+/**
+ * The beat a caret offset belongs to in one part.
+ *
+ * At the end of a voice the caret appends, so the marker points at the last
+ * beat that holds music rather than at a later, still blank measure. Inside the
+ * voice, the last beat whose event ends exactly at the caret is the one the
+ * writer is working in; after a duration, the first beat beyond it is used.
+ */
+export function activeBeat(part: PartView, offset: number): BeatAddress | null {
+    const firstMeasure = part.measures[0];
+    const firstBeat = firstMeasure?.beats[0];
+    if (!firstMeasure || !firstBeat) return null;
+
+    // An empty voice has no written event to point at; the score starts at its
+    // first beat.
+    if (part.source.length === 0) {
+        return { measure: firstMeasure.number, beat: firstBeat.number };
+    }
+
+    if (offset >= part.source.length) {
+        const written = lastWrittenBeat(part);
+        if (written) return written;
+    }
+
+    let ending: BeatAddress | null = null;
+    let after: BeatAddress | null = null;
+    let last: BeatAddress = { measure: firstMeasure.number, beat: firstBeat.number };
+
+    for (const measure of part.measures) {
+        for (const beat of measure.beats) {
+            last = { measure: measure.number, beat: beat.number };
+            if (beat.sourceOffset === offset) {
+                ending = last;
+            } else if (!after && beat.sourceOffset > offset) {
+                after = last;
+            }
+        }
+    }
+
+    return ending ?? after ?? last;
+}
+
+/** The last beat anywhere in the part that holds at least one written event. */
+function lastWrittenBeat(part: PartView): BeatAddress | null {
+    let written: BeatAddress | null = null;
+
+    for (const measure of part.measures) {
+        for (const beat of measure.beats) {
+            if (beat.items.length > 0) {
+                written = { measure: measure.number, beat: beat.number };
+            }
+        }
+    }
+
+    return written;
+}

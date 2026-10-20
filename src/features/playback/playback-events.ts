@@ -1,14 +1,15 @@
 import * as Tone from 'tone';
 import {
+    fractionToNumber,
     NOTE_VALUE_UNITS,
     PARTS,
-    solfaPitch,
     soundingMidi,
     type NoteValue,
     type PartId,
+    type ScoreDocument,
     type SolfaSyllable,
 } from '@/domain/music';
-import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
 
 export type PlaybackEvent = {
     /** Seconds from the start of the score. */
@@ -18,26 +19,13 @@ export type PlaybackEvent = {
     durationSeconds: number;
     syllable: SolfaSyllable;
     part: PartId;
-    slotId: string;
+    /** The same identity the page uses to mark the note being played. */
+    noteKey: string;
 };
 
 export type PlaybackCallbacks = {
     onNoteStart?: (event: PlaybackEvent) => void;
     onPlaybackEnded?: () => void;
-};
-
-/**
- * How far each part is transposed from the written pitch.
- *
- * The score is written in a single register, so the parts are separated by
- * whole octaves: soprano an octave above the written pitch, alto at it, and the
- * men's parts one and two octaves below it.
- */
-const PART_OCTAVE_OFFSETS: Record<PartId, number> = {
-    soprano: 12,
-    alto: 0,
-    tenor: -12,
-    bass: -24,
 };
 
 function quarterUnits(value: NoteValue): number {
@@ -46,7 +34,7 @@ function quarterUnits(value: NoteValue): number {
 }
 
 /** Seconds per quarter note at the score's tempo. */
-export function secondsPerQuarter(document: EditorDocument): number {
+export function secondsPerQuarter(document: Pick<ScoreDocument, 'tempo'>): number {
     const beatQuarters = quarterUnits(document.tempo.beatUnit);
     if (beatQuarters <= 0) return 60 / document.tempo.beatsPerMinute;
     return 60 / document.tempo.beatsPerMinute / beatQuarters;
@@ -55,67 +43,35 @@ export function secondsPerQuarter(document: EditorDocument): number {
 /**
  * Flatten the score into a single time-ordered list of notes.
  *
- * Every duration is converted once, into quarter notes, and then into seconds,
- * so a note's length never depends on how the notation happens to spell it. A
- * continuation prolongs the note before it instead of sounding again.
+ * The source language already carries exact quarter-note starts and lengths,
+ * so playback reads those rather than rebuilding a clock from the page. A held
+ * note is one event of its full written length — the page may split it at a
+ * barline, but the ear should not hear a barline at all.
  *
- * The key and the part are applied here, to the pitch only: the syllables stay
- * written as they read, and the transposition never touches the score.
+ * The key is applied here, to the pitch only: the syllables stay written as
+ * they read, and the transposition never touches the score.
  */
-export function buildPlaybackEvents(document: EditorDocument): PlaybackEvent[] {
-    const measureNumbers = [...new Set(document.measures.map((measure) => measure.number))].sort(
-        (left, right) => left - right,
-    );
-    const secondsPer = secondsPerQuarter(document);
-
+export function buildPlaybackEvents(view: ScoreView): PlaybackEvent[] {
+    const secondsPer = secondsPerQuarter(view.document);
     const events: PlaybackEvent[] = [];
-    const lastByPart = new Map<PartId, PlaybackEvent>();
-    let clockQuarters = 0;
 
-    for (const measureNumber of measureNumbers) {
-        for (const part of PARTS) {
-            const measure = document.measures.find(
-                (candidate) => candidate.part === part.id && candidate.number === measureNumber,
-            );
-            if (!measure) continue;
+    for (const part of PARTS) {
+        const voice = view.parts[part.id].voice;
+        if (!voice) continue;
 
-            let beatQuarters = 0;
-            for (const slot of measure.slots) {
-                const slotQuarters = quarterUnits(slot.noteValue);
-                const noteQuarters = slotQuarters / slot.division;
-                const noteSeconds = Math.max(noteQuarters * secondsPer, 0.02);
+        voice.events.forEach((event, index) => {
+            if (event.kind !== 'note') return;
 
-                slot.notes.forEach((note, index) => {
-                    if (!note.syllable) return;
-
-                    const previous = lastByPart.get(part.id);
-                    if (note.continuation && previous) {
-                        previous.durationSeconds += noteSeconds;
-                        return;
-                    }
-
-                    // The written pitch is in the neutral register; the part's
-                    // octave offset spreads the four voices into their ranges.
-                    const midi =
-                        soundingMidi(solfaPitch(note.syllable), document.key) +
-                        PART_OCTAVE_OFFSETS[part.id];
-                    const event: PlaybackEvent = {
-                        time: (clockQuarters + beatQuarters + index * noteQuarters) * secondsPer,
-                        note: Tone.Frequency(midi, 'midi').toNote(),
-                        durationSeconds: noteSeconds,
-                        syllable: note.syllable,
-                        part: part.id,
-                        slotId: slot.id,
-                    };
-                    events.push(event);
-                    lastByPart.set(part.id, event);
-                });
-
-                beatQuarters += slotQuarters;
-            }
-        }
-
-        clockQuarters += document.timeSignature.count * quarterUnits(document.timeSignature.note);
+            const midi = soundingMidi(event.note.pitch, view.document.key);
+            events.push({
+                time: fractionToNumber(event.start) * secondsPer,
+                note: Tone.Frequency(midi, 'midi').toNote(),
+                durationSeconds: fractionToNumber(event.note.duration) * secondsPer,
+                syllable: event.note.syllable,
+                part: part.id,
+                noteKey: `${part.id}:${index}`,
+            });
+        });
     }
 
     return events.sort((left, right) => left.time - right.time);

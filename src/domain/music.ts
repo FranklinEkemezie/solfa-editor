@@ -54,8 +54,8 @@ export {
     fractionsEqual,
     floorFraction,
     ceilFraction,
+    fractionToNumber,
 } from '@/domain/fraction';
-export { Duration } from '@/domain/duration';
 export { Pitch } from '@/domain/pitch';
 export {
     ACCIDENTAL_SEMITONES,
@@ -83,6 +83,5 @@ export {
     withMeasureCount,
 } from '@/domain/score-document';
 
-export { createEmptyScore } from '@/domain/score-factory';
 export { validateScore } from '@/domain/score-validation';
 export { noteValueDenominator, timeSignatureLabel } from '@/domain/notational-labels';

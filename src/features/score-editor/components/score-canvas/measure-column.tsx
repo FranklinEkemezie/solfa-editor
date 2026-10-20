@@ -1,8 +1,8 @@
 import { PARTS } from '@/domain/music';
-import type { EditorMeasure } from '@/features/score-editor/adapters/editor-document-schema';
 import { FinalBarline } from '@/features/score-editor/components/score-canvas/final-barline';
 import { PartMeasure } from '@/features/score-editor/components/score-canvas/part-measure';
-import type { EditorPosition } from '@/features/score-editor/state/editor-position';
+import { activeBeat, type ScoreView } from '@/features/score-editor/model/score-view';
+import type { EditorPosition } from '@/features/score-editor/editing/caret';
 import { cn } from '@/lib/utils';
 
 /**
@@ -16,18 +16,18 @@ export function MeasureColumn({
     number,
     width,
     isFinal,
-    measureById,
+    view,
     position,
     onPositionChange,
-    activeSlotId,
+    activeNoteKey,
 }: {
     number: number;
     width: number;
     isFinal: boolean;
-    measureById: Map<string, EditorMeasure>;
+    view: ScoreView;
     position: EditorPosition;
     onPositionChange: (position: EditorPosition) => void;
-    activeSlotId?: string | null;
+    activeNoteKey?: string | null;
 }) {
     return (
         <div
@@ -35,15 +35,20 @@ export function MeasureColumn({
             style={{ width }}
         >
             {PARTS.map((part) => {
-                const measure = measureById.get(`${part.id}-${number}`);
+                const partView = view.parts[part.id];
+                const measure = partView.measures[number - 1];
                 if (!measure) return null;
+                const active =
+                    position.part === part.id ? activeBeat(partView, position.offset) : null;
+
                 return (
                     <PartMeasure
                         key={part.id}
+                        part={partView}
                         measure={measure}
-                        position={position}
                         onPositionChange={onPositionChange}
-                        activeSlotId={part.id === 'soprano' ? activeSlotId : null}
+                        activeBeatNumber={active && active.measure === number ? active.beat : null}
+                        activeNoteKey={activeNoteKey}
                     />
                 );
             })}

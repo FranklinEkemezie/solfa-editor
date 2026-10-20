@@ -1,5 +1,6 @@
 import { beatMarkBetween } from '@/domain/music';
-import type { EditorSlot } from '@/features/score-editor/adapters/editor-document-schema';
+import { ACCIDENTAL_MARKS } from '@/features/score-editor/components/score-canvas/accidental-mark';
+import type { BeatView } from '@/features/score-editor/model/score-view';
 
 /**
  * One beat of one part.
@@ -10,15 +11,15 @@ import type { EditorSlot } from '@/features/score-editor/adapters/editor-documen
  * the bar falls into its two halves. The button fills its row, which gives the
  * note a generous target without crowding the beats beside it.
  */
-export function SlotButton({
-    slot,
+export function BeatButton({
+    beat,
     closingMark,
     isActive,
     isPlaying,
     ariaLabel,
     onSelect,
 }: {
-    slot: EditorSlot;
+    beat: BeatView;
     /** The mark after this beat, or null for the beat that ends the bar. */
     closingMark: string | null;
     isActive: boolean;
@@ -26,31 +27,43 @@ export function SlotButton({
     ariaLabel: string;
     onSelect: () => void;
 }) {
+    const isEmpty = beat.items.length === 0;
+
     return (
         <button
             type="button"
             className={`group relative flex h-full flex-1 items-center justify-center rounded-md border-0 bg-transparent font-mono text-[0.8125rem] leading-none transition-colors hover:bg-green-wash/50 focus:outline-none focus-visible:ring-1 focus-visible:ring-green ${
-                slot.notes.length > 0 ? 'text-ink' : 'text-ghost'
+                isEmpty ? 'text-ghost' : 'text-ink'
             }`}
-            onClick={(event) => {
-                event.stopPropagation();
-                onSelect();
-            }}
+            onClick={onSelect}
             aria-label={ariaLabel}
         >
             <span className="flex items-baseline pr-[2px]">
-                {slot.notes.map((note, index) => (
-                    <span key={note.id} className="flex items-baseline">
+                {beat.items.map((item, index) => (
+                    <span key={`${item.noteKey}-${index}`} className="flex items-baseline">
                         {index > 0 ? (
                             <span aria-hidden="true" className="px-[1px]">
-                                {beatMarkBetween(slot.division, index - 1)}
+                                {beatMarkBetween(beat.division, index - 1) ?? ' '}
                             </span>
                         ) : null}
                         <span className="relative flex flex-col items-center">
-                            <span>{note.continuation ? '—' : (note.syllable ?? ' ')}</span>
-                            {note.lyric ? (
+                            <span>
+                                {item.kind === 'continuation' ? (
+                                    '—'
+                                ) : (
+                                    <>
+                                        {item.syllable}
+                                        {item.accidental ? (
+                                            <span className="align-super text-[0.7em]">
+                                                {ACCIDENTAL_MARKS[item.accidental] ?? ''}
+                                            </span>
+                                        ) : null}
+                                    </>
+                                )}
+                            </span>
+                            {item.lyric ? (
                                 <span className="absolute -bottom-3 text-[9px] font-bold uppercase tracking-[0.08em] text-ink-muted">
-                                    {note.lyric}
+                                    {item.lyric}
                                 </span>
                             ) : null}
                         </span>

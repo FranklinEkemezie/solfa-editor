@@ -13,11 +13,7 @@ import type {
     NotationNote,
     VoiceNotation,
 } from '@/features/notation/musical-ir';
-import type {
-    ParsedPitch,
-    ParseItem,
-    VoiceParseTree,
-} from '@/features/notation/parser';
+import type { ParsedPitch, ParseItem, VoiceParseTree } from '@/features/notation/parser';
 import type { SourceRange } from '@/features/notation/source-position';
 
 /** The note currently being read, which continuations may still lengthen. */
@@ -163,8 +159,6 @@ function currentDuration(duration: NoteValue | null, item: ParseItem): Fraction 
 }
 
 /** Narrow a notation event to a note, which is useful to callers walking a voice. */
-export function isNotationNote(
-    event: NotationEvent,
-): event is NotationNote {
+export function isNotationNote(event: NotationEvent): event is NotationNote {
     return event.kind === 'note';
 }

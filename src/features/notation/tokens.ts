@@ -53,12 +53,7 @@ export type RestToken = {
 };
 
 export type Token =
-    | DurationToken
-    | PitchToken
-    | AccidentalToken
-    | OctaveToken
-    | ContinuationToken
-    | RestToken;
+    DurationToken | PitchToken | AccidentalToken | OctaveToken | ContinuationToken | RestToken;
 
 export type TokenKind = Token['kind'];
 

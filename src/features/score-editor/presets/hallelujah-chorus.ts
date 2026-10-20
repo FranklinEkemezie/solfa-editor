@@ -9,8 +9,12 @@ import type { ScorePreset } from '@/features/score-editor/presets/score-preset';
  * no lyrics are written because this preset exists to have something to edit,
  * play and print without typing.
  *
- * The sheet writes "Doh is D", so the key is D major and every part is written
- * in the same octave — the editor separates the registers when it plays.
+ * The sheet writes "Doh is D", so the key is D major. Every part is written at
+ * its own register, which is what lets the four voices sound apart.
+ *
+ * Each line is ordinary notation: `:` is a quarter, `.` an eighth, `,` a
+ * sixteenth, `-` holds the note before it, and a space is a rest. Measures are
+ * not written — the bars fall where the time signature says they do.
  */
 export const hallelujahChorus: ScorePreset = {
     title: 'Hallelujah Chorus',
@@ -19,10 +23,9 @@ export const hallelujahChorus: ScorePreset = {
     timeSignature: '4/QUARTER',
     tempo: { beatsPerMinute: 72, description: 'Allegro' },
     parts: {
-        soprano:
-            'd : - : s.l : s | d : - : - : - | d : s.l : d : m | r : - : - : - | d : - : s.l : s | d : - : - : - | m : r : d : r | d : - : - : -',
-        alto: 'd : - : m.l : m | d : - : - : - | f : m : r : d | t : - : - : - | d : - : m.l : m | d : - : - : - | s : f : m : f | m : - : - : -',
-        tenor: 's : - : d.l : d | f : - : - : - | l : s : f : m | s : - : - : - | s : - : d.l : d | f : - : - : - | s : s : f : s | d : - : - : -',
-        bass: 'd : - : d : d | f : - : - : - | f : f : f : f | s : - : - : - | d : - : d : d | f : - : - : - | d : d : s : s | d : - : - : -',
+        soprano: ':d-.sl:sd---d.sl:dmr---d-.sl:sd---mrdrd---',
+        alto: ':d-.ml:md---fmrdt---d-.ml:md---sfmfm---',
+        tenor: ':s-.dl:df---lsfms---s-.dl:df---ssfsd---',
+        bass: ':d-ddf---ffffs---d-ddf---ddssd---',
     },
 };

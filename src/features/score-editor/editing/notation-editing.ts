@@ -9,7 +9,13 @@ import {
     voiceSource,
     withVoice,
 } from '@/domain/music';
-import { caretAt, offsetAfter, offsetBefore, siblingCaret, type EditorPosition } from '@/features/score-editor/editing/caret';
+import {
+    caretAt,
+    offsetAfter,
+    offsetBefore,
+    siblingCaret,
+    type EditorPosition,
+} from '@/features/score-editor/editing/caret';
 import type { Diagnostic } from '@/features/notation/diagnostics';
 import { parseVoice } from '@/features/notation/notation-engine';
 import { clampOffset, containsOffset, type SourceRange } from '@/features/notation/source-position';
@@ -39,11 +45,7 @@ const DURATION_NAMES: Record<string, string> = {
     SIXTEENTH: 'a sixteenth note',
 };
 
-function reject(
-    document: ScoreDocument,
-    position: EditorPosition,
-    message: string,
-): EditOutcome {
+function reject(document: ScoreDocument, position: EditorPosition, message: string): EditOutcome {
     return { document, position, changed: false, rejected: message };
 }
 
@@ -106,6 +108,22 @@ function eventText(document: ScoreDocument, position: EditorPosition, text: stri
     return durationAt(document, position.part, position.offset) === null ? `:${text}` : text;
 }
 
+/**
+ * The duration key in force at the caret, for the on-screen keyboard.
+ *
+ * Before the first duration is written a note would be entered as a quarter,
+ * so the quarter key is the one in force.
+ */
+export function activeDurationMark(
+    document: ScoreDocument,
+    position: EditorPosition,
+): DurationMark {
+    const value = durationAt(document, position.part, position.offset);
+    if (value === NoteValue.EIGHTH) return '.';
+    if (value === NoteValue.SIXTEENTH) return ',';
+    return ':';
+}
+
 function textAt(document: ScoreDocument, position: EditorPosition): string {
     return voiceSource(document, position.part);
 }
@@ -159,10 +177,7 @@ export function insertDuration(
     );
 }
 
-export function insertRest(
-    document: ScoreDocument,
-    position: EditorPosition,
-): EditOutcome {
+export function insertRest(document: ScoreDocument, position: EditorPosition): EditOutcome {
     const offset = offsetOf(document, position);
     const text = eventText(document, position, ' ');
     const source = textAt(document, position);
@@ -175,10 +190,7 @@ export function insertRest(
     );
 }
 
-export function insertContinuation(
-    document: ScoreDocument,
-    position: EditorPosition,
-): EditOutcome {
+export function insertContinuation(document: ScoreDocument, position: EditorPosition): EditOutcome {
     const offset = offsetOf(document, position);
     const source = textAt(document, position);
     const next = source.slice(0, offset) + '-' + source.slice(offset);
@@ -250,9 +262,7 @@ function tokenBefore(tokens: readonly Token[], offset: number): Token | null {
         if (tokens[index].range.end === offset) return tokens[index];
     }
     // Inside a token, delete the whole token rather than half of it.
-    const inside = tokens.find(
-        (token) => token.range.start < offset && offset < token.range.end,
-    );
+    const inside = tokens.find((token) => token.range.start < offset && offset < token.range.end);
     if (inside) return inside;
     for (let index = tokens.length - 1; index >= 0; index -= 1) {
         if (tokens[index].range.end <= offset) return tokens[index];
@@ -260,11 +270,7 @@ function tokenBefore(tokens: readonly Token[], offset: number): Token | null {
     return null;
 }
 
-function removeToken(
-    document: ScoreDocument,
-    position: EditorPosition,
-    token: Token,
-): EditOutcome {
+function removeToken(document: ScoreDocument, position: EditorPosition, token: Token): EditOutcome {
     const source = textAt(document, position);
     const next = splice(source, token.range, '');
     const offset = Math.min(token.range.start, next.length);
@@ -283,10 +289,7 @@ function removeToken(
 }
 
 /** Delete the whole token before the caret — a syllable, a duration, a modifier, a rest. */
-export function deletePrevious(
-    document: ScoreDocument,
-    position: EditorPosition,
-): EditOutcome {
+export function deletePrevious(document: ScoreDocument, position: EditorPosition): EditOutcome {
     const offset = offsetOf(document, position);
     const token = tokenBefore(tokensOf(document, position.part), offset);
     if (!token) return { document, position, changed: false };
@@ -408,11 +411,7 @@ function composeVowel(
         );
     }
 
-    return reject(
-        document,
-        position,
-        `“${vowel}” does not complete the symbol before the caret.`,
-    );
+    return reject(document, position, `“${vowel}” does not complete the symbol before the caret.`);
 }
 
 export type CaretDirection = 'left' | 'right' | 'up' | 'down';

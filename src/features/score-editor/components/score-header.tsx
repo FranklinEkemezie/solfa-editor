@@ -1,7 +1,6 @@
-import { timeSignatureLabel } from '@/domain/music';
+import { timeSignatureLabel, type ScoreDocument } from '@/domain/music';
 import { EditableSelect } from '@/components/ui/editable-select';
 import { EditableText } from '@/components/ui/editable-text';
-import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { metadataKeyLabel } from '@/features/score-editor/adapters/metadata-label';
 import {
     KEY_OPTIONS,
@@ -31,8 +30,8 @@ export function ScoreHeader({
     document,
     onChange,
 }: {
-    document: EditorDocument;
-    onChange: (next: EditorDocument) => void;
+    document: ScoreDocument;
+    onChange: (next: ScoreDocument) => void;
 }) {
     const keyValue = keyOptionValue(document.key);
     const timeValue = timeSignatureOptionValue(document.timeSignature);

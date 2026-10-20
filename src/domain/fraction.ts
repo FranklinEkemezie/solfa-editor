@@ -69,3 +69,8 @@ export function floorFraction(value: Fraction): number {
 export function ceilFraction(value: Fraction): number {
     return Math.ceil(value.numerator / value.denominator);
 }
+
+/** The fraction as a number, for timing that is measured in real units. */
+export function fractionToNumber(value: Fraction): number {
+    return value.numerator / value.denominator;
+}

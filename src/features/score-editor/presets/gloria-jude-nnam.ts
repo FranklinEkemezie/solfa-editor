@@ -17,10 +17,9 @@ export const gloriaJudeNnam: ScorePreset = {
     timeSignature: '4/QUARTER',
     tempo: { beatsPerMinute: 110, description: 'Allegretto' },
     parts: {
-        soprano:
-            'd : m : s : l | s : - : m : - | f : m : r : d | r : - : - : - | d : m : s : l | s : - : l : - | m : r : d : r | d : - : - : -',
-        alto: 'm : d : m : f | m : - : d : - | l : s : f : m | f : - : - : - | m : d : m : f | m : - : f : - | s : f : m : f | m : - : - : -',
-        tenor: 's : s : d : d | d : - : s : - | s : s : s : s | s : - : - : - | s : s : d : d | d : - : d : - | d : t : d : t | d : - : - : -',
-        bass: 'd : d : d : d | f : - : f : - | m : m : s : d | s : - : - : - | d : d : d : d | f : - : f : - | d : s : d : s | d : - : - : -',
+        soprano: ':dmsls-m-fmrdr---dmsls-l-mrdrd---',
+        alto: ':mdmfm-d-lsfmf---mdmfm-f-sfmfm---',
+        tenor: ':ssddd-s-sssss---ssddd-d-dtdtd---',
+        bass: ':ddddf-f-mmsds---ddddf-f-dsdsd---',
     },
 };

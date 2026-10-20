@@ -14,13 +14,7 @@ import type { TokenKind } from '@/features/notation/tokens';
  * uses the newly established duration"), and it is what makes it possible to
  * hold a note into a beat of a different value.
  */
-export type ParserState =
-    | 'start'
-    | 'new'
-    | 'pitch'
-    | 'modifier'
-    | 'continuation'
-    | 'heldDuration';
+export type ParserState = 'start' | 'new' | 'pitch' | 'modifier' | 'continuation' | 'heldDuration';
 
 export function transition(state: ParserState, kind: TokenKind): ParserState | null {
     switch (state) {
@@ -62,7 +56,8 @@ export const STATE_HINTS: Record<ParserState, string> = {
     start: 'Start the voice with a duration: : for a quarter note, . for an eighth, or , for a sixteenth.',
     new: 'A note, a rest, or a duration can be written here.',
     pitch: 'A note, a rest, a duration, an accidental, an octave mark, or a continuation can follow.',
-    modifier: 'A note, a rest, a duration, an accidental, an octave mark, or a continuation can follow.',
+    modifier:
+        'A note, a rest, a duration, an accidental, an octave mark, or a continuation can follow.',
     continuation: 'A note, a rest, a duration, or another continuation can follow.',
     heldDuration: 'A note, a rest, a duration, or a continuation can follow.',
 };

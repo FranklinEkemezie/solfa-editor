@@ -1,8 +1,5 @@
-import type {
-    EditorDocument,
-    EditorMeasure,
-    EditorSlot,
-} from '@/features/score-editor/adapters/editor-document-schema';
+import { PARTS } from '@/domain/parts';
+import type { BeatView, ScoreView } from '@/features/score-editor/model/score-view';
 import {
     PAGE_CONTENT_WIDTH_PX,
     PART_LABEL_WIDTH_PX,
@@ -54,10 +51,10 @@ export type ScoreLayout = {
  * comes out is a page count the editor can draw and the printer can repeat, so
  * neither has to guess where the music breaks.
  */
-export function calculateScoreLayout(document: EditorDocument): ScoreLayout {
-    const measureWidth = uniformMeasureWidth(document);
+export function calculateScoreLayout(view: ScoreView): ScoreLayout {
+    const measureWidth = uniformMeasureWidth(view);
     const perSystem = Math.max(1, Math.floor(measureRoomPx() / measureWidth));
-    const systems = chunk(measureNumbers(document), perSystem).map((measureNumbers) => ({
+    const systems = chunk(view.measureNumbers, perSystem).map((measureNumbers) => ({
         measureNumbers,
     }));
 
@@ -76,12 +73,6 @@ function measureRoomPx(): number {
     return PAGE_CONTENT_WIDTH_PX - PART_LABEL_WIDTH_PX - SYSTEM_BARLINE_PX;
 }
 
-function measureNumbers(document: EditorDocument): number[] {
-    return [...new Set(document.measures.map((measure) => measure.number))].sort(
-        (left, right) => left - right,
-    );
-}
-
 /**
  * The width every measure is given.
  *
@@ -90,25 +81,33 @@ function measureNumbers(document: EditorDocument): number[] {
  * part writes anywhere — not from each measure's own needs — so a page never
  * mixes wide and narrow bars.
  */
-function uniformMeasureWidth(document: EditorDocument): number {
-    const widest = document.measures.reduce(
-        (width, measure) => Math.max(width, naturalWidth(measure)),
+function uniformMeasureWidth(view: ScoreView): number {
+    const widest = view.measureNumbers.reduce(
+        (width, number) => Math.max(width, naturalWidth(view, number)),
         MINIMUM_MEASURE_WIDTH,
     );
     return Math.min(Math.round(widest), measureRoomPx());
 }
 
-function naturalWidth(measure: EditorMeasure): number {
-    const widestBeat = measure.slots.reduce(
-        (widest, slot) => Math.max(widest, SLOT_WIDTH + markRoom(slot)),
-        SLOT_WIDTH,
-    );
-    return measure.slots.length * widestBeat + MEASURE_PADDING;
+function naturalWidth(view: ScoreView, number: number): number {
+    let beatCount = 0;
+    let widestBeat = SLOT_WIDTH;
+
+    for (const part of PARTS) {
+        const measure = view.parts[part.id].measures[number - 1];
+        if (!measure) continue;
+        beatCount = Math.max(beatCount, measure.beats.length);
+        for (const beat of measure.beats) {
+            widestBeat = Math.max(widestBeat, SLOT_WIDTH + markRoom(beat));
+        }
+    }
+
+    return beatCount * widestBeat + MEASURE_PADDING;
 }
 
 /** The beats of a measure share its width, so every beat is as wide as the fullest one. */
-function markRoom(slot: EditorSlot): number {
-    return Math.max(0, slot.notes.length - 1) * SUBDIVISION_MARK_WIDTH;
+function markRoom(beat: BeatView): number {
+    return Math.max(0, beat.items.length - 1) * SUBDIVISION_MARK_WIDTH;
 }
 
 function paginate(systems: ScoreSystem[]): ScorePage[] {
@@ -135,7 +134,7 @@ function paginate(systems: ScoreSystem[]): ScorePage[] {
     return pages;
 }
 
-function chunk<T>(items: T[], size: number): T[][] {
+function chunk<T>(items: readonly T[], size: number): T[][] {
     const chunks: T[][] = [];
     for (let index = 0; index < items.length; index += size) {
         chunks.push(items.slice(index, index + size));

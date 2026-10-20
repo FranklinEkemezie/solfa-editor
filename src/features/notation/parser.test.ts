@@ -111,8 +111,8 @@ describe('the notation parser', () => {
 
     it('accepts the compact pitch run from the language specification', () => {
         expect(
-            parsed(':ddemdsfeltasebam').items
-                .slice(1)
+            parsed(':ddemdsfeltasebam')
+                .items.slice(1)
                 .map((item) => (item.kind === 'pitch' ? item.token.text : item.kind)),
         ).toEqual(['d', 'de', 'm', 'd', 's', 'fe', 'l', 'ta', 'se', 'ba', 'm']);
     });

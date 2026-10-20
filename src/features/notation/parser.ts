@@ -6,7 +6,8 @@ import {
     type ParserState,
 } from '@/features/notation/grammar';
 import { tokenCandidatesAt } from '@/features/notation/lexer';
-import { sourceRange } from '@/features/notation/source-position';import type {
+import { sourceRange } from '@/features/notation/source-position';
+import type {
     ContinuationToken,
     DurationToken,
     PitchModifierToken,
@@ -166,7 +167,9 @@ function buildTree(tokens: readonly Token[]): VoiceParseTree {
             case 'octave': {
                 const last = items[items.length - 1];
                 if (last?.kind !== 'pitch') {
-                    throw new Error('The parser attached a modifier to something other than a pitch.');
+                    throw new Error(
+                        'The parser attached a modifier to something other than a pitch.',
+                    );
                 }
                 last.modifiers.push(token);
                 break;

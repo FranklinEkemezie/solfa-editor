@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import type { EditorMeasure } from '@/features/score-editor/adapters/editor-document-schema';
 import { ScoreSystem } from '@/features/score-editor/components/score-canvas/score-system';
 import {
     A4_HEIGHT_PX,
@@ -11,7 +10,8 @@ import type {
     ScoreLayout,
     ScorePage as PageLayout,
 } from '@/features/score-editor/layout/score-layout';
-import type { EditorPosition } from '@/features/score-editor/state/editor-position';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
+import type { EditorPosition } from '@/features/score-editor/editing/caret';
 
 /**
  * One sheet of A4.
@@ -23,18 +23,18 @@ import type { EditorPosition } from '@/features/score-editor/state/editor-positi
 export function ScorePage({
     page,
     layout,
-    measureById,
+    view,
     position,
     onPositionChange,
-    activeSlotId,
+    activeNoteKey,
     children,
 }: {
     page: PageLayout;
     layout: ScoreLayout;
-    measureById: Map<string, EditorMeasure>;
+    view: ScoreView;
     position: EditorPosition;
     onPositionChange: (position: EditorPosition) => void;
-    activeSlotId?: string | null;
+    activeNoteKey?: string | null;
     /** The title block, drawn above the first system of the first sheet. */
     children?: ReactNode;
 }) {
@@ -48,8 +48,8 @@ export function ScorePage({
             {page.showsMasthead && children ? (
                 <div
                     style={{ marginBottom: SYSTEM_GAP_PX }}
-                    // The heading edits itself. A click here must not also put the
-                    // caret in the score, which is what would scroll the sheet.
+                    // The heading edits itself. A click here must not also put
+                    // the caret in the score, which is what would scroll the sheet.
                     onClick={(event) => event.stopPropagation()}
                 >
                     {children}
@@ -62,10 +62,10 @@ export function ScorePage({
                         system={system}
                         measureWidth={layout.measureWidth}
                         isFinalSystem={finalPage && index === page.systems.length - 1}
-                        measureById={measureById}
+                        view={view}
                         position={position}
                         onPositionChange={onPositionChange}
-                        activeSlotId={activeSlotId}
+                        activeNoteKey={activeNoteKey}
                     />
                 ))}
             </div>

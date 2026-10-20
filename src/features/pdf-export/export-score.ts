@@ -1,15 +1,10 @@
-import { editorToDomain } from '@/features/score-editor/adapters/editor-to-domain';
-import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
 
-export function exportScoreToPdf(
-    scoreDocument: EditorDocument,
-): { ok: true } | { ok: false; message: string } {
-    try {
-        editorToDomain(scoreDocument);
-    } catch (error) {
+export function exportScoreToPdf(view: ScoreView): { ok: true } | { ok: false; message: string } {
+    if (view.diagnostics.length > 0) {
         return {
             ok: false,
-            message: error instanceof Error ? error.message : 'The score is not ready to print.',
+            message: view.diagnostics[0].message,
         };
     }
 

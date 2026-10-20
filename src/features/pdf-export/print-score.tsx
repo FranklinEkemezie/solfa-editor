@@ -1,10 +1,7 @@
-import type {
-    EditorDocument,
-    EditorMeasure,
-} from '@/features/score-editor/adapters/editor-document-schema';
 import { PrintMasthead } from '@/features/pdf-export/print/print-masthead';
 import { PrintSystem } from '@/features/pdf-export/print/print-system';
 import { calculateScoreLayout } from '@/features/score-editor/layout/score-layout';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
 
 /**
  * The score as it goes to paper.
@@ -15,18 +12,15 @@ import { calculateScoreLayout } from '@/features/score-editor/layout/score-layou
  * only — because that is what a score looks like printed, and what a printer
  * can be trusted to reproduce.
  */
-export function PrintScore({ document }: { document: EditorDocument }) {
-    const layout = calculateScoreLayout(document);
-    const measureById = new Map(
-        document.measures.map((measure): [string, EditorMeasure] => [measure.id, measure]),
-    );
+export function PrintScore({ view }: { view: ScoreView }) {
+    const layout = calculateScoreLayout(view);
     const finalPage = layout.pages.length;
 
     return (
         <main className="print-sheet" id="print-view">
             {layout.pages.map((page) => (
                 <section key={page.number} className="print-page">
-                    {page.showsMasthead ? <PrintMasthead document={document} /> : null}
+                    {page.showsMasthead ? <PrintMasthead document={view.document} /> : null}
                     {page.systems.map((system, index) => (
                         <PrintSystem
                             key={system.measureNumbers[0]}
@@ -35,7 +29,7 @@ export function PrintScore({ document }: { document: EditorDocument }) {
                             isFinalSystem={
                                 page.number === finalPage && index === page.systems.length - 1
                             }
-                            measureById={measureById}
+                            view={view}
                         />
                     ))}
                 </section>

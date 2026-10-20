@@ -64,6 +64,19 @@ export function keyFromOptionValue(value: string): Key {
     );
 }
 
+/**
+ * The name a key is written by, the same one the masthead's select shows.
+ *
+ * A key's signature is not a sign on its tonic: D major has two sharps, but
+ * its name has none. The curated list carries the proper spelling, so the
+ * printed heading and the screen agree.
+ */
+export function keyLabel(key: Key): string {
+    const value = keyOptionValue(key);
+    const option = KEY_OPTIONS.find((candidate) => candidate.value === value);
+    return option?.label ?? `${key.letter} ${key.mode === Mode.MAJOR ? 'major' : 'minor'}`;
+}
+
 export function timeSignatureOptionValue(signature: TimeSignature): string {
     return `${signature.count}/${signature.note}`;
 }

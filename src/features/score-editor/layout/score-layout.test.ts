@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createEmptyScore } from '@/domain/music';
-import { domainToEditor } from '@/features/score-editor/adapters/domain-to-editor';
-import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
-import { addMeasure } from '@/features/score-editor/state/score-measure-commands';
+import { createEmptyScoreDocument, withMeasureCount } from '@/domain/music';
 import {
     PAGE_CONTENT_WIDTH_PX,
     PART_LABEL_WIDTH_PX,
@@ -11,24 +8,20 @@ import {
     systemRoomPx,
 } from '@/features/score-editor/layout/page-geometry';
 import { calculateScoreLayout } from '@/features/score-editor/layout/score-layout';
+import { buildScoreView } from '@/features/score-editor/model/build-score';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
 
-function scoreOf(measureCount: number): EditorDocument {
-    let document = domainToEditor(createEmptyScore());
-    while (measureNumbers(document).length < measureCount) document = addMeasure(document);
-    return document;
+function viewOf(measureCount: number): ScoreView {
+    return buildScoreView(withMeasureCount(createEmptyScoreDocument(), measureCount));
 }
 
-function measureNumbers(document: EditorDocument): number[] {
-    return [...new Set(document.measures.map((measure) => measure.number))];
-}
-
-function systems(document: EditorDocument) {
-    return calculateScoreLayout(document).pages.flatMap((page) => page.systems);
+function systems(view: ScoreView) {
+    return calculateScoreLayout(view).pages.flatMap((page) => page.systems);
 }
 
 describe('calculateScoreLayout', () => {
     it('fits the default two measures on a single sheet', () => {
-        const layout = calculateScoreLayout(scoreOf(2));
+        const layout = calculateScoreLayout(viewOf(2));
 
         expect(layout.pages).toHaveLength(1);
         expect(layout.pages[0].showsMasthead).toBe(true);
@@ -36,21 +29,21 @@ describe('calculateScoreLayout', () => {
     });
 
     it('gives every measure the same width', () => {
-        const layout = calculateScoreLayout(scoreOf(5));
+        const layout = calculateScoreLayout(viewOf(5));
 
         expect(layout.measureWidth).toBeGreaterThan(0);
         expect(layout.measuresPerSystem).toBeGreaterThan(0);
     });
 
     it('works out how many measures a line holds from the page width', () => {
-        const layout = calculateScoreLayout(scoreOf(20));
+        const layout = calculateScoreLayout(viewOf(20));
 
         expect(layout.measuresPerSystem).toBeGreaterThan(1);
         expect(layout.pages[0].systems[0].measureNumbers).toHaveLength(layout.measuresPerSystem);
     });
 
     it('keeps the part labels, the opening barline and the measures inside the page', () => {
-        const layout = calculateScoreLayout(scoreOf(20));
+        const layout = calculateScoreLayout(viewOf(20));
 
         expect(
             PART_LABEL_WIDTH_PX +
@@ -60,7 +53,7 @@ describe('calculateScoreLayout', () => {
     });
 
     it('never gives a measure more width than the labels leave it', () => {
-        const layout = calculateScoreLayout(scoreOf(3));
+        const layout = calculateScoreLayout(viewOf(3));
 
         expect(layout.measureWidth).toBeLessThanOrEqual(
             PAGE_CONTENT_WIDTH_PX - PART_LABEL_WIDTH_PX - SYSTEM_BARLINE_PX,
@@ -69,14 +62,14 @@ describe('calculateScoreLayout', () => {
     });
 
     it('breaks the score into systems that cover every measure once, in order', () => {
-        const document = scoreOf(13);
-        const laid = systems(document).flatMap((system) => system.measureNumbers);
+        const view = viewOf(13);
+        const laid = systems(view).flatMap((system) => system.measureNumbers);
 
         expect(laid).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
     });
 
     it('fills the first page less than the rest, because the title block is on it', () => {
-        const layout = calculateScoreLayout(scoreOf(200));
+        const layout = calculateScoreLayout(viewOf(200));
         const [first, second] = layout.pages;
 
         expect(layout.pages.length).toBeGreaterThan(1);
@@ -88,7 +81,7 @@ describe('calculateScoreLayout', () => {
     });
 
     it('numbers the pages from one, in order', () => {
-        const layout = calculateScoreLayout(scoreOf(200));
+        const layout = calculateScoreLayout(viewOf(200));
 
         expect(layout.pages.map((page) => page.number)).toEqual(
             layout.pages.map((_, index) => index + 1),
@@ -96,7 +89,7 @@ describe('calculateScoreLayout', () => {
     });
 
     it('still returns one sheet for a score with nothing on it', () => {
-        const layout = calculateScoreLayout(scoreOf(1));
+        const layout = calculateScoreLayout(viewOf(1));
 
         expect(layout.pages).toHaveLength(1);
         expect(layout.pages[0].showsMasthead).toBe(true);

@@ -1,5 +1,4 @@
 import { PARTS } from '@/domain/music';
-import type { EditorMeasure } from '@/features/score-editor/adapters/editor-document-schema';
 import { PrintMeasure } from '@/features/pdf-export/print/print-measure';
 import {
     PART_LABEL_WIDTH_PX,
@@ -9,6 +8,7 @@ import {
     SYSTEM_NUMBER_ROW_PX,
 } from '@/features/score-editor/layout/page-geometry';
 import type { ScoreSystem } from '@/features/score-editor/layout/score-layout';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
 
 /**
  * One line of the printed score: a numbered row of measures read across the
@@ -24,12 +24,12 @@ export function PrintSystem({
     system,
     measureWidth,
     isFinalSystem,
-    measureById,
+    view,
 }: {
     system: ScoreSystem;
     measureWidth: number;
     isFinalSystem: boolean;
-    measureById: Map<string, EditorMeasure>;
+    view: ScoreView;
 }) {
     const numbers = system.measureNumbers;
     const lastMeasure = numbers.length - 1;
@@ -70,7 +70,7 @@ export function PrintSystem({
                         {numbers.map((number, index) => (
                             <PrintMeasure
                                 key={number}
-                                measure={measureById.get(`${part.id}-${number}`)}
+                                measure={view.parts[part.id].measures[number - 1]}
                                 width={measureWidth}
                                 isFinal={isFinalSystem && index === lastMeasure}
                             />

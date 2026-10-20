@@ -9,6 +9,7 @@ import {
     type ScoreDocument,
 } from '@/domain/music';
 import { buildScoreView } from '@/features/score-editor/model/build-score';
+import { activeBeat } from '@/features/score-editor/model/score-view';
 
 function documentWith(voices: Partial<Record<'soprano' | 'alto' | 'tenor' | 'bass', string>>) {
     let document: ScoreDocument = createEmptyScoreDocument();
@@ -166,13 +167,43 @@ describe('building a score from voice sources', () => {
     });
 
     it('keeps the parts’ sources independent', () => {
-        const view = buildScoreView(
-            withVoice(documentWith({ soprano: ':d' }), 'bass', ':s'),
-        );
+        const view = buildScoreView(withVoice(documentWith({ soprano: ':d' }), 'bass', ':s'));
 
         expect(view.parts.soprano.source).toBe(':d');
         expect(view.parts.bass.source).toBe(':s');
         expect(sopranoMeasure(view, 1)?.beats[0]?.items[0]?.syllable).toBe('d');
         expect(view.parts.bass.measures[0]?.beats[0]?.items[0]?.syllable).toBe('s');
+    });
+});
+
+describe('activeBeat', () => {
+    it('points an empty voice at its opening beat', () => {
+        const view = buildScoreView(createEmptyScoreDocument());
+
+        expect(activeBeat(view.parts.soprano, 0)).toEqual({ measure: 1, beat: 1 });
+    });
+
+    it('points a caret after an event at the last beat that event sounds in', () => {
+        const view = viewOf(':d-');
+
+        expect(activeBeat(view.parts.soprano, 3)).toEqual({ measure: 1, beat: 2 });
+    });
+
+    it('points a caret before a note at the beat the note starts in', () => {
+        const view = viewOf(':d-');
+
+        expect(activeBeat(view.parts.soprano, 2)).toEqual({ measure: 1, beat: 1 });
+    });
+
+    it('points into a later measure when the music reaches it', () => {
+        const view = viewOf(':d:d:d:d:d');
+
+        expect(activeBeat(view.parts.soprano, 9)).toEqual({ measure: 2, beat: 1 });
+    });
+
+    it('points a caret past the end at the last beat that holds music', () => {
+        const view = viewOf(':d');
+
+        expect(activeBeat(view.parts.soprano, 999)).toEqual({ measure: 1, beat: 1 });
     });
 });

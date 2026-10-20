@@ -1,5 +1,4 @@
-import { timeSignatureLabel } from '@/domain/music';
-import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
+import { timeSignatureLabel, type ScoreDocument } from '@/domain/music';
 import { metadataKeyLabel } from '@/features/score-editor/adapters/metadata-label';
 
 /**
@@ -18,7 +17,7 @@ import { metadataKeyLabel } from '@/features/score-editor/adapters/metadata-labe
  * its details, and air below it before the music starts. A heading pressed
  * against the first system reads as a caption.
  */
-export function PrintMasthead({ document }: { document: EditorDocument }) {
+export function PrintMasthead({ document }: { document: ScoreDocument }) {
     return (
         <header className="mb-[42px] pt-[8px] text-center">
             <h1 className="m-0 font-serif text-[20pt] font-semibold leading-[1.15] text-ink">

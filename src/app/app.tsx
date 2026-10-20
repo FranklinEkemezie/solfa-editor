@@ -12,12 +12,10 @@ import { PlaybackControls } from '@/features/playback/playback-controls';
 import { OnScreenKeyboard } from '@/features/score-editor/components/on-screen-keyboard';
 import { ScoreDocument } from '@/features/score-editor/components/score-document';
 import { ScoreHeader } from '@/features/score-editor/components/score-header';
-import { useCommit } from '@/features/score-editor/hooks/use-commit';
+import { activeDurationMark } from '@/features/score-editor/editing/notation-editing';
 import { useDocumentZoom } from '@/features/score-editor/hooks/use-document-zoom';
-import { useMetadataEditing } from '@/features/score-editor/hooks/use-metadata-editing';
 import { usePinchZoom } from '@/features/score-editor/hooks/use-pinch-zoom';
-import { useScoreEditor } from '@/features/score-editor/hooks/use-score-editor';
-import { useScoreKeyboard } from '@/features/score-editor/hooks/use-score-keyboard';
+import { useScoreEditing } from '@/features/score-editor/hooks/use-score-editing';
 import { DOCUMENT_INSET_PX } from '@/features/score-editor/layout/document-zoom';
 import { useScoreStore } from '@/features/score-editor/state/score-store';
 
@@ -34,28 +32,17 @@ export function App() {
         onZoom: documentView.zoomTo,
     });
 
-    const editor = useScoreEditor(store.document);
-    const commit = useCommit(store, addToast);
-    const changeMetadata = useMetadataEditing(store, commit);
-    const { isPlaying, activeSlotId, toggle, stop } = usePlayback(store.document, addToast);
-
-    const keyboard = useScoreKeyboard({
-        document: store.document,
-        position: store.position,
-        commit,
-        moveTo: (position) => store.commit(store.document, position),
-        undo: store.undo,
-        redo: store.redo,
-        onMessage: addToast,
-    });
+    const editing = useScoreEditing(store, addToast);
+    const { isPlaying, activeNoteKey, toggle, stop } = usePlayback(store.view, addToast);
 
     const printResult = () => {
-        const result = exportScoreToPdf(store.document);
+        const result = exportScoreToPdf(store.view);
         if (!result.ok) addToast(result.message);
     };
 
     const removeMeasure = () => {
-        if (!store.removeMeasure()) addToast('Keep at least one measure in the score.');
+        const result = store.removeMeasure();
+        if (!result.ok) addToast(result.message);
     };
 
     const tools = buildScoreToolGroups({
@@ -102,25 +89,28 @@ export function App() {
                             style={{ zoom: documentView.zoom, padding: DOCUMENT_INSET_PX }}
                         >
                             <ScoreDocument
-                                document={store.document}
+                                view={store.view}
                                 position={store.position}
-                                editor={editor}
                                 masthead={
                                     <ScoreHeader
                                         document={store.document}
-                                        onChange={changeMetadata}
+                                        onChange={(next) => store.commit(next, store.position)}
                                     />
                                 }
-                                onPositionChange={(next) => store.commit(store.document, next)}
-                                onKeyDown={keyboard.handleKeyDown}
-                                activeSlotId={activeSlotId}
+                                onPositionChange={store.setPosition}
+                                onKeyDown={editing.handleKeyDown}
+                                activeNoteKey={activeNoteKey}
                             />
                         </div>
                     </main>
                 </div>
-                <OnScreenKeyboard onInput={keyboard.input} onBackspace={keyboard.backspace} />
+                <OnScreenKeyboard
+                    onInput={editing.input}
+                    onBackspace={editing.backspace}
+                    activeDuration={activeDurationMark(store.document, store.position)}
+                />
             </div>
-            <PrintScore document={store.document} />
+            <PrintScore view={store.view} />
             <ToastViewport messages={toasts} dismiss={dismiss} />
         </TooltipProvider>
     );

@@ -1,17 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { editorToDomain } from '@/features/score-editor/adapters/editor-to-domain';
+import { validateScore } from '@/domain/music';
+import { buildScoreView } from '@/features/score-editor/model/build-score';
 import {
+    gloriaJudeNnam,
+    hallelujahChorus,
+    presetDocument,
     ScorePresetError,
-    parseScorePreset,
     type ScorePreset,
 } from '@/features/score-editor/presets';
 
-function preset(parts: Partial<ScorePreset['parts']> = {}): ScorePreset {
+function preset(parts: Partial<ScorePreset['parts']> = {}, measureCount?: number): ScorePreset {
     return {
         title: 'Test',
         key: 'D-MAJOR-SHARP-2',
         timeSignature: '4/QUARTER',
         tempo: { beatsPerMinute: 96, description: 'Andante' },
+        measureCount,
         parts: {
             soprano: '',
             alto: '',
@@ -22,9 +26,9 @@ function preset(parts: Partial<ScorePreset['parts']> = {}): ScorePreset {
     };
 }
 
-describe('parseScorePreset', () => {
+describe('presetDocument', () => {
     it('reads the details off the preset', () => {
-        const document = parseScorePreset(preset({ soprano: 'd : m : s : l' }));
+        const document = presetDocument(preset({ soprano: ':dmsl' }));
 
         expect(document.title).toBe('Test');
         expect(document.key.letter).toBe('D');
@@ -34,114 +38,99 @@ describe('parseScorePreset', () => {
         expect(document.tempo.description).toBe('Andante');
     });
 
-    it('gives every part the same number of measures, ordered by part', () => {
-        const document = parseScorePreset(
-            preset({ soprano: 'd : : : | m : : :', alto: 's : : :' }),
-        );
+    it('keeps the notation as the voices’ sources', () => {
+        const document = presetDocument(preset({ soprano: ':dmsl' }));
 
-        expect(document.measures.map((measure) => measure.id)).toEqual([
-            'soprano-1',
-            'soprano-2',
-            'alto-1',
-            'alto-2',
-            'tenor-1',
-            'tenor-2',
-            'bass-1',
-            'bass-2',
-        ]);
+        expect(document.voices.soprano).toBe(':dmsl');
+        expect(document.voices.alto).toBe('');
     });
 
-    it('fills a measure with one beat per colon', () => {
-        const document = parseScorePreset(preset({ soprano: 'd : m : s : l' }));
+    it('lays a short voice over the measures the document asks for', () => {
+        const view = buildScoreView(presetDocument(preset({ soprano: ':dmsl' }, 3)));
 
-        expect(document.measures[0].slots.map((slot) => slot.notes[0]?.syllable)).toEqual([
-            'd',
-            'm',
-            's',
-            'l',
-        ]);
-    });
-
-    it('leaves the beats a part stops writing empty', () => {
-        const document = parseScorePreset(preset({ soprano: 'd : m' }));
-
-        expect(document.measures[0].slots).toHaveLength(4);
-        expect(document.measures[0].slots[2].notes).toEqual([]);
-        expect(document.measures[0].slots[2].division).toBe(1);
-    });
-
-    it('halves a beat at a dot and quarters it at a comma', () => {
-        const document = parseScorePreset(preset({ soprano: 'm.d : d,r.m,f' }));
-        const [halved, quartered] = document.measures[0].slots;
-
-        expect(halved.division).toBe(2);
-        expect(halved.notes.map((note) => note.syllable)).toEqual(['m', 'd']);
-        expect(quartered.division).toBe(4);
-        expect(quartered.notes.map((note) => note.syllable)).toEqual(['d', 'r', 'm', 'f']);
-    });
-
-    it('lets a comma win when a beat mixes the two marks', () => {
-        expect(parseScorePreset(preset({ soprano: 'd,r.m' })).measures[0].slots[0].division).toBe(
-            4,
+        expect(view.measureCount).toBe(3);
+        expect(
+            view.parts.soprano.measures[0]?.beats.map((beat) => beat.items[0]?.syllable),
+        ).toEqual(['d', 'm', 's', 'l']);
+        expect(view.parts.soprano.measures[2]?.beats.every((beat) => beat.items.length === 0)).toBe(
+            true,
         );
     });
 
-    it('sustains the note before a dash, across the barline', () => {
-        const document = parseScorePreset(preset({ soprano: 'd : - | - : m' }));
+    it('gives every part the measures the music needs', () => {
+        const view = buildScoreView(
+            presetDocument(preset({ soprano: ':dmsl:dmsl:dmsl', alto: ':d' })),
+        );
 
-        expect(document.measures[0].slots[1].notes).toEqual([
-            expect.objectContaining({ syllable: 'd', continuation: true }),
-        ]);
-        expect(document.measures[1].slots[0].notes).toEqual([
-            expect.objectContaining({ syllable: 'd', continuation: true }),
-        ]);
-    });
-
-    it('ignores octave marks, which the parts already supply', () => {
-        expect(parseScorePreset(preset({ soprano: "d' : m," })).measures[0].slots[0].notes).toEqual(
-            [expect.objectContaining({ syllable: 'd' })],
+        expect(view.measureCount).toBe(3);
+        expect(view.parts.alto.measures).toHaveLength(3);
+        expect(view.parts.alto.measures[2]?.beats.every((beat) => beat.items.length === 0)).toBe(
+            true,
         );
     });
 
-    it('reads the chromatic syllables as one note', () => {
-        const document = parseScorePreset(preset({ soprano: 'de : ma : se : ta' }));
+    it('places each voice in its own register', () => {
+        const view = buildScoreView(presetDocument(preset({ soprano: ':d', bass: ':d' })));
 
-        expect(document.measures[0].slots.map((slot) => slot.notes[0].syllable)).toEqual([
-            'de',
-            'ma',
-            'se',
-            'ta',
+        const soprano = view.parts.soprano.voice?.events[0];
+        const bass = view.parts.bass.voice?.events[0];
+        expect(soprano?.kind === 'note' ? soprano.note.pitch.octave : null).toBe(5);
+        expect(bass?.kind === 'note' ? bass.note.pitch.octave : null).toBe(2);
+    });
+
+    it('rejects a source it cannot read, naming the part', () => {
+        expect(() => presetDocument(preset({ soprano: ':dx' }))).toThrow(ScorePresetError);
+        expect(() => presetDocument(preset({ soprano: ':dx' }))).toThrow(/soprano/i);
+    });
+
+    it('accepts an empty preset as four silent voices', () => {
+        const view = buildScoreView(presetDocument(preset()));
+
+        expect(view.measureCount).toBe(1);
+        expect(validateScore(view.score)).toEqual([]);
+    });
+});
+
+describe('the samples', () => {
+    it('opens the Hallelujah Chorus as eight measures for four parts', () => {
+        const view = buildScoreView(presetDocument(hallelujahChorus));
+
+        expect(view.measureCount).toBe(8);
+        for (const part of ['soprano', 'alto', 'tenor', 'bass'] as const) {
+            expect(view.parts[part].diagnostics).toEqual([]);
+            expect(view.parts[part].measures).toHaveLength(8);
+        }
+        expect(validateScore(view.score)).toEqual([]);
+    });
+
+    it('keeps the written notes of the opening measure', () => {
+        const view = buildScoreView(presetDocument(hallelujahChorus));
+        const beats = view.parts.soprano.measures[0]?.beats ?? [];
+
+        expect(beats[0]?.items[0]).toMatchObject({ kind: 'note', syllable: 'd' });
+        expect(beats[1]?.items[0]).toMatchObject({ kind: 'continuation', syllable: 'd' });
+        expect(beats[2]?.items.map((item) => item.syllable)).toEqual(['s', 'l']);
+        expect(beats[3]?.items[0]).toMatchObject({ kind: 'note', syllable: 's' });
+    });
+
+    it('holds the long notes across their beats', () => {
+        const view = buildScoreView(presetDocument(gloriaJudeNnam));
+        const measure = view.score.measures.find(
+            (candidate) => candidate.part === 'soprano' && candidate.number === 2,
+        );
+
+        expect(measure?.events.map((event) => event.duration)).toEqual([
+            { numerator: 2, denominator: 1 },
+            { numerator: 2, denominator: 1 },
         ]);
     });
 
-    it('keeps a measure that is written empty', () => {
-        const document = parseScorePreset(preset({ soprano: 'd : : : | | m : : :' }));
-        const soprano = document.measures.filter((measure) => measure.part === 'soprano');
+    it('keeps Gloria’s details', () => {
+        const document = presetDocument(gloriaJudeNnam);
 
-        expect(soprano).toHaveLength(3);
-        expect(soprano[1].slots.every((slot) => slot.notes.length === 0)).toBe(true);
-        expect(soprano[2].slots[0].notes[0].syllable).toBe('m');
-    });
-
-    it('rejects more beats than the time signature holds', () => {
-        expect(() => parseScorePreset(preset({ soprano: 'd : m : s : l : d' }))).toThrow(
-            ScorePresetError,
-        );
-    });
-
-    it('rejects a syllable it does not know', () => {
-        expect(() => parseScorePreset(preset({ soprano: 'd : x : :' }))).toThrow(ScorePresetError);
-    });
-
-    it('rejects a dash with nothing before it to sustain', () => {
-        expect(() => parseScorePreset(preset({ soprano: '- : d : :' }))).toThrow(ScorePresetError);
-    });
-
-    it('produces a score the domain accepts', () => {
-        const document = parseScorePreset(
-            preset({ soprano: 'd : m : s : l', bass: 'd,r.m,f : : :' }),
-        );
-
-        expect(() => editorToDomain(document)).not.toThrow();
+        expect(document.title).toBe('Gloria');
+        expect(document.author).toBe('Sir Jude Nnam');
+        expect(document.key.letter).toBe('E');
+        expect(document.tempo.beatsPerMinute).toBe(110);
     });
 });

@@ -15,12 +15,6 @@
     "dependencies": {
         "@radix-ui/react-select": "^2.4.1",
         "@radix-ui/react-tooltip": "^1.4.1",
-        "@tiptap/core": "^3.32.0",
-        "@tiptap/extension-document": "^3.32.0",
-        "@tiptap/extension-history": "^3.32.0",
-        "@tiptap/extension-text": "^3.32.0",
-        "@tiptap/pm": "^3.32.0",
-        "@tiptap/react": "^3.32.0",
         "clsx": "^2.1.1",
         "lucide-react": "^1.57.0",
         "react": "^18.3.1",

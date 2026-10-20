@@ -1,7 +1,7 @@
 import { gloriaJudeNnam } from '@/features/score-editor/presets/gloria-jude-nnam';
 import { hallelujahChorus } from '@/features/score-editor/presets/hallelujah-chorus';
 import {
-    parseScorePreset,
+    presetDocument,
     ScorePresetError,
     type ScorePreset,
 } from '@/features/score-editor/presets/score-preset';
@@ -16,5 +16,5 @@ import {
  */
 export const ACTIVE_PRESET: ScorePreset | null = hallelujahChorus;
 
-export { gloriaJudeNnam, hallelujahChorus, parseScorePreset, ScorePresetError };
+export { gloriaJudeNnam, hallelujahChorus, presetDocument, ScorePresetError };
 export type { ScorePreset };

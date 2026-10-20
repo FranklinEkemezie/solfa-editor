@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
 import { ScorePlayer } from '@/features/playback/score-player';
 
-export function usePlayback(document: EditorDocument, onError: (message: string) => void) {
+export function usePlayback(view: ScoreView, onError: (message: string) => void) {
     const playerRef = useRef<ScorePlayer | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
+    const [activeNoteKey, setActiveNoteKey] = useState<string | null>(null);
 
     useEffect(() => {
         return () => {
@@ -17,7 +17,7 @@ export function usePlayback(document: EditorDocument, onError: (message: string)
     const stop = useCallback(() => {
         playerRef.current?.stop();
         setIsPlaying(false);
-        setActiveSlotId(null);
+        setActiveNoteKey(null);
     }, []);
 
     const toggle = useCallback(async () => {
@@ -29,20 +29,20 @@ export function usePlayback(document: EditorDocument, onError: (message: string)
         if (!playerRef.current) playerRef.current = new ScorePlayer();
 
         try {
-            await playerRef.current.start(document, {
+            await playerRef.current.start(view, {
                 onNoteStart: (event) => {
-                    if (event.part === 'soprano') setActiveSlotId(event.slotId ?? null);
+                    if (event.part === 'soprano') setActiveNoteKey(event.noteKey);
                 },
                 onPlaybackEnded: () => {
                     setIsPlaying(false);
-                    setActiveSlotId(null);
+                    setActiveNoteKey(null);
                 },
             });
             setIsPlaying(true);
         } catch (error) {
             onError(error instanceof Error ? error.message : 'Playback could not start.');
         }
-    }, [document, isPlaying, onError, stop]);
+    }, [isPlaying, onError, stop, view]);
 
-    return { isPlaying, activeSlotId, toggle, stop };
+    return { isPlaying, activeNoteKey, toggle, stop };
 }

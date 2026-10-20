@@ -1,13 +1,8 @@
-import type { KeyboardEvent, ReactNode } from 'react';
-import type { Editor } from '@tiptap/core';
-import { EditorContent } from '@tiptap/react';
-import type {
-    EditorDocument,
-    EditorMeasure,
-} from '@/features/score-editor/adapters/editor-document-schema';
+import { useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { ScorePage } from '@/features/score-editor/components/score-canvas/score-page';
+import type { EditorPosition } from '@/features/score-editor/editing/caret';
 import { calculateScoreLayout } from '@/features/score-editor/layout/score-layout';
-import type { EditorPosition } from '@/features/score-editor/state/editor-position';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
 
 /**
  * The score, as a document of A4 sheets.
@@ -17,40 +12,38 @@ import type { EditorPosition } from '@/features/score-editor/state/editor-positi
  * order and scroll past the reader; how large they are drawn is the viewport's
  * business, not this component's.
  *
- * The hidden Tiptap surface stays in the tree because it is what the physical
- * keyboard is captured by, and what undo and redo are kept in.
+ * The section itself is the writing surface. It is focusable and holds the
+ * physical keyboard handler, so clicking the music puts the caret back in the
+ * score without moving the page: the browser is asked to focus without
+ * scrolling, and the sheets stay where they were.
  */
 export function ScoreDocument({
-    document,
+    view,
     position,
-    editor,
     masthead,
     onPositionChange,
     onKeyDown,
-    activeSlotId,
+    activeNoteKey,
 }: {
-    document: EditorDocument;
+    view: ScoreView;
     position: EditorPosition;
-    editor: Editor;
     /** The editable title block, drawn on the first sheet. */
     masthead: ReactNode;
     onPositionChange: (position: EditorPosition) => void;
-    onKeyDown: (event: KeyboardEvent) => void;
-    activeSlotId?: string | null;
+    onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+    activeNoteKey?: string | null;
 }) {
-    const layout = calculateScoreLayout(document);
-    const measureById: Map<string, EditorMeasure> = new Map(
-        document.measures.map((measure) => [measure.id, measure]),
-    );
+    const sectionRef = useRef<HTMLElement>(null);
+    const layout = calculateScoreLayout(view);
 
     return (
         <section
-            className="relative"
+            ref={sectionRef}
+            tabIndex={0}
+            className="relative outline-none"
             aria-label="SATB score editor"
             onKeyDown={onKeyDown}
-            // The editing surface sits after the sheets, so focusing it must not
-            // scroll the document down to it.
-            onClick={() => editor.commands.focus(undefined, { scrollIntoView: false })}
+            onClick={() => sectionRef.current?.focus({ preventScroll: true })}
         >
             <div className="flex flex-col items-start gap-8">
                 {layout.pages.map((page) => (
@@ -58,19 +51,15 @@ export function ScoreDocument({
                         key={page.number}
                         page={page}
                         layout={layout}
-                        measureById={measureById}
+                        view={view}
                         position={position}
                         onPositionChange={onPositionChange}
-                        activeSlotId={activeSlotId}
+                        activeNoteKey={activeNoteKey}
                     >
                         {masthead}
                     </ScorePage>
                 ))}
             </div>
-            <EditorContent
-                editor={editor}
-                className="pointer-events-none absolute h-0 w-0 opacity-0"
-            />
         </section>
     );
 }

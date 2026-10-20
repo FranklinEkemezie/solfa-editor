@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NoteValue } from '@/domain/music';
-import {
-    CHROMATIC_SOLFA_SYLLABLES,
-    NATURAL_SOLFA_SYLLABLES,
-} from '@/domain/solfa';
+import { CHROMATIC_SOLFA_SYLLABLES, NATURAL_SOLFA_SYLLABLES } from '@/domain/solfa';
 import { tokenCandidatesAt } from '@/features/notation/lexer';
 import { tokenize } from '@/features/notation/parser';
 
@@ -59,12 +56,7 @@ describe('the notation lexer', () => {
     });
 
     it('recognises continuations and literal-space rests', () => {
-        expect(shape(':d- ')).toEqual([
-            'duration::',
-            'pitch:d',
-            'continuation:-',
-            'rest: ',
-        ]);
+        expect(shape(':d- ')).toEqual(['duration::', 'pitch:d', 'continuation:-', 'rest: ']);
     });
 
     it('offers the longer pitch first at an ambiguous position', () => {

@@ -1,44 +1,50 @@
 import { markAfterBeat } from '@/domain/music';
-import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
-import { SlotButton } from '@/features/score-editor/components/score-canvas/slot-button';
+import { ACCIDENTAL_MARKS } from '@/features/score-editor/components/score-canvas/accidental-mark';
+import { BeatButton } from '@/features/score-editor/components/score-canvas/beat-button';
 import { PART_ROW_HEIGHT_PX } from '@/features/score-editor/layout/page-geometry';
-import type { EditorPosition } from '@/features/score-editor/state/editor-position';
+import type { BeatView, MeasureView, PartView } from '@/features/score-editor/model/score-view';
+import type { EditorPosition } from '@/features/score-editor/editing/caret';
 
-function beatSummary(notes: EditorDocument['measures'][number]['slots'][number]['notes']): string {
-    if (notes.length === 0) return ', empty';
-    const written = notes.map((note) =>
-        note.continuation ? 'continuation' : (note.syllable ?? 'rest'),
-    );
-    return `, ${written.join(' ')}`;
+function writtenItem(item: BeatView['items'][number]): string {
+    if (item.kind === 'continuation') return 'continuation';
+    return `${item.syllable}${item.accidental ? (ACCIDENTAL_MARKS[item.accidental] ?? '') : ''}`;
+}
+
+function beatSummary(beat: BeatView): string {
+    if (beat.items.length === 0) return ', empty';
+    return `, ${beat.items.map(writtenItem).join(' ')}`;
 }
 
 /** One part's row of beats inside one measure. */
 export function PartMeasure({
+    part,
     measure,
-    position,
     onPositionChange,
-    activeSlotId,
+    activeBeatNumber,
+    activeNoteKey,
 }: {
-    measure: EditorDocument['measures'][number];
-    position: EditorPosition;
+    part: PartView;
+    measure: MeasureView;
     onPositionChange: (position: EditorPosition) => void;
-    activeSlotId?: string | null;
+    /** The beat in this measure the caret is in, if any. */
+    activeBeatNumber: number | null;
+    activeNoteKey?: string | null;
 }) {
     return (
         <div className="flex items-stretch px-1" style={{ height: PART_ROW_HEIGHT_PX }}>
-            {measure.slots.map((slot, slotIndex) => (
-                <SlotButton
-                    key={slot.id}
-                    slot={slot}
+            {measure.beats.map((beat, index) => (
+                <BeatButton
+                    key={beat.number}
+                    beat={beat}
                     closingMark={
-                        slotIndex < measure.slots.length - 1
-                            ? markAfterBeat(slotIndex, measure.timeSignature.count)
+                        index < measure.beats.length - 1
+                            ? markAfterBeat(index, measure.beats.length)
                             : null
                     }
-                    isActive={position.measureId === measure.id && position.slotIndex === slotIndex}
-                    isPlaying={activeSlotId === slot.id}
-                    ariaLabel={`${measure.part}, measure ${measure.number}, beat ${slotIndex + 1}${beatSummary(slot.notes)}`}
-                    onSelect={() => onPositionChange({ measureId: measure.id, slotIndex })}
+                    isActive={activeBeatNumber === beat.number}
+                    isPlaying={beat.items.some((item) => item.noteKey === activeNoteKey)}
+                    ariaLabel={`${part.label}, measure ${measure.number}, beat ${beat.number}${beatSummary(beat)}`}
+                    onSelect={() => onPositionChange({ part: part.id, offset: beat.sourceOffset })}
                 />
             ))}
         </div>

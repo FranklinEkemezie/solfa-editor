@@ -28,11 +28,7 @@ function source(outcome: EditOutcome, part: EditorPosition['part'] = 'soprano'):
     return outcome.document.voices[part];
 }
 
-function write(
-    document: ScoreDocument,
-    position: EditorPosition,
-    keys: string[],
-): EditOutcome {
+function write(document: ScoreDocument, position: EditorPosition, keys: string[]): EditOutcome {
     let outcome: EditOutcome = { document, position, changed: false };
     for (const key of keys) {
         outcome = composeKey(outcome.document, outcome.position, key);
@@ -238,9 +234,7 @@ describe('editing a voice source', () => {
 
         expect(source(write(createEmptyScoreDocument(), caret(0), ['d', ' ']))).toBe(':d ');
         expect(source(write(createEmptyScoreDocument(), caret(0), ['d', '-']))).toBe(':d-');
-        expect(source(write(createEmptyScoreDocument(), caret(0), ['d', "'", '1']))).toBe(
-            ":d'1",
-        );
+        expect(source(write(createEmptyScoreDocument(), caret(0), ['d', "'", '1']))).toBe(":d'1");
     });
 
     it('writes an accidental from the keyboard', () => {

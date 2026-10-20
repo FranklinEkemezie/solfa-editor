@@ -1,59 +1,69 @@
 import { describe, expect, it } from 'vitest';
-import { Accidental, createEmptyScore, Key, KeySignature, Letter, Mode } from '@/domain/music';
-import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
-import { domainToEditor } from '@/features/score-editor/adapters/domain-to-editor';
-import { interpretInput } from '@/features/score-editor/editor/input-rules';
-import type { EditorPosition } from '@/features/score-editor/state/editor-position';
+import {
+    Accidental,
+    createEmptyScoreDocument,
+    Key,
+    KeySignature,
+    Letter,
+    Mode,
+    NoteValue,
+    Tempo,
+    withVoice,
+    type PartId,
+    type ScoreDocument,
+} from '@/domain/music';
+import { buildScoreView } from '@/features/score-editor/model/build-score';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
 import {
     buildPlaybackEvents,
     secondsPerQuarter,
     type PlaybackEvent,
 } from '@/features/playback/playback-events';
 
-function write(
-    document: EditorDocument,
-    keys: string[],
-    position: EditorPosition = { measureId: 'soprano-1', slotIndex: 0 },
-): EditorDocument {
-    let current = document;
-    let caret = position;
-    for (const key of keys) {
-        const result = interpretInput(current, caret, key);
-        current = result.document;
-        caret = result.position;
+function scoreOf(
+    voices: Partial<Record<PartId, string>>,
+    patch: Partial<ScoreDocument> = {},
+): ScoreView {
+    let document = createEmptyScoreDocument();
+    for (const [part, source] of Object.entries(voices) as [PartId, string][]) {
+        document = withVoice(document, part, source);
     }
-    return current;
+    return buildScoreView({ ...document, ...patch });
 }
 
-function part(document: EditorDocument, id: PlaybackEvent['part']): PlaybackEvent[] {
-    return buildPlaybackEvents(document).filter((event) => event.part === id);
+function part(view: ScoreView, id: PlaybackEvent['part']): PlaybackEvent[] {
+    return buildPlaybackEvents(view).filter((event) => event.part === id);
 }
+
+const D_MAJOR = new Key(Letter.D, new KeySignature(Accidental.SHARP, 2), Mode.MAJOR);
+const F_MAJOR = new Key(Letter.F, new KeySignature(Accidental.FLAT, 1), Mode.MAJOR);
 
 describe('buildPlaybackEvents', () => {
     it('sounds a plain quarter note for one quarter note of time', () => {
-        const document = write(domainToEditor(createEmptyScore()), ['d']);
-        const events = part(document, 'soprano');
+        const view = scoreOf({ soprano: ':d' });
+        const events = part(view, 'soprano');
 
         expect(events).toHaveLength(1);
         expect(events[0].time).toBeCloseTo(0);
-        expect(events[0].durationSeconds).toBeCloseTo(secondsPerQuarter(document));
+        expect(events[0].durationSeconds).toBeCloseTo(secondsPerQuarter(view.document));
     });
 
-    it('sounds the two halves of a halved beat', () => {
-        const document = write(domainToEditor(createEmptyScore()), ['d', '.', 'm']);
-        const events = part(document, 'soprano');
-        const quarter = secondsPerQuarter(document);
+    it('sounds the two halves of an eighth-note pair', () => {
+        const view = scoreOf({ soprano: ':.dm' });
+        const events = part(view, 'soprano');
+        const quarter = secondsPerQuarter(view.document);
 
         expect(events.map((event) => event.syllable)).toEqual(['d', 'm']);
         expect(events[0].time).toBeCloseTo(0);
         expect(events[1].time).toBeCloseTo(quarter / 2);
         expect(events[0].durationSeconds).toBeCloseTo(quarter / 2);
+        expect(events[1].durationSeconds).toBeCloseTo(quarter / 2);
     });
 
-    it('sounds the four quarters of a quartered beat', () => {
-        const document = write(domainToEditor(createEmptyScore()), ['d', ',', 'r', 'm', 'f']);
-        const events = part(document, 'soprano');
-        const quarter = secondsPerQuarter(document);
+    it('sounds the four quarters of a sixteenth-note group', () => {
+        const view = scoreOf({ soprano: ':,drmf' });
+        const events = part(view, 'soprano');
+        const quarter = secondsPerQuarter(view.document);
 
         expect(events.map((event) => event.syllable)).toEqual(['d', 'r', 'm', 'f']);
         expect(events[3].time).toBeCloseTo((quarter * 3) / 4);
@@ -61,56 +71,89 @@ describe('buildPlaybackEvents', () => {
     });
 
     it('prolongs the previous note for a continuation instead of sounding again', () => {
-        const document = write(domainToEditor(createEmptyScore()), ['d', '-']);
-        const events = part(document, 'soprano');
+        const view = scoreOf({ soprano: ':d-' });
+        const events = part(view, 'soprano');
 
         expect(events).toHaveLength(1);
-        expect(events[0].durationSeconds).toBeCloseTo(secondsPerQuarter(document) * 2);
+        expect(events[0].durationSeconds).toBeCloseTo(secondsPerQuarter(view.document) * 2);
+    });
+
+    it('keeps a note that crosses a barline as one sound', () => {
+        const view = scoreOf({ soprano: ':d----' });
+        const events = part(view, 'soprano');
+
+        expect(events).toHaveLength(1);
+        expect(events[0].durationSeconds).toBeCloseTo(secondsPerQuarter(view.document) * 5);
+    });
+
+    it('lets rests take time without sounding', () => {
+        const view = scoreOf({ soprano: ':d s' });
+        const events = part(view, 'soprano');
+        const quarter = secondsPerQuarter(view.document);
+
+        expect(events.map((event) => event.syllable)).toEqual(['d', 's']);
+        expect(events[0].time).toBeCloseTo(0);
+        expect(events[1].time).toBeCloseTo(quarter * 2);
     });
 
     it('separates the parts by whole octaves', () => {
-        let document = domainToEditor(createEmptyScore());
-        for (const id of ['soprano', 'alto', 'tenor', 'bass'] as const) {
-            document = write(document, ['d'], { measureId: `${id}-1`, slotIndex: 0 });
-        }
+        const view = scoreOf({
+            soprano: ':d',
+            alto: ':d',
+            tenor: ':d',
+            bass: ':d',
+        });
 
-        expect(part(document, 'soprano')[0].note).toBe('C5');
-        expect(part(document, 'alto')[0].note).toBe('C4');
-        expect(part(document, 'tenor')[0].note).toBe('C3');
-        expect(part(document, 'bass')[0].note).toBe('C2');
+        expect(part(view, 'soprano')[0].note).toBe('C5');
+        expect(part(view, 'alto')[0].note).toBe('C4');
+        expect(part(view, 'tenor')[0].note).toBe('C3');
+        expect(part(view, 'bass')[0].note).toBe('C2');
     });
 
     it('sounds doh on the key tonic, leaving the notation alone', () => {
-        const base = domainToEditor(createEmptyScore());
-        const inD: EditorDocument = {
-            ...base,
-            key: new Key(Letter.D, new KeySignature(Accidental.SHARP, 2), Mode.MAJOR),
-        };
-        const written = write(inD, ['d', 'r']);
+        const view = scoreOf({ soprano: ':dr' }, { key: D_MAJOR });
 
-        expect(written.measures[0].slots[0].notes[0].syllable).toBe('d');
-        expect(part(written, 'soprano').map((event) => event.note)).toEqual(['D5', 'E5']);
+        expect(view.parts.soprano.voice?.events[0]).toMatchObject({
+            kind: 'note',
+            note: { syllable: 'd' },
+        });
+        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['D5', 'E5']);
     });
 
     it('keys a flat score without rewriting a single syllable', () => {
-        const base = domainToEditor(createEmptyScore());
-        const inF: EditorDocument = {
-            ...base,
-            key: new Key(Letter.F, new KeySignature(Accidental.FLAT, 1), Mode.MAJOR),
-        };
-        const written = write(inF, ['d', 'm', 's', 'l']);
+        const view = scoreOf({ soprano: ':dmsl' }, { key: F_MAJOR });
 
-        expect(written.measures[0].slots.map((slot) => slot.notes[0].syllable)).toEqual([
-            'd',
-            'm',
-            's',
-            'l',
-        ]);
-        expect(part(written, 'soprano').map((event) => event.note)).toEqual([
-            'F5',
-            'A5',
-            'C6',
-            'D6',
-        ]);
+        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['F5', 'A5', 'C6', 'D6']);
+    });
+
+    it('sounds an explicit accidental over the syllable’s own degree', () => {
+        const view = scoreOf({ soprano: ':d#' }, { key: D_MAJOR });
+
+        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['D#5']);
+    });
+
+    it('gives every note a key the page can use to mark it', () => {
+        const view = scoreOf({ soprano: ':dm' });
+        const events = part(view, 'soprano');
+
+        expect(events.map((event) => event.noteKey)).toEqual(['soprano:0', 'soprano:1']);
+    });
+
+    it('skips a voice that could not be read', () => {
+        const view = scoreOf({ soprano: ':dx', alto: ':d' });
+
+        expect(part(view, 'soprano')).toEqual([]);
+        expect(part(view, 'alto')).toHaveLength(1);
+    });
+
+    it('times at the tempo’s beat unit', () => {
+        const view = scoreOf({ soprano: ':d' });
+        const bpm = view.document.tempo.beatsPerMinute;
+        const halfNoteBeat: ScoreDocument = {
+            ...view.document,
+            tempo: new Tempo(NoteValue.HALF, bpm, ''),
+        };
+
+        expect(secondsPerQuarter(halfNoteBeat)).toBeCloseTo(60 / bpm / 2);
     });
 });

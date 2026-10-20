@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
 import {
     buildPlaybackEvents,
     type PlaybackCallbacks,
@@ -11,7 +11,7 @@ export class ScorePlayer {
     private part: Tone.Part | null = null;
     private callbacks: PlaybackCallbacks = {};
 
-    public async start(document: EditorDocument, callbacks: PlaybackCallbacks = {}): Promise<void> {
+    public async start(view: ScoreView, callbacks: PlaybackCallbacks = {}): Promise<void> {
         this.stop();
         this.callbacks = callbacks;
         await Tone.start();
@@ -21,7 +21,7 @@ export class ScorePlayer {
             envelope: { attack: 0.02, decay: 0.14, sustain: 0.2, release: 0.4 },
         }).toDestination();
 
-        const events = buildPlaybackEvents(document);
+        const events = buildPlaybackEvents(view);
         this.part = new Tone.Part(
             (time, value) => {
                 const event = value as PlaybackEvent;
