@@ -1,11 +1,14 @@
 import {
-    divisionForValues,
+    fractionsEqual,
+    fraction,
     Measure,
     Note,
     NoteValue,
+    NOTE_VALUE_UNITS,
     PARTS,
     Score,
     type BeatDivision,
+    type Fraction,
     type MusicalEvent,
     type SolfaSyllable,
 } from '@/domain/music';
@@ -42,6 +45,18 @@ export function domainToEditor(score: Score): EditorDocument {
 type NoteGroup = { division: BeatDivision; notes: Note[] };
 
 /**
+ * The old editor stored a beat's division rather than a duration. This adapter
+ * is on its way out; until it goes, read the division back off an exact
+ * duration so a converted score still groups into its original beats.
+ */
+function divisionForDuration(beatValue: NoteValue, duration: Fraction): BeatDivision {
+    const beat = NOTE_VALUE_UNITS[beatValue];
+    if (fractionsEqual(duration, beat)) return 1;
+    if (fractionsEqual(duration, fraction(beat.numerator, beat.denominator * 2))) return 2;
+    return 4;
+}
+
+/**
  * Group a measure's events into beats.
  *
  * Consecutive notes shorter than the beat and of the same written value are
@@ -62,13 +77,13 @@ function groupEventsIntoBeats(
             continue;
         }
 
-        const division = divisionForValues(beatValue, event.duration.noteValue);
+        const division = divisionForDuration(beatValue, event.duration);
         const notes: Note[] = [event];
         let next = index + 1;
         while (notes.length < division && next < events.length) {
             const candidate = events[next];
             if (!(candidate instanceof Note)) break;
-            if (divisionForValues(beatValue, candidate.duration.noteValue) !== division) break;
+            if (divisionForDuration(beatValue, candidate.duration) !== division) break;
             notes.push(candidate);
             next += 1;
         }

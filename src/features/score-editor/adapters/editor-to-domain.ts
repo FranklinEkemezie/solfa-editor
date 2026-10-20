@@ -45,7 +45,7 @@ function toDomainMeasure(measure: EditorMeasure): Measure {
                 ? [
                       new Note(
                           solfaPitch(note.syllable),
-                          duration,
+                          duration.toQuarterUnits(),
                           note.syllable,
                           note.continuation ?? false,
                           note.lyric ?? '',

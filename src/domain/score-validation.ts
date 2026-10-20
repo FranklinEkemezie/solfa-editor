@@ -1,4 +1,4 @@
-import { addFractions, compareFractions, fraction, type Fraction } from '@/domain/fraction';
+import { addFractions, compareFractions, ZERO_FRACTION, type Fraction } from '@/domain/fraction';
 import type { Measure } from '@/domain/measure';
 import type { MusicalEvent } from '@/domain/musical-event';
 import { PARTS } from '@/domain/parts';
@@ -6,8 +6,8 @@ import type { Score } from '@/domain/score';
 
 function durationOfEvents(events: ReadonlyArray<MusicalEvent>): Fraction {
     return events.reduce<Fraction>(
-        (total, event) => addFractions(total, event.duration.toQuarterUnits()),
-        fraction(0),
+        (total, event) => addFractions(total, event.duration),
+        ZERO_FRACTION,
     );
 }
 

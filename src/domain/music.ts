@@ -41,7 +41,19 @@ export {
     solfaPitch,
     isSolfaSyllable,
 } from '@/domain/solfa';
-export { type Fraction, fraction, addFractions, compareFractions } from '@/domain/fraction';
+export {
+    type Fraction,
+    fraction,
+    addFractions,
+    subtractFractions,
+    multiplyFractions,
+    compareFractions,
+    ZERO_FRACTION,
+    isZeroFraction,
+    fractionsEqual,
+    floorFraction,
+    ceilFraction,
+} from '@/domain/fraction';
 export { Duration } from '@/domain/duration';
 export { Pitch } from '@/domain/pitch';
 export {
@@ -53,6 +65,7 @@ export {
 export { type VoiceSettings, VOICE_SETTINGS, referenceOctave } from '@/domain/voice';
 export { MusicalEvent } from '@/domain/musical-event';
 export { Note } from '@/domain/note';
+export { Rest } from '@/domain/rest';
 export { Measure } from '@/domain/measure';
 export { KeySignature } from '@/domain/key-signature';
 export { Key } from '@/domain/key';

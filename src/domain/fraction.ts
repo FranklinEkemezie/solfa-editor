@@ -30,6 +30,37 @@ export function addFractions(left: Fraction, right: Fraction): Fraction {
     );
 }
 
+export function subtractFractions(left: Fraction, right: Fraction): Fraction {
+    return fraction(
+        left.numerator * right.denominator - right.numerator * left.denominator,
+        left.denominator * right.denominator,
+    );
+}
+
+export function multiplyFractions(left: Fraction, right: Fraction): Fraction {
+    return fraction(left.numerator * right.numerator, left.denominator * right.denominator);
+}
+
 export function compareFractions(left: Fraction, right: Fraction): number {
     return left.numerator * right.denominator - right.numerator * left.denominator;
+}
+
+export const ZERO_FRACTION: Fraction = { numerator: 0, denominator: 1 };
+
+export function isZeroFraction(value: Fraction): boolean {
+    return value.numerator === 0;
+}
+
+export function fractionsEqual(left: Fraction, right: Fraction): boolean {
+    return compareFractions(left, right) === 0;
+}
+
+/** The largest whole number that is not greater than the fraction. */
+export function floorFraction(value: Fraction): number {
+    return Math.floor(value.numerator / value.denominator);
+}
+
+/** The smallest whole number that is not less than the fraction. */
+export function ceilFraction(value: Fraction): number {
+    return Math.ceil(value.numerator / value.denominator);
 }
