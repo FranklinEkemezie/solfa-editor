@@ -14,9 +14,14 @@ from editor-specific and presentation-specific concerns.
   letters, so `d` then `e` writes `de` rather than two notes. `#` and `b` set an explicit
   accidental after a note.
 - An on-screen keyboard for touch devices that mirrors the physical input keys. Every syllable is one press.
-  The three duration keys (`.` `:` `,`) choose the length of the notes that follow and the one in force is
-  lit. The dock is hidden from the `lg` breakpoint up, where the hardware keyboard can already type
-  everything, and it slides away while a field in the masthead is being typed into
+  The duration keys sit on their own line above the notes, with the accidentals at the far end of it,
+  and the hold key beside them; the bottom line carries the octave selectors, rest, a wide space bar
+  and delete. The octave selector raises or lowers the notes being entered by one or two octaves and
+  writes the mark with the syllable, so the page shows a raised octave as a superscript and a lowered
+  one as a subscript. The three duration keys (`.` `:` `,`) choose the length of the notes that follow
+  and the one in force is lit. The dock is hidden from the `lg` breakpoint up, where the hardware
+  keyboard can already type everything, and it slides away while a field in the masthead is being typed
+  into
 - Pinch to zoom the sheet on a touch screen. The gesture scales the page, the way
   the zoom controls do, instead of magnifying the whole app
 - Absolute rhythmic values — `:` a quarter, `.` an eighth, `,` a sixteenth, `-` to hold the note before it,
@@ -54,6 +59,9 @@ A voice is a line of text and nothing else. The whole language is in
 | `#` / `b`              | an explicit sharp or flat on the note before it             |
 | `'` and digits         | octave marks, one or more octaves from the voice's register |
 
+Octave marks are drawn as a superscript for a raised note (`d'` is d¹) and a subscript for a lowered one
+(`d1` is d₁).
+
 A duration stays in force until it is changed, so `:dmsl` is four quarter notes and `.dmsl` is four
 eighths. A note's length is the sum of its own duration and every `-` after it. Modifiers (`#`, `b`,
 octave marks) attach to the note immediately before them; there are no bars in the source, because the
@@ -65,18 +73,19 @@ Invalid text is never stored. The editor parses every candidate source before ke
 the document can always be read by the engine; a rejected edit leaves the previous source and explains
 what the language would accept. Typing is token-atomic, so a two-letter syllable is undone as one step.
 
-## Opening with a sample score
+## Opening score
 
-The editor opens on the score named in `src/features/score-editor/presets/index.ts`:
+The editor opens on a blank, untitled score with four silent measures. The sample scores are kept in
+`src/features/score-editor/presets/`, not deleted; to open on one of them, point the switch in
+`presets/index.ts` at it:
 
 ```ts
 export const ACTIVE_PRESET: ScorePreset | null = hallelujahChorus;
 ```
 
-Presets are metadata plus four notation strings, built by `presets/score-preset.ts`, so a score can be
-typed in, swapped, or dropped without touching a component. Comment that one line out to start from the
-empty default — an untitled score with two silent measures — or name another preset (`gloriaJudeNnam`
-ships alongside the default for exactly that) to open on that one instead. Each preset is validated when
+With `ACTIVE_PRESET` left `null`, the editor starts empty. `hallelujahChorus` and `gloriaJudeNnam` are
+both available. Presets are metadata plus four notation strings, built by `presets/score-preset.ts`, so
+a score can be typed in, swapped, or dropped without touching a component. Each preset is validated when
 it is opened, so a mistake in a sample is reported with the voice's name rather than half-drawn on the
 page.
 

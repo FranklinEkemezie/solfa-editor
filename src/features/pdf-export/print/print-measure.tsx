@@ -1,6 +1,7 @@
 import { beatMarkBetween, markAfterBeat } from '@/domain/music';
 import { ACCIDENTAL_MARKS } from '@/features/score-editor/components/score-canvas/accidental-mark';
 import { FinalBarline } from '@/features/score-editor/components/score-canvas/final-barline';
+import { OctaveMark } from '@/features/score-editor/components/score-canvas/octave-mark';
 import type { MeasureView } from '@/features/score-editor/model/score-view';
 import { cn } from '@/lib/utils';
 
@@ -61,6 +62,7 @@ export function PrintMeasure({
                                                         {ACCIDENTAL_MARKS[item.accidental] ?? ''}
                                                     </span>
                                                 ) : null}
+                                                <OctaveMark offset={item.octaveOffset} />
                                             </>
                                         )}
                                     </span>

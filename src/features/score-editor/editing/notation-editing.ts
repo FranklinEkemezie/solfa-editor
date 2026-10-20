@@ -132,14 +132,21 @@ function offsetOf(document: ScoreDocument, position: EditorPosition): number {
     return clampOffset(textAt(document, position), position.offset);
 }
 
-/** A note, complete in one command — what the on-screen keyboard sends. */
+/**
+ * A note, complete in one command — what the on-screen keyboard sends.
+ *
+ * An octave mark is written in the same edit as the syllable it belongs to, so
+ * choosing an octave costs no extra undo step and the note is never briefly
+ * left without the register the writer asked for.
+ */
 export function insertSyllable(
     document: ScoreDocument,
     position: EditorPosition,
     syllable: SolfaSyllable,
+    octaveMark = '',
 ): EditOutcome {
     const offset = offsetOf(document, position);
-    const text = eventText(document, position, syllable);
+    const text = eventText(document, position, `${syllable}${octaveMark}`);
     const next = textAt(document, position);
     return accept(
         document,

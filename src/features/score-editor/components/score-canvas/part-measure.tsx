@@ -7,7 +7,15 @@ import type { EditorPosition } from '@/features/score-editor/editing/caret';
 
 function writtenItem(item: BeatView['items'][number]): string {
     if (item.kind === 'continuation') return 'continuation';
-    return `${item.syllable}${item.accidental ? (ACCIDENTAL_MARKS[item.accidental] ?? '') : ''}`;
+
+    const octave =
+        item.octaveOffset === 0
+            ? ''
+            : ` ${Math.abs(item.octaveOffset)} octave${
+                  Math.abs(item.octaveOffset) === 1 ? '' : 's'
+              } ${item.octaveOffset > 0 ? 'up' : 'down'}`;
+
+    return `${item.syllable}${item.accidental ? (ACCIDENTAL_MARKS[item.accidental] ?? '') : ''}${octave}`;
 }
 
 function beatSummary(beat: BeatView): string {

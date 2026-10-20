@@ -1,5 +1,6 @@
 import { beatMarkBetween } from '@/domain/music';
 import { ACCIDENTAL_MARKS } from '@/features/score-editor/components/score-canvas/accidental-mark';
+import { OctaveMark } from '@/features/score-editor/components/score-canvas/octave-mark';
 import type { BeatView } from '@/features/score-editor/model/score-view';
 
 /**
@@ -58,6 +59,7 @@ export function BeatButton({
                                                 {ACCIDENTAL_MARKS[item.accidental] ?? ''}
                                             </span>
                                         ) : null}
+                                        <OctaveMark offset={item.octaveOffset} />
                                     </>
                                 )}
                             </span>

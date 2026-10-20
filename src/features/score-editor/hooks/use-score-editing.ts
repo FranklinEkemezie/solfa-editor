@@ -16,13 +16,14 @@ import {
     type DurationMark,
     type EditOutcome,
 } from '@/features/score-editor/editing/notation-editing';
+import { octaveMark, type OctaveStep } from '@/features/score-editor/editing/octave';
 import type { ScoreStore } from '@/features/score-editor/state/score-store';
 
 export type ScoreEditing = {
     /** Key handler for the physical keyboard, attached to the score section. */
     handleKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
     /** Apply one key from the on-screen keyboard. */
-    input: (token: string) => void;
+    input: (token: string, octave?: OctaveStep) => void;
     /** Remove the symbol before the caret. */
     backspace: () => void;
 };
@@ -72,7 +73,7 @@ export function useScoreEditing(
     );
 
     const input = useCallback(
-        (token: string) => {
+        (token: string, octave: OctaveStep = 0) => {
             const document = store.document;
             const position = store.position;
 
@@ -97,7 +98,7 @@ export function useScoreEditing(
                 return;
             }
             if (isSolfaSyllable(token)) {
-                apply(insertSyllable(document, position, token));
+                apply(insertSyllable(document, position, token, octaveMark(octave)));
                 return;
             }
 
