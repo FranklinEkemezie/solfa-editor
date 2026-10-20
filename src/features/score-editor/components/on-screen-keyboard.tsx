@@ -59,13 +59,20 @@ function KeyboardKey({
 }
 
 /**
- * A touch-friendly sol-fa keyboard docked to the bottom of the editor.
+ * A touch-friendly sol-fa keyboard, in a drawer docked to the bottom of the
+ * editor.
  *
  * It carries the full syllable vocabulary (diatonic and chromatic) plus the
  * rhythmic and editing keys that the physical keyboard otherwise provides, so
  * the whole editor is usable on a device without a hardware keyboard. On a
  * desktop the physical keyboard types every syllable, including the chromatic
  * ones, so the dock is hidden from the `lg` breakpoint up.
+ *
+ * The drawer belongs to the score, not to the editor's fields: while a field in
+ * the document is being typed into it is shut, because the phone's own keyboard
+ * has the bottom of the screen and the drawn keys would only sit under it. That
+ * is decided in `styles/index.css`, where the shell asks whether any field has
+ * focus; see the drawer rules there.
  */
 export function OnScreenKeyboard({
     onInput,
@@ -75,70 +82,74 @@ export function OnScreenKeyboard({
     onBackspace: () => void;
 }) {
     return (
-        <section
-            aria-label="On-screen sol-fa keyboard"
-            className="z-30 flex-none border-t border-line bg-paper/95 px-3 pb-3 pt-2.5 backdrop-blur lg:hidden"
-        >
-            <div className="grid grid-cols-7 gap-1.5">
-                {NATURAL_SOLFA_SYLLABLES.map((syllable) => (
-                    <KeyboardKey
-                        key={syllable}
-                        label={`${syllable} (${pitchLabel(syllable)})`}
-                        tooltip={`${syllable} — ${pitchLabel(syllable)}`}
-                        onPress={() => onInput(syllable)}
-                        className="h-12 font-mono text-lg font-medium lowercase"
-                    >
-                        {syllable}
-                    </KeyboardKey>
-                ))}
+        <div className="score-keyboard-dock grid flex-none lg:hidden">
+            <div className="min-h-0 overflow-hidden">
+                <section
+                    aria-label="On-screen sol-fa keyboard"
+                    className="score-keyboard border-t border-line bg-paper/95 px-3 pb-3 pt-2.5 backdrop-blur"
+                >
+                    <div className="grid grid-cols-7 gap-1.5">
+                        {NATURAL_SOLFA_SYLLABLES.map((syllable) => (
+                            <KeyboardKey
+                                key={syllable}
+                                label={`${syllable} (${pitchLabel(syllable)})`}
+                                tooltip={`${syllable} — ${pitchLabel(syllable)}`}
+                                onPress={() => onInput(syllable)}
+                                className="h-12 font-mono text-lg font-medium lowercase"
+                            >
+                                {syllable}
+                            </KeyboardKey>
+                        ))}
+                    </div>
+                    <div className="mt-1.5 grid grid-cols-7 gap-1.5">
+                        {CHROMATIC_SOLFA_SYLLABLES.map((syllable) => (
+                            <KeyboardKey
+                                key={syllable}
+                                label={`${syllable} (${pitchLabel(syllable)})`}
+                                tooltip={`${syllable} — ${pitchLabel(syllable)}`}
+                                onPress={() => onInput(syllable)}
+                                className="h-11 bg-cream font-mono text-sm font-medium lowercase text-ink-muted"
+                            >
+                                {syllable}
+                            </KeyboardKey>
+                        ))}
+                    </div>
+                    <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+                        <KeyboardKey
+                            label="Dot — divide the beat in two"
+                            tooltip="Divide this beat in two (.)"
+                            onPress={() => onInput('.')}
+                            className="h-11 text-lg font-semibold"
+                        >
+                            .
+                        </KeyboardKey>
+                        <KeyboardKey
+                            label="Comma — divide the beat in four"
+                            tooltip="Divide this beat in four (,)"
+                            onPress={() => onInput(',')}
+                            className="h-11 text-lg font-semibold"
+                        >
+                            ,
+                        </KeyboardKey>
+                        <KeyboardKey
+                            label="Continuation"
+                            tooltip="Continue the previous note (-)"
+                            onPress={() => onInput('-')}
+                            className="h-11 font-mono text-lg"
+                        >
+                            -
+                        </KeyboardKey>
+                        <KeyboardKey
+                            label="Backspace"
+                            tooltip="Delete the note (Backspace)"
+                            onPress={onBackspace}
+                            className="h-11"
+                        >
+                            <Delete size={18} strokeWidth={2} />
+                        </KeyboardKey>
+                    </div>
+                </section>
             </div>
-            <div className="mt-1.5 grid grid-cols-7 gap-1.5">
-                {CHROMATIC_SOLFA_SYLLABLES.map((syllable) => (
-                    <KeyboardKey
-                        key={syllable}
-                        label={`${syllable} (${pitchLabel(syllable)})`}
-                        tooltip={`${syllable} — ${pitchLabel(syllable)}`}
-                        onPress={() => onInput(syllable)}
-                        className="h-11 bg-cream font-mono text-sm font-medium lowercase text-ink-muted"
-                    >
-                        {syllable}
-                    </KeyboardKey>
-                ))}
-            </div>
-            <div className="mt-1.5 grid grid-cols-4 gap-1.5">
-                <KeyboardKey
-                    label="Dot — divide the beat in two"
-                    tooltip="Divide this beat in two (.)"
-                    onPress={() => onInput('.')}
-                    className="h-11 text-lg font-semibold"
-                >
-                    .
-                </KeyboardKey>
-                <KeyboardKey
-                    label="Comma — divide the beat in four"
-                    tooltip="Divide this beat in four (,)"
-                    onPress={() => onInput(',')}
-                    className="h-11 text-lg font-semibold"
-                >
-                    ,
-                </KeyboardKey>
-                <KeyboardKey
-                    label="Continuation"
-                    tooltip="Continue the previous note (-)"
-                    onPress={() => onInput('-')}
-                    className="h-11 font-mono text-lg"
-                >
-                    -
-                </KeyboardKey>
-                <KeyboardKey
-                    label="Backspace"
-                    tooltip="Delete the note (Backspace)"
-                    onPress={onBackspace}
-                    className="h-11"
-                >
-                    <Delete size={18} strokeWidth={2} />
-                </KeyboardKey>
-            </div>
-        </section>
+        </div>
     );
 }

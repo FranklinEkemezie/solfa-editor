@@ -103,3 +103,39 @@
     width: max-content;
     margin-inline: auto;
 }
+
+/**
+ * The on-screen keyboard is a drawer.
+ *
+ * It belongs to the score, so it is shut while a field in the document is being
+ * typed into: the phone's own keyboard takes the bottom of the screen, and the
+ * drawn keys would only sit beneath it. The rule asks the shell whether a field
+ * has focus rather than keeping that in state, so it cannot fall out of step —
+ * a field removed while it holds focus closes the drawer by ceasing to exist.
+ *
+ * The row collapses to give the document its height back while the keys slide
+ * down out of it, and `visibility` follows the slide so the shut drawer is
+ * neither painted nor reachable.
+ */
+.score-keyboard-dock {
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 200ms ease-out;
+}
+
+.app-shell:has(input:focus, textarea:focus) .score-keyboard-dock {
+    grid-template-rows: 0fr;
+}
+
+.score-keyboard {
+    transition:
+        transform 200ms ease-out,
+        visibility 0s;
+}
+
+.app-shell:has(input:focus, textarea:focus) .score-keyboard {
+    transform: translateY(100%);
+    visibility: hidden;
+    transition:
+        transform 200ms ease-out,
+        visibility 0s 200ms;
+}
