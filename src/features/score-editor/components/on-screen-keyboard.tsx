@@ -4,7 +4,7 @@ import {
     Accidental,
     CHROMATIC_SOLFA_SYLLABLES,
     NATURAL_SOLFA_SYLLABLES,
-    SOLFA_TO_PITCH,
+    SOLFA_TO_DEGREE,
     type SolfaSyllable,
 } from '@/domain/music';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -18,9 +18,14 @@ const ACCIDENTAL_SYMBOLS: Record<Accidental, string> = {
     [Accidental.DOUBLE_SHARP]: '𝄪',
 };
 
-function pitchLabel(syllable: SolfaSyllable): string {
-    const pitch = SOLFA_TO_PITCH[syllable];
-    return `${pitch.letter}${ACCIDENTAL_SYMBOLS[pitch.accidental]}`;
+/**
+ * The degree a syllable stands for, which is how a movable-doh score names its
+ * notes. The old label showed an absolute letter, which was only ever true in
+ * C major.
+ */
+function degreeLabel(syllable: SolfaSyllable): string {
+    const spec = SOLFA_TO_DEGREE[syllable];
+    return `${ACCIDENTAL_SYMBOLS[spec.accidental]}${spec.degree}`;
 }
 
 function KeyboardKey({
@@ -92,8 +97,8 @@ export function OnScreenKeyboard({
                         {NATURAL_SOLFA_SYLLABLES.map((syllable) => (
                             <KeyboardKey
                                 key={syllable}
-                                label={`${syllable} (${pitchLabel(syllable)})`}
-                                tooltip={`${syllable} — ${pitchLabel(syllable)}`}
+                                label={`${syllable} (${degreeLabel(syllable)})`}
+                                tooltip={`${syllable} — degree ${degreeLabel(syllable)}`}
                                 onPress={() => onInput(syllable)}
                                 className="h-12 font-mono text-lg font-medium lowercase"
                             >
@@ -105,8 +110,8 @@ export function OnScreenKeyboard({
                         {CHROMATIC_SOLFA_SYLLABLES.map((syllable) => (
                             <KeyboardKey
                                 key={syllable}
-                                label={`${syllable} (${pitchLabel(syllable)})`}
-                                tooltip={`${syllable} — ${pitchLabel(syllable)}`}
+                                label={`${syllable} (${degreeLabel(syllable)})`}
+                                tooltip={`${syllable} — degree ${degreeLabel(syllable)}`}
                                 onPress={() => onInput(syllable)}
                                 className="h-11 bg-cream font-mono text-sm font-medium lowercase text-ink-muted"
                             >

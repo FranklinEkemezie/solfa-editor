@@ -1,5 +1,5 @@
 import { Accidental } from '@/domain/accidental';
-import { Letter } from '@/domain/letter';
+import { Degree } from '@/domain/degree';
 import { Pitch } from '@/domain/pitch';
 
 /** The seven diatonic tonic sol-fa syllables: doh, ray, mi, fah, soh, lah, te. */
@@ -26,28 +26,48 @@ export type ChromaticSolfaSyllable = (typeof CHROMATIC_SOLFA_SYLLABLES)[number];
 export const SOLFA_SYLLABLES = [...NATURAL_SOLFA_SYLLABLES, ...CHROMATIC_SOLFA_SYLLABLES] as const;
 export type SolfaSyllable = (typeof SOLFA_SYLLABLES)[number];
 
-/**
- * The written pitch for each syllable, all spelled within the fourth octave.
- *
- * The editor transposes per part, so these values are relative spellings rather
- * than concert pitch.
- */
-export const SOLFA_TO_PITCH: Record<SolfaSyllable, Pitch> = {
-    d: new Pitch(Letter.C, Accidental.NATURAL, 4),
-    r: new Pitch(Letter.D, Accidental.NATURAL, 4),
-    m: new Pitch(Letter.E, Accidental.NATURAL, 4),
-    f: new Pitch(Letter.F, Accidental.NATURAL, 4),
-    s: new Pitch(Letter.G, Accidental.NATURAL, 4),
-    l: new Pitch(Letter.A, Accidental.NATURAL, 4),
-    t: new Pitch(Letter.B, Accidental.NATURAL, 4),
-    de: new Pitch(Letter.C, Accidental.SHARP, 4),
-    re: new Pitch(Letter.D, Accidental.SHARP, 4),
-    ma: new Pitch(Letter.E, Accidental.FLAT, 4),
-    fe: new Pitch(Letter.F, Accidental.SHARP, 4),
-    ba: new Pitch(Letter.G, Accidental.FLAT, 4),
-    se: new Pitch(Letter.G, Accidental.SHARP, 4),
-    ta: new Pitch(Letter.B, Accidental.FLAT, 4),
+/** A degree together with the accidental the syllable itself implies. */
+export type SolfaPitchSpec = {
+    readonly degree: Degree;
+    readonly accidental: Accidental;
 };
+
+/**
+ * The degree and inherent accidental of every syllable.
+ *
+ * This is the single mapping from notation to scale meaning. It deliberately
+ * carries no octave and no letter: the octave belongs to the voice and the
+ * letter belongs to the key. A chromatic syllable contributes its alteration
+ * once, here; an explicit `#` or `b` later overrides it rather than adding to
+ * it.
+ */
+export const SOLFA_TO_DEGREE: Record<SolfaSyllable, SolfaPitchSpec> = {
+    d: { degree: Degree.I, accidental: Accidental.NATURAL },
+    r: { degree: Degree.II, accidental: Accidental.NATURAL },
+    m: { degree: Degree.III, accidental: Accidental.NATURAL },
+    f: { degree: Degree.IV, accidental: Accidental.NATURAL },
+    s: { degree: Degree.V, accidental: Accidental.NATURAL },
+    l: { degree: Degree.VI, accidental: Accidental.NATURAL },
+    t: { degree: Degree.VII, accidental: Accidental.NATURAL },
+    de: { degree: Degree.I, accidental: Accidental.SHARP },
+    re: { degree: Degree.II, accidental: Accidental.SHARP },
+    ma: { degree: Degree.III, accidental: Accidental.FLAT },
+    fe: { degree: Degree.IV, accidental: Accidental.SHARP },
+    ba: { degree: Degree.V, accidental: Accidental.FLAT },
+    se: { degree: Degree.V, accidental: Accidental.SHARP },
+    ta: { degree: Degree.VII, accidental: Accidental.FLAT },
+};
+
+/**
+ * Build the written pitch of a syllable at a given octave.
+ *
+ * The notation engine resolves octaves from the voice's reference octave; this
+ * helper is the convenience form used where a neutral register is enough.
+ */
+export function solfaPitch(syllable: SolfaSyllable, octave = 4): Pitch {
+    const spec = SOLFA_TO_DEGREE[syllable];
+    return new Pitch(spec.degree, spec.accidental, octave);
+}
 
 const SOLFA_SYLLABLE_SET: ReadonlySet<string> = new Set(SOLFA_SYLLABLES);
 

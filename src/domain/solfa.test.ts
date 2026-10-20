@@ -1,12 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { Accidental, Letter, Pitch } from '@/domain/music';
+import {
+    Accidental,
+    Degree,
+    Key,
+    KeySignature,
+    Letter,
+    Mode,
+    solfaPitch,
+    soundingMidi,
+} from '@/domain/music';
 import {
     CHROMATIC_SOLFA_SYLLABLES,
     isSolfaSyllable,
     NATURAL_SOLFA_SYLLABLES,
     SOLFA_SYLLABLES,
-    SOLFA_TO_PITCH,
+    SOLFA_TO_DEGREE,
 } from '@/domain/solfa';
+
+const C_MAJOR = new Key(Letter.C, new KeySignature(Accidental.NATURAL, 0), Mode.MAJOR);
 
 describe('solfa syllables', () => {
     it('keeps the diatonic set as single letters', () => {
@@ -16,20 +27,36 @@ describe('solfa syllables', () => {
         }
     });
 
-    it('raises "de" and lowers "ta" when spelling chromatics', () => {
-        expect(SOLFA_TO_PITCH.de).toEqual(new Pitch(Letter.C, Accidental.SHARP, 4));
-        expect(SOLFA_TO_PITCH.ta).toEqual(new Pitch(Letter.B, Accidental.FLAT, 4));
-        expect(SOLFA_TO_PITCH.se).toEqual(new Pitch(Letter.G, Accidental.SHARP, 4));
-        expect(SOLFA_TO_PITCH.ma).toEqual(new Pitch(Letter.E, Accidental.FLAT, 4));
+    it('gives each syllable its degree and inherent accidental', () => {
+        expect(SOLFA_TO_DEGREE.d).toEqual({
+            degree: Degree.I,
+            accidental: Accidental.NATURAL,
+        });
+        expect(SOLFA_TO_DEGREE.de).toEqual({
+            degree: Degree.I,
+            accidental: Accidental.SHARP,
+        });
+        expect(SOLFA_TO_DEGREE.ma).toEqual({
+            degree: Degree.III,
+            accidental: Accidental.FLAT,
+        });
+        expect(SOLFA_TO_DEGREE.ta).toEqual({
+            degree: Degree.VII,
+            accidental: Accidental.FLAT,
+        });
+    });
+
+    it('covers every accepted syllable with a degree', () => {
+        expect(Object.keys(SOLFA_TO_DEGREE).sort()).toEqual([...SOLFA_SYLLABLES].sort());
     });
 
     it('treats re/ma and fe/ba as enharmonic pairs', () => {
-        expect(SOLFA_TO_PITCH.re.toMidi()).toBe(SOLFA_TO_PITCH.ma.toMidi());
-        expect(SOLFA_TO_PITCH.fe.toMidi()).toBe(SOLFA_TO_PITCH.ba.toMidi());
-    });
-
-    it('covers every accepted syllable with a pitch', () => {
-        expect(Object.keys(SOLFA_TO_PITCH).sort()).toEqual([...SOLFA_SYLLABLES].sort());
+        expect(soundingMidi(solfaPitch('re'), C_MAJOR)).toBe(
+            soundingMidi(solfaPitch('ma'), C_MAJOR),
+        );
+        expect(soundingMidi(solfaPitch('fe'), C_MAJOR)).toBe(
+            soundingMidi(solfaPitch('ba'), C_MAJOR),
+        );
     });
 
     it('recognises only the declared syllables', () => {

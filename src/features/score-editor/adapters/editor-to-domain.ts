@@ -4,7 +4,7 @@ import {
     Measure,
     Note,
     Score,
-    SOLFA_TO_PITCH,
+    solfaPitch,
     TimeSignature,
     validateScore,
 } from '@/domain/music';
@@ -44,7 +44,7 @@ function toDomainMeasure(measure: EditorMeasure): Measure {
             note.syllable
                 ? [
                       new Note(
-                          SOLFA_TO_PITCH[note.syllable],
+                          solfaPitch(note.syllable),
                           duration,
                           note.syllable,
                           note.continuation ?? false,

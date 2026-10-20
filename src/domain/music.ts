@@ -8,6 +8,7 @@
 
 export { Letter } from '@/domain/letter';
 export { Accidental } from '@/domain/accidental';
+export { Degree, DEGREES } from '@/domain/degree';
 export { Mode } from '@/domain/mode';
 export { NoteValue, NOTE_VALUE_ORDER, NOTE_VALUE_UNITS } from '@/domain/note-value';
 export {
@@ -32,15 +33,24 @@ export {
     type SolfaSyllable,
     type NaturalSolfaSyllable,
     type ChromaticSolfaSyllable,
+    type SolfaPitchSpec,
     SOLFA_SYLLABLES,
     NATURAL_SOLFA_SYLLABLES,
     CHROMATIC_SOLFA_SYLLABLES,
-    SOLFA_TO_PITCH,
+    SOLFA_TO_DEGREE,
+    solfaPitch,
     isSolfaSyllable,
 } from '@/domain/solfa';
 export { type Fraction, fraction, addFractions, compareFractions } from '@/domain/fraction';
 export { Duration } from '@/domain/duration';
 export { Pitch } from '@/domain/pitch';
+export {
+    ACCIDENTAL_SEMITONES,
+    DEGREE_SEMITONES,
+    soundingMidi,
+    soundingPitchClass,
+} from '@/domain/pitch-resolution';
+export { type VoiceSettings, VOICE_SETTINGS, referenceOctave } from '@/domain/voice';
 export { MusicalEvent } from '@/domain/musical-event';
 export { Note } from '@/domain/note';
 export { Measure } from '@/domain/measure';

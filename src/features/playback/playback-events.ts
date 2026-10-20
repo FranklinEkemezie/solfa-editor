@@ -2,8 +2,8 @@ import * as Tone from 'tone';
 import {
     NOTE_VALUE_UNITS,
     PARTS,
-    SOLFA_TO_PITCH,
-    tonicPitchClass,
+    solfaPitch,
+    soundingMidi,
     type NoteValue,
     type PartId,
     type SolfaSyllable,
@@ -67,7 +67,6 @@ export function buildPlaybackEvents(document: EditorDocument): PlaybackEvent[] {
         (left, right) => left - right,
     );
     const secondsPer = secondsPerQuarter(document);
-    const keyShift = tonicPitchClass(document.key);
 
     const events: PlaybackEvent[] = [];
     const lastByPart = new Map<PartId, PlaybackEvent>();
@@ -95,9 +94,10 @@ export function buildPlaybackEvents(document: EditorDocument): PlaybackEvent[] {
                         return;
                     }
 
+                    // The written pitch is in the neutral register; the part's
+                    // octave offset spreads the four voices into their ranges.
                     const midi =
-                        SOLFA_TO_PITCH[note.syllable].toMidi() +
-                        keyShift +
+                        soundingMidi(solfaPitch(note.syllable), document.key) +
                         PART_OCTAVE_OFFSETS[part.id];
                     const event: PlaybackEvent = {
                         time: (clockQuarters + beatQuarters + index * noteQuarters) * secondsPer,
