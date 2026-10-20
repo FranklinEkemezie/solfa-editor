@@ -20,7 +20,7 @@ export function PrintScore({ document }: { document: EditorDocument }) {
     const measureById = new Map(
         document.measures.map((measure): [string, EditorMeasure] => [measure.id, measure]),
     );
-    const lastPage = layout.pages.length - 1;
+    const finalPage = layout.pages.length;
 
     return (
         <main className="print-sheet" id="print-view">
@@ -33,7 +33,7 @@ export function PrintScore({ document }: { document: EditorDocument }) {
                             system={system}
                             measureWidth={layout.measureWidth}
                             isFinalSystem={
-                                page.number === lastPage && index === page.systems.length - 1
+                                page.number === finalPage && index === page.systems.length - 1
                             }
                             measureById={measureById}
                         />
