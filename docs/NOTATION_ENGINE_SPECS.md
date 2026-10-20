@@ -153,11 +153,11 @@ The initial language supports duration specifiers, solfa pitches, accidentals, o
 
 ## 4.1 Duration specifiers
 
-| Symbol | Duration |
-|---|---|
-| `:` | Quarter note |
-| `.` | Eighth note |
-| `,` | Sixteenth note |
+| Symbol | Duration       |
+| ------ | -------------- |
+| `:`    | Quarter note   |
+| `.`    | Eighth note    |
+| `,`    | Sixteenth note |
 
 A duration specifier establishes the current duration.
 
@@ -205,15 +205,15 @@ Use the existing solfa definitions and their documented meanings where applicabl
 
 The intended relationships are:
 
-| Syllable | Meaning |
-|---|---|
-| `de` | Raised first degree |
-| `re` | Raised second degree |
-| `ma` | Lowered third degree |
-| `fe` | Raised fourth degree |
-| `ba` | Lowered fifth degree |
-| `se` | Raised fifth degree |
-| `ta` | Lowered seventh degree |
+| Syllable | Meaning                |
+| -------- | ---------------------- |
+| `de`     | Raised first degree    |
+| `re`     | Raised second degree   |
+| `ma`     | Lowered third degree   |
+| `fe`     | Raised fourth degree   |
+| `ba`     | Lowered fifth degree   |
+| `se`     | Raised fifth degree    |
+| `ta`     | Lowered seventh degree |
 
 These syllables are movable relative to the composition's key. They must not be permanently mapped to the same absolute pitch letters regardless of key.
 
@@ -261,12 +261,12 @@ The octave modifiers are:
 Their meanings are:
 
 | Modifier | Octave offset |
-|---|---:|
-| `'` | +1 octave |
-| `''` | +2 octaves |
-| `1` | -1 octave |
-| `2` | -2 octaves |
-| `3` | -3 octaves |
+| -------- | ------------: |
+| `'`      |     +1 octave |
+| `''`     |    +2 octaves |
+| `1`      |     -1 octave |
+| `2`      |    -2 octaves |
+| `3`      |    -3 octaves |
 
 The apostrophe sequence `''` is one modifier specifying an offset of +2. It is not two independent modifiers.
 
