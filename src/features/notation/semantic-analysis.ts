@@ -26,6 +26,7 @@ type WorkingNote = {
     note: Note;
     start: Fraction;
     source: SourceRange;
+    sourceEnd: number;
     accidentalModifier: Accidental | null;
     octaveOffset: number;
     continuationSources: SourceRange[];
@@ -94,6 +95,7 @@ export function analyseVoice(
                     rest: new Rest(restDuration),
                     start: cursor,
                     source: item.token.range,
+                    sourceEnd: item.token.range.end,
                 });
                 cursor = addFractions(cursor, restDuration);
                 lastNote = null;
@@ -111,6 +113,9 @@ export function analyseVoice(
                     note: new Note(pitch, noteDuration, item.token.syllable),
                     start: cursor,
                     source: item.token.range,
+                    sourceEnd:
+                        item.modifiers[item.modifiers.length - 1]?.range.end ??
+                        item.token.range.end,
                     accidentalModifier,
                     octaveOffset,
                     continuationSources: [],
@@ -134,6 +139,7 @@ export function analyseVoice(
                     lastNote.note.lyric,
                 );
                 lastNote.continuationSources.push(item.token.range);
+                lastNote.sourceEnd = item.token.range.end;
                 cursor = addFractions(cursor, extension);
                 break;
             }

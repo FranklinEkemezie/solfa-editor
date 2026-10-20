@@ -41,6 +41,11 @@ export function multiplyFractions(left: Fraction, right: Fraction): Fraction {
     return fraction(left.numerator * right.numerator, left.denominator * right.denominator);
 }
 
+export function divideFractions(left: Fraction, right: Fraction): Fraction {
+    if (right.numerator === 0) throw new Error('Cannot divide by a zero fraction.');
+    return fraction(left.numerator * right.denominator, left.denominator * right.numerator);
+}
+
 export function compareFractions(left: Fraction, right: Fraction): number {
     return left.numerator * right.denominator - right.numerator * left.denominator;
 }

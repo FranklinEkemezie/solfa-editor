@@ -47,6 +47,7 @@ export {
     addFractions,
     subtractFractions,
     multiplyFractions,
+    divideFractions,
     compareFractions,
     ZERO_FRACTION,
     isZeroFraction,
@@ -73,6 +74,14 @@ export { tonicPitchClass } from '@/domain/key-tonic';
 export { Tempo } from '@/domain/tempo';
 export { TimeSignature } from '@/domain/time-signature';
 export { Score } from '@/domain/score';
+export {
+    type ScoreDocument,
+    createEmptyScoreDocument,
+    emptyVoices,
+    voiceSource,
+    withVoice,
+    withMeasureCount,
+} from '@/domain/score-document';
 
 export { createEmptyScore } from '@/domain/score-factory';
 export { validateScore } from '@/domain/score-validation';

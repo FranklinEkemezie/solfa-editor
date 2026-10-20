@@ -22,6 +22,8 @@ export type NotationNote = {
     readonly start: Fraction;
     /** The written pitch and its modifiers, excluding continuations. */
     readonly source: SourceRange;
+    /** The end of the note's written text, including modifiers and continuations. */
+    readonly sourceEnd: number;
     /** The last explicit `#` or `b`, or null when the syllable's own accidental stands. */
     readonly accidentalModifier: Accidental | null;
     /** The last octave modifier, in octaves from the voice's reference. */
@@ -35,6 +37,7 @@ export type NotationRest = {
     readonly rest: Rest;
     readonly start: Fraction;
     readonly source: SourceRange;
+    readonly sourceEnd: number;
 };
 
 export type NotationEvent = NotationNote | NotationRest;
