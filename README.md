@@ -12,7 +12,10 @@ and presentation-specific concerns.
   letters, so `d` then `e` writes `de` rather than two notes.
 - An on-screen keyboard for touch devices that mirrors the physical input keys.
   It is docked on small screens and hidden from the `lg` breakpoint up, where the
-  hardware keyboard can already type every syllable.
+  hardware keyboard can already type every syllable. It slides away while a field
+  in the masthead is being typed into
+- Pinch to zoom the sheet on a touch screen. The gesture scales the page, the way
+  the zoom controls do, instead of magnifying the whole app
 - Rhythmic subdivision with dots and commas, plus `-` for continuations
 - Bars that read in two halves are marked at the half bar (`/`), and the score closes with a double
   barline (`||`), the way a printed score does
@@ -146,6 +149,15 @@ printer prints the editor's pages, system for system and measure for measure.
 - Zoom follows a fixed ladder of round levels (25%, 33%, 50%, … 300%) rather than multiplying, so a
   press or two cannot leave the reader at 156%. The editor opens at the page width on a narrow window
   and at the paper's true size on a wide one; resizing the window afterwards leaves the zoom alone.
+- A pinch on a touch screen belongs to the reader, not to the browser: `touch-action` on the document
+  keeps the window from magnifying, and `usePinchZoom` scales the sheet instead. The zoom is continuous
+  between the ladder's limits and turns about the point between the fingers, so the bar being read
+  stays under them; the maths is in `layout/pinch-zoom.ts` and the touches in the hook. One finger
+  still scrolls with the browser's own momentum.
+- The drawn keyboard is a drawer that shuts while a field in the document holds focus: the phone's own
+  keyboard has the bottom of the screen, and the drawn keys would only sit beneath it. The rule is
+  written with `:has()` in the stylesheet rather than tracked in state, so it cannot fall out of step
+  with the field — a field removed by its own commit closes the drawer by ceasing to exist.
 - PDF output is implemented as a browser print flow with a print-specific stylesheet; this is a
   sensible prototype approach without introducing a large PDF engine. Paged.js is not used: pagination
   is already decided by the layout module, and all the print stylesheet has to add is that each of the
@@ -232,8 +244,8 @@ src/
 │   ├── playback/               # Tone.js audio playback
 │   └── score-editor/           # Tiptap editor, adapters, and UI
 │       ├── components/         # Sheets, document, keyboard, masthead
-│       ├── hooks/              # Editor, commit, playback-view and zoom state
-│       ├── layout/             # Page geometry, pagination, document zoom
+│       ├── hooks/              # Editor, commit, playback-view, zoom and pinch state
+│       ├── layout/             # Page geometry, pagination, zoom and pinch geometry
 │       └── presets/            # Sample scores and their notation parser
 └── styles/                     # Global CSS and Tailwind entry
 ```
