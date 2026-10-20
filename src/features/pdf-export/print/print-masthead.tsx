@@ -1,4 +1,4 @@
-import { timeSignatureLabel, type ScoreDocument } from '@/domain/music';
+import { scoreDisplayTitle, timeSignatureLabel, type ScoreDocument } from '@/domain/music';
 import { metadataKeyLabel } from '@/features/score-editor/adapters/metadata-label';
 
 /**
@@ -21,7 +21,7 @@ export function PrintMasthead({ document }: { document: ScoreDocument }) {
     return (
         <header className="mb-[42px] pt-[8px] text-center">
             <h1 className="m-0 font-serif text-[20pt] font-semibold leading-[1.15] text-ink">
-                {document.title || 'Untitled solfa'}
+                {scoreDisplayTitle(document)}
             </h1>
             {document.subtitle ? (
                 <p className="m-0 mt-[6px] font-serif text-[10pt] italic leading-snug text-ink-muted">

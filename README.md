@@ -35,6 +35,9 @@ from editor-specific and presentation-specific concerns.
 - Real A4 sheets, read the way a document is read. A score too tall for one page breaks across as
   many sheets as it needs; the sheets sit still in the window and scroll past, with a gutter and a
   shadow between them
+- A score name in the header, beside the app's mark, with a quiet save state and a Save button next to
+  playback. The score is written to IndexedDB as it changes; reopening the editor restores the
+  document, the caret and the zoom
 - A tool rail down the left for undo and redo, adding and removing measures, zooming, and printing.
   Every control is an icon with a tooltip, and the rail can be put away to give the score the whole
   window
@@ -75,10 +78,11 @@ what the language would accept. Typing is token-atomic, so a two-letter syllable
 
 ## Opening score
 
-The editor opens on a blank, untitled score with four silent measures. The Gloria sample is one press
-away on the tool rail (`Open the Gloria sample`); it opens as an undoable step, so the blank score is
-one undo back. The sample scores are kept in `src/features/score-editor/presets/` and can also be made
-the opening score by pointing the switch at one of them:
+The editor opens the score last saved in this browser. On a fresh browser it opens on a blank,
+untitled score with four silent measures. The Gloria sample is one press away on the tool rail
+(`Open the Gloria sample`); it opens as an undoable step, so the blank score is one undo back. The
+sample scores are kept in `src/features/score-editor/presets/` and can also be made the opening score
+by pointing the switch at one of them:
 
 ```ts
 export const ACTIVE_PRESET: ScorePreset | null = gloriaJudeNnam;
@@ -148,6 +152,18 @@ read at, and `hooks/use-document-zoom.ts` holds it for the app.
 
 Because there is one layout and two consumers, the printed sheet is the page that was on screen: the
 printer prints the editor's pages, system for system and measure for measure.
+
+### Saving a score
+
+`features/persistence/` is its own feature. `score-storage.ts` is a versioned codec: it turns the
+document's value objects into plain data and validates every field when reading a score back.
+`indexed-db-score-store.ts` keeps those records in one `scores` store, indexed by save time, and opens
+the most recent one. `autosave.ts` is a small debounced writer that always follows an in-flight write
+with the newest snapshot instead of queueing every keystroke. `use-score-persistence.ts` hydrates the
+editor before arming autosave, so the blank opening document can never overwrite saved work, and it
+flushes when the page is hidden. The stored record contains all metadata, all four voice sources, the
+measure count, the caret and the zoom; undo history is deliberately left out and starts fresh on
+reopening.
 
 ### Notable implementation decisions
 

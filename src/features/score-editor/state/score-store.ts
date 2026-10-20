@@ -44,6 +44,8 @@ export type ScoreStore = {
     removeMeasure: () => MeasureRemoval;
     /** Open a sample score, as one undoable step. */
     openPreset: (preset: ScorePreset) => void;
+    /** Replace the document with one restored from storage; not an undo step. */
+    restore: (document: ScoreDocument, position?: EditorPosition) => void;
 };
 
 /**
@@ -144,6 +146,18 @@ export function useScoreStore(): ScoreStore {
         [commit],
     );
 
+    /**
+     * Open a score that came from storage.
+     *
+     * The restored document becomes the whole history, so undoing can never
+     * walk back into the blank document the editor happened to mount with.
+     */
+    const restore = useCallback((document: ScoreDocument, position?: EditorPosition) => {
+        const target = position ?? caretAtEnd(document);
+        const caret = caretAt(target.part, document.voices[target.part], target.offset);
+        setHistory(createHistory({ document, position: caret }));
+    }, []);
+
     return {
         document,
         view,
@@ -157,5 +171,6 @@ export function useScoreStore(): ScoreStore {
         addMeasure,
         removeMeasure,
         openPreset,
+        restore,
     };
 }

@@ -1,4 +1,4 @@
-import { timeSignatureLabel, type ScoreDocument } from '@/domain/music';
+import { timeSignatureLabel, UNTITLED_SCORE_TITLE, type ScoreDocument } from '@/domain/music';
 import { EditableSelect } from '@/components/ui/editable-select';
 import { EditableText } from '@/components/ui/editable-text';
 import { metadataKeyLabel } from '@/features/score-editor/adapters/metadata-label';
@@ -67,7 +67,7 @@ export function ScoreHeader({
                         value={document.title}
                         onCommit={(title) => onChange(patchMetadata(document, { title }))}
                         label="title"
-                        placeholder="Untitled solfa"
+                        placeholder={UNTITLED_SCORE_TITLE}
                         className="justify-center text-center"
                         inputClassName="w-full max-w-md text-center"
                     />

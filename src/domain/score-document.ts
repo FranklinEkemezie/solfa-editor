@@ -32,6 +32,14 @@ export type ScoreDocument = {
 const DEFAULT_TIME_SIGNATURE = new TimeSignature(NoteValue.QUARTER, 4);
 const DEFAULT_MEASURE_COUNT = 4;
 
+/** The name a score carries until the writer gives it one. */
+export const UNTITLED_SCORE_TITLE = 'Untitled sheet';
+
+/** The name shown for a score, falling back when its title is blank. */
+export function scoreDisplayTitle(document: Pick<ScoreDocument, 'title'>): string {
+    return document.title.trim() || UNTITLED_SCORE_TITLE;
+}
+
 export function emptyVoices(): Record<PartId, string> {
     const voices = {} as Record<PartId, string>;
     for (const part of PARTS) voices[part.id] = '';
@@ -41,7 +49,7 @@ export function emptyVoices(): Record<PartId, string> {
 /** The document the editor opens with when no sample is selected. */
 export function createEmptyScoreDocument(): ScoreDocument {
     return {
-        title: 'Untitled solfa',
+        title: UNTITLED_SCORE_TITLE,
         subtitle: '',
         author: 'Composer',
         lyrics: '',

@@ -76,8 +76,10 @@ export { TimeSignature } from '@/domain/time-signature';
 export { Score } from '@/domain/score';
 export {
     type ScoreDocument,
+    UNTITLED_SCORE_TITLE,
     createEmptyScoreDocument,
     emptyVoices,
+    scoreDisplayTitle,
     voiceSource,
     withVoice,
     withMeasureCount,

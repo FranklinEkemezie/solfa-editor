@@ -5,8 +5,14 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppHeader } from '@/app/components/app-header';
 import { ToolRail } from '@/app/components/tool-rail';
 import { buildScoreToolGroups } from '@/app/score-tools';
+import { scoreDisplayTitle } from '@/domain/music';
 import { exportScoreToPdf } from '@/features/pdf-export/export-score';
 import { PrintScore } from '@/features/pdf-export/print-score';
+import { SaveButton } from '@/features/persistence/save-button';
+import {
+    useScorePersistence,
+    type PersistenceStatus,
+} from '@/features/persistence/use-score-persistence';
 import { usePlayback } from '@/features/playback/hooks/use-playback';
 import { PlaybackControls } from '@/features/playback/playback-controls';
 import { OnScreenKeyboard } from '@/features/score-editor/components/on-screen-keyboard';
@@ -19,6 +25,15 @@ import { useScoreEditing } from '@/features/score-editor/hooks/use-score-editing
 import { DOCUMENT_INSET_PX } from '@/features/score-editor/layout/document-zoom';
 import { gloriaJudeNnam } from '@/features/score-editor/presets';
 import { useScoreStore } from '@/features/score-editor/state/score-store';
+
+const SAVE_STATUS_LABEL: Record<PersistenceStatus, string> = {
+    opening: 'Opening…',
+    saving: 'Saving…',
+    saved: 'Saved',
+    unsaved: 'Unsaved changes',
+    new: 'Not saved yet',
+    error: 'Storage error',
+};
 
 export function App() {
     const store = useScoreStore();
@@ -36,6 +51,17 @@ export function App() {
     const editing = useScoreEditing(store, addToast);
     const { isPlaying, activeNoteKey, toggle, stop } = usePlayback(store.view, addToast);
 
+    const persistence = useScorePersistence({
+        document: store.document,
+        position: store.position,
+        zoom: documentView.zoom,
+        onRestore: (saved) => {
+            store.restore(saved.document, saved.caret);
+            documentView.zoomTo(saved.zoom);
+        },
+        onError: addToast,
+    });
+
     const printResult = () => {
         const result = exportScoreToPdf(store.view);
         if (!result.ok) addToast(result.message);
@@ -44,6 +70,12 @@ export function App() {
     const removeMeasure = () => {
         const result = store.removeMeasure();
         if (!result.ok) addToast(result.message);
+    };
+
+    const saveScore = async () => {
+        const result = await persistence.saveNow();
+        if (result.ok) addToast('Saved to this browser.', 'info');
+        else addToast(result.message);
     };
 
     const tools = buildScoreToolGroups({
@@ -66,12 +98,22 @@ export function App() {
         <TooltipProvider delayDuration={200}>
             <div className="app-shell flex h-dvh flex-col overflow-hidden">
                 <AppHeader
+                    documentName={scoreDisplayTitle(store.document)}
+                    documentStatus={SAVE_STATUS_LABEL[persistence.status]}
                     actions={
-                        <PlaybackControls
-                            isPlaying={isPlaying}
-                            onPlayPause={toggle}
-                            onStop={stop}
-                        />
+                        <>
+                            <PlaybackControls
+                                isPlaying={isPlaying}
+                                onPlayPause={toggle}
+                                onStop={stop}
+                            />
+                            <span aria-hidden="true" className="mx-1 h-5 w-px bg-line" />
+                            <SaveButton
+                                onSave={saveScore}
+                                isSaving={persistence.isSaving}
+                                disabled={persistence.isHydrating || persistence.isSaving}
+                            />
+                        </>
                     }
                 />
                 <div className="relative flex min-h-0 flex-1">
@@ -83,6 +125,7 @@ export function App() {
                     <main
                         ref={documentView.viewportRef}
                         aria-label="Score document"
+                        aria-busy={persistence.isHydrating}
                         className="document-surface min-w-0 flex-1"
                     >
                         <div
@@ -105,6 +148,11 @@ export function App() {
                             />
                         </div>
                     </main>
+                    {persistence.isHydrating ? (
+                        <div className="absolute inset-0 z-20 grid place-items-center bg-paper/70 text-sm text-ink-muted backdrop-blur-[1px]">
+                            Opening your sheet…
+                        </div>
+                    ) : null}
                 </div>
                 <OnScreenKeyboard
                     onInput={editing.input}
