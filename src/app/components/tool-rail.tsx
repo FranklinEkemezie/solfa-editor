@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { IconButton } from '@/components/ui/icon-button';
 
 /** One control in the rail: a name, the face to draw, and what it does. */
@@ -19,13 +19,13 @@ export type ToolRailGroup = {
 };
 
 /**
- * The tool rail down the right of the canvas.
+ * The tool rail down the left of the document.
  *
  * It knows nothing about the score: the shell hands it groups of controls and
  * this decides only how they are arranged. Icons carry the meaning, so every
  * control names itself on hover and to keyboard and screen reader users. The
- * rail can be put away to give the score the whole window, and a single chip
- * then floats over the canvas to bring it back.
+ * rail can be put away to give the document the whole window, and a single chip
+ * then floats over it to bring the rail back.
  */
 export function ToolRail({
     groups,
@@ -38,14 +38,14 @@ export function ToolRail({
 }) {
     if (!open) {
         return (
-            <div className="absolute right-3 top-3 z-20">
+            <div className="absolute left-3 top-3 z-20">
                 <IconButton
                     label="Show tools"
                     variant="secondary"
                     onClick={onToggle}
                     className="size-9 shadow-panel"
                 >
-                    <PanelRightOpen size={16} strokeWidth={2} />
+                    <PanelLeftOpen size={16} strokeWidth={2} />
                 </IconButton>
             </div>
         );
@@ -54,14 +54,14 @@ export function ToolRail({
     return (
         <aside
             aria-label="Score tools"
-            className="z-20 flex w-14 flex-none flex-col items-center gap-0.5 overflow-y-auto border-l border-line bg-paper py-2"
+            className="z-20 flex w-14 flex-none flex-col items-center gap-0.5 overflow-y-auto border-r border-line bg-paper py-2"
         >
             <IconButton
                 label="Hide tools"
                 onClick={onToggle}
                 className="size-9 text-ink-muted hover:text-ink"
             >
-                <PanelRightClose size={16} strokeWidth={2} />
+                <PanelLeftClose size={16} strokeWidth={2} />
             </IconButton>
             {groups.map((group) => (
                 <Fragment key={group.id}>

@@ -78,6 +78,11 @@ export function App() {
                     }
                 />
                 <div className="relative flex min-h-0 flex-1">
+                    <ToolRail
+                        groups={tools}
+                        open={toolsOpen}
+                        onToggle={() => setToolsOpen((open) => !open)}
+                    />
                     <main
                         ref={documentView.viewportRef}
                         aria-label="Score document"
@@ -103,11 +108,6 @@ export function App() {
                             />
                         </div>
                     </main>
-                    <ToolRail
-                        groups={tools}
-                        open={toolsOpen}
-                        onToggle={() => setToolsOpen((open) => !open)}
-                    />
                 </div>
                 <OnScreenKeyboard onInput={keyboard.input} onBackspace={keyboard.backspace} />
             </div>
