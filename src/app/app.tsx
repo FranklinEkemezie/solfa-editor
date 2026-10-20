@@ -15,6 +15,7 @@ import { ScoreHeader } from '@/features/score-editor/components/score-header';
 import { useCommit } from '@/features/score-editor/hooks/use-commit';
 import { useDocumentZoom } from '@/features/score-editor/hooks/use-document-zoom';
 import { useMetadataEditing } from '@/features/score-editor/hooks/use-metadata-editing';
+import { usePinchZoom } from '@/features/score-editor/hooks/use-pinch-zoom';
 import { useScoreEditor } from '@/features/score-editor/hooks/use-score-editor';
 import { useScoreKeyboard } from '@/features/score-editor/hooks/use-score-keyboard';
 import { DOCUMENT_INSET_PX } from '@/features/score-editor/layout/document-zoom';
@@ -25,6 +26,13 @@ export function App() {
     const { toasts, addToast, dismiss } = useToasts();
     const documentView = useDocumentZoom();
     const [toolsOpen, setToolsOpen] = useState(true);
+
+    usePinchZoom({
+        surfaceRef: documentView.viewportRef,
+        pagesRef: documentView.pagesRef,
+        zoom: documentView.zoom,
+        onZoom: documentView.zoomTo,
+    });
 
     const editor = useScoreEditor(store.document);
     const commit = useCommit(store, addToast);
@@ -89,6 +97,7 @@ export function App() {
                         className="document-surface min-w-0 flex-1"
                     >
                         <div
+                            ref={documentView.pagesRef}
                             className="document-pages"
                             style={{ zoom: documentView.zoom, padding: DOCUMENT_INSET_PX }}
                         >
