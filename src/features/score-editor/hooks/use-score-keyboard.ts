@@ -31,7 +31,7 @@ const SUSTAIN_MESSAGE =
     'The next beat continues this note, so it cannot be cleared yet — remove that continuation first.';
 
 export type ScoreKeyboard = {
-    /** Key handler for the physical keyboard, attached to the score canvas. */
+    /** Key handler for the physical keyboard, attached to the score document. */
     handleKeyDown: (event: KeyboardEvent) => void;
     /** Apply a complete sol-fa token (`.`, `,`, `-`, or a syllable) at the caret. */
     input: (token: string) => void;
