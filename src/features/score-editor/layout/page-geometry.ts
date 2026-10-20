@@ -18,7 +18,7 @@ export const A4_HEIGHT_PX = 1123;
  * music is set in — and the printer uses the very same measurement, so what
  * comes off the paper is the page that was on screen.
  */
-export const PAGE_MARGIN_PX = 64;
+export const PAGE_MARGIN_PX = 70;
 
 export const PAGE_CONTENT_WIDTH_PX = A4_WIDTH_PX - PAGE_MARGIN_PX * 2;
 export const PAGE_CONTENT_HEIGHT_PX = A4_HEIGHT_PX - PAGE_MARGIN_PX * 2;
