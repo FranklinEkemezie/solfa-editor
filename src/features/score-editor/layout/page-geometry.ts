@@ -6,7 +6,7 @@ import { PARTS } from '@/domain/music';
  * The editor draws a real A4 page rather than a strip that grows, so what is on
  * screen and what the printer emits are the same page. Nothing scrolls inside
  * the sheet either: a score too tall for one page is broken across several, and
- * the canvas is panned and zoomed around them instead.
+ * the document is read by scrolling past them.
  */
 export const A4_WIDTH_PX = 794;
 export const A4_HEIGHT_PX = 1123;

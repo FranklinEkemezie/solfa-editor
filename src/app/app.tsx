@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { ToastViewport } from '@/components/feedback/toast-viewport';
 import { useToasts } from '@/components/feedback/use-toasts';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -10,20 +10,20 @@ import { PrintScore } from '@/features/pdf-export/print-score';
 import { usePlayback } from '@/features/playback/hooks/use-playback';
 import { PlaybackControls } from '@/features/playback/playback-controls';
 import { OnScreenKeyboard } from '@/features/score-editor/components/on-screen-keyboard';
-import { ScoreCanvas } from '@/features/score-editor/components/score-canvas';
+import { ScoreDocument } from '@/features/score-editor/components/score-document';
 import { ScoreHeader } from '@/features/score-editor/components/score-header';
-import { ScoreStage, type ScoreStageHandle } from '@/features/score-editor/components/score-stage';
 import { useCommit } from '@/features/score-editor/hooks/use-commit';
+import { useDocumentZoom } from '@/features/score-editor/hooks/use-document-zoom';
 import { useMetadataEditing } from '@/features/score-editor/hooks/use-metadata-editing';
 import { useScoreEditor } from '@/features/score-editor/hooks/use-score-editor';
 import { useScoreKeyboard } from '@/features/score-editor/hooks/use-score-keyboard';
+import { DOCUMENT_INSET_PX } from '@/features/score-editor/layout/document-zoom';
 import { useScoreStore } from '@/features/score-editor/state/score-store';
 
 export function App() {
     const store = useScoreStore();
     const { toasts, addToast, dismiss } = useToasts();
-    const stage = useRef<ScoreStageHandle>(null);
-    const [scale, setScale] = useState(1);
+    const documentView = useDocumentZoom();
     const [toolsOpen, setToolsOpen] = useState(true);
 
     const editor = useScoreEditor(store.document);
@@ -58,11 +58,11 @@ export function App() {
         onAddMeasure: store.addMeasure,
         onRemoveMeasure: removeMeasure,
         onExport: printResult,
-        onZoomIn: () => stage.current?.zoomIn(),
-        onZoomOut: () => stage.current?.zoomOut(),
-        onFitPage: () => stage.current?.fitToPage(),
-        onActualSize: () => stage.current?.actualSize(),
-        zoomPercent: Math.round(scale * 100),
+        onZoomIn: documentView.zoomIn,
+        onZoomOut: documentView.zoomOut,
+        onFitWidth: documentView.fitWidth,
+        onActualSize: documentView.actualSize,
+        zoom: documentView.zoom,
     });
 
     return (
@@ -78,9 +78,16 @@ export function App() {
                     }
                 />
                 <div className="relative flex min-h-0 flex-1">
-                    <main className="min-w-0 flex-1">
-                        <ScoreStage ref={stage} onScaleChange={setScale}>
-                            <ScoreCanvas
+                    <main
+                        ref={documentView.viewportRef}
+                        aria-label="Score document"
+                        className="document-surface min-w-0 flex-1"
+                    >
+                        <div
+                            className="document-pages"
+                            style={{ zoom: documentView.zoom, padding: DOCUMENT_INSET_PX }}
+                        >
+                            <ScoreDocument
                                 document={store.document}
                                 position={store.position}
                                 editor={editor}
@@ -94,7 +101,7 @@ export function App() {
                                 onKeyDown={keyboard.handleKeyDown}
                                 activeSlotId={activeSlotId}
                             />
-                        </ScoreStage>
+                        </div>
                     </main>
                     <ToolRail
                         groups={tools}

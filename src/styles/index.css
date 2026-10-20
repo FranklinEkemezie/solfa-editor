@@ -67,32 +67,33 @@
 }
 
 /**
- * The stage the sheets are panned and zoomed on.
+ * The document the sheets are read in.
  *
- * The viewport fills whatever the shell gives it and carries the workspace
- * dots; the sheets are stacked by the transform, so nothing here scrolls.
+ * A word processor's view: the page holds still in the middle of the window and
+ * the document scrolls past it. Nothing here pans and the wheel only scrolls,
+ * so the page cannot drift or lurch while it is being read.
+ *
+ * The gutter is reserved whether or not a scrollbar is showing: fitting the
+ * page to the window is measured from this width, and a scrollbar appearing a
+ * moment later would otherwise leave the page a finger too wide for it.
  */
-.score-stage-viewport {
-    width: 100%;
-    height: 100%;
-    cursor: grab;
+.document-surface {
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scroll-behavior: smooth;
     background-color: var(--color-cream);
-    background-image: radial-gradient(circle, var(--color-line) 1px, transparent 1px);
-    background-size: 22px 22px;
 }
 
-.score-stage-viewport:active {
-    cursor: grabbing;
-}
-
-.score-stage-content {
+/**
+ * The sheets, sat on the desk and never squeezed.
+ *
+ * `max-content` keeps the column exactly as wide as the paper, and the auto
+ * margins centre it while there is room to spare. Once the zoom makes the page
+ * wider than the window the margins give way, and that overflow becomes the
+ * horizontal scroll a document view pans with.
+ */
+.document-pages {
     width: max-content;
-}
-
-.score-stage-sheets {
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    width: max-content;
-    padding: 28px;
+    margin-inline: auto;
 }

@@ -10,15 +10,17 @@ import { calculateScoreLayout } from '@/features/score-editor/layout/score-layou
 import type { EditorPosition } from '@/features/score-editor/state/editor-position';
 
 /**
- * The score, as a stack of A4 sheets.
+ * The score, as a document of A4 sheets.
  *
  * The page breaks are decided here and nowhere else, so the editor and the
- * printer agree on where the music falls. The hidden Tiptap surface stays in
- * the tree because it is what the physical keyboard is captured by, and what
- * undo and redo are kept in. How the sheets are looked at is the stage's
+ * printer agree on where the music falls. The sheets are stacked in reading
+ * order and scroll past the reader; how large they are drawn is the viewport's
  * business, not this component's.
+ *
+ * The hidden Tiptap surface stays in the tree because it is what the physical
+ * keyboard is captured by, and what undo and redo are kept in.
  */
-export function ScoreCanvas({
+export function ScoreDocument({
     document,
     position,
     editor,
@@ -48,7 +50,7 @@ export function ScoreCanvas({
             onKeyDown={onKeyDown}
             onClick={() => editor.commands.focus()}
         >
-            <div className="flex flex-col items-start gap-6">
+            <div className="flex flex-col items-start gap-8">
                 {layout.pages.map((page) => (
                     <ScorePage
                         key={page.number}

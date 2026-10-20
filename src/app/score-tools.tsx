@@ -2,13 +2,14 @@ import {
     ArrowDownToLine,
     FileMinus2,
     FilePlus2,
-    Frame,
     RotateCcw,
     RotateCw,
+    UnfoldHorizontal,
     ZoomIn,
     ZoomOut,
 } from 'lucide-react';
 import type { ToolRailGroup } from '@/app/components/tool-rail';
+import { zoomLabel } from '@/features/score-editor/layout/document-zoom';
 
 /** What the editor's tools need from the app to work. */
 export type ScoreToolActions = {
@@ -21,10 +22,10 @@ export type ScoreToolActions = {
     onExport: () => void;
     onZoomIn: () => void;
     onZoomOut: () => void;
-    onFitPage: () => void;
+    onFitWidth: () => void;
     onActualSize: () => void;
-    /** The current zoom, shown on the control that returns to full size. */
-    zoomPercent: number;
+    /** The zoom the document is being read at, shown on the rail. */
+    zoom: number;
 };
 
 const ICON = { size: 16, strokeWidth: 2 } as const;
@@ -83,15 +84,15 @@ export function buildScoreToolGroups(actions: ScoreToolActions): ToolRailGroup[]
                     onSelect: actions.onZoomOut,
                 },
                 {
-                    label: 'Fit the page to the window',
-                    icon: <Frame {...ICON} />,
-                    onSelect: actions.onFitPage,
+                    label: 'Fit the page width',
+                    icon: <UnfoldHorizontal {...ICON} />,
+                    onSelect: actions.onFitWidth,
                 },
                 {
                     label: 'Actual size',
                     icon: (
                         <span className="text-[0.6875rem] font-semibold tabular-nums">
-                            {actions.zoomPercent}%
+                            {zoomLabel(actions.zoom)}
                         </span>
                     ),
                     onSelect: actions.onActualSize,
