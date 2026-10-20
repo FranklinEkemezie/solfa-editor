@@ -5,10 +5,14 @@ import { metadataKeyLabel } from '@/features/score-editor/adapters/metadata-labe
 /**
  * The title block at the head of the first printed sheet.
  *
- * It reads exactly as the editor's masthead does — the title, its subtitle,
- * then one row with the musical facts on the left and the composer on the
- * right — so the page that comes off the printer is the page that was on
- * screen. Type is set in points, which is the printer's own unit.
+ * It reads as the editor's masthead does — the title, its subtitle, then one
+ * row with the musical facts on the left and the composer on the right — so the
+ * page that comes off the printer is the page that was on screen. Type is set in
+ * points, which is the printer's own unit.
+ *
+ * The facts of the score are set upright and in the ink the notes are printed
+ * in: they are part of the music's heading, not a caption under it. Only the
+ * subtitle and the composer's credit keep the italic they carry on screen.
  *
  * The block is given room to stand in: air above it, air between the title and
  * its details, and air below it before the music starts. A heading pressed
@@ -25,21 +29,27 @@ export function PrintMasthead({ document }: { document: EditorDocument }) {
                     {document.subtitle}
                 </p>
             ) : null}
-            <div className="mt-[20px] flex items-baseline justify-between border-t border-ink-muted/40 pt-[8px] text-[9pt] leading-snug text-ink-muted">
+            <div className="mt-[18px] flex items-baseline justify-between text-[9pt] leading-snug text-ink">
                 <span className="flex items-baseline">
                     <span>{metadataKeyLabel(document)}</span>
-                    <span className="px-[4pt]">·</span>
+                    <span aria-hidden="true" className="px-[4pt] text-ink-muted">
+                        ·
+                    </span>
                     <span>{timeSignatureLabel(document.timeSignature)}</span>
                     {document.tempo.description ? (
                         <>
-                            <span className="px-[4pt]">·</span>
-                            <span className="italic">{document.tempo.description}</span>
+                            <span aria-hidden="true" className="px-[4pt] text-ink-muted">
+                                ·
+                            </span>
+                            <span>{document.tempo.description}</span>
                         </>
                     ) : null}
-                    <span className="px-[4pt]">·</span>
+                    <span aria-hidden="true" className="px-[4pt] text-ink-muted">
+                        ·
+                    </span>
                     <span>♩ = {document.tempo.beatsPerMinute}</span>
                 </span>
-                <span className="italic">{`By ${document.author || 'Anonymous'}`}</span>
+                <span className="italic text-ink-muted">{`By ${document.author || 'Anonymous'}`}</span>
             </div>
         </header>
     );
