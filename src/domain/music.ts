@@ -20,6 +20,13 @@ export {
     isBeatDivision,
     refineDivision,
 } from '@/domain/beat-division';
+export {
+    BEAT_MARK,
+    HALF_BAR_MARK,
+    dividesInHalves,
+    halfBarAfter,
+    markAfterBeat,
+} from '@/domain/bar-division';
 export { type PartId, PARTS } from '@/domain/parts';
 export {
     type SolfaSyllable,

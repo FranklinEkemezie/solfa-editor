@@ -1,3 +1,4 @@
+import { markAfterBeat } from '@/domain/music';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { SlotButton } from '@/features/score-editor/components/score-canvas/slot-button';
 import { PART_ROW_HEIGHT_PX } from '@/features/score-editor/layout/page-geometry';
@@ -29,6 +30,11 @@ export function PartMeasure({
                 <SlotButton
                     key={slot.id}
                     slot={slot}
+                    closingMark={
+                        slotIndex < measure.slots.length - 1
+                            ? markAfterBeat(slotIndex, measure.timeSignature.count)
+                            : null
+                    }
                     isActive={position.measureId === measure.id && position.slotIndex === slotIndex}
                     isPlaying={activeSlotId === slot.id}
                     ariaLabel={`${measure.part}, measure ${measure.number}, beat ${slotIndex + 1}${beatSummary(slot.notes)}`}
