@@ -14,6 +14,8 @@ and presentation-specific concerns.
   It is docked on small screens and hidden from the `lg` breakpoint up, where the
   hardware keyboard can already type every syllable.
 - Rhythmic subdivision with dots and commas, plus `-` for continuations
+- Bars that read in two halves are marked at the half bar (`/`), and the score closes with a double
+  barline (`||`), the way a printed score does
 - Inline editing of the title, subtitle, composer, key, time signature, and tempo straight from the score
   masthead
 - Automatic score growth: reaching the last slot of the last measure appends a new one
@@ -108,6 +110,12 @@ printer prints the editor's pages, system for system and measure for measure.
 - A measure is a list of beats, and each beat carries the notes written in it
   plus its division (1, 2, or 4). The marks between the notes are derived from
   that division, so the notation always reads the way the method writes it.
+- A bar of an even number of beats greater than two is read in two halves, so the
+  mark between the beats at its middle is a slash rather than a colon: 4/4 reads
+  `d : m / s : m`, and 6/8 reads three beats, a slash, three more. A bar of two or
+  three beats has no middle to mark. The last measure of the score closes with a
+  double barline. The rule lives in `domain/bar-division.ts`, so the sheet and the
+  printed page cannot disagree about where the halves fall.
 - A continuation belongs to the note right before it, so the two rules follow
   from that: clearing a note or a beat is refused while the next position still
   continues it, and writing a syllable over a beat that holds only a continuation
@@ -115,7 +123,9 @@ printer prints the editor's pages, system for system and measure for measure.
 - Cursor advancement is centralised in `advanceCursor`; when input reaches the final slot of the
   final measure it appends a fresh measure for every part rather than stopping.
 - Score details are edited inline: the masthead renders plain text and swaps in an input or a
-  shadcn `Select` only when activated, so there is no separate metadata form.
+  shadcn `Select` only when activated, so there is no separate metadata form. Activating a field
+  takes focus without scrolling and the masthead's clicks stop at the heading, so editing a title
+  never moves the page under the pointer.
 - Playback flattens the score into a single time-ordered note list measured in
   quarter notes, then converts once into seconds, so a note's length never
   depends on how its duration is spelled. Continuations prolong the note before
@@ -141,12 +151,15 @@ printer prints the editor's pages, system for system and measure for measure.
   is already decided by the layout module, and all the print stylesheet has to add is that each of the
   editor's pages starts a fresh sheet and that a system is never split across two.
 - The printed page box is the editor's page box — A4 with a 70px margin, which is A4 with a margin of
-  just under 19mm — so the printable width is the width the layout was measured against. The title
-  block is given air above and below it, so a printed heading does not read as a caption on the first
-  system.
+  just under 19mm — so the printable width is the width the layout was measured against. The page is
+  then drawn at 95%: the breaks stay where the editor put them, and the music keeps a few millimetres
+  of air from the paper's edge instead of running to the margin. The title block is given air above
+  and below it, so a printed heading does not read as a caption on the first system.
 - The printed sheet carries no colour: ink, hairlines and barlines only. The subdivision marks (`.`,
-  `,`) and the colon that closes a beat are notation rather than decoration, so they are set at the
-  note's own size, colour and mono face.
+  `,`), the colon that closes a beat and the slash at the half bar are notation rather than
+  decoration, so they are set at the note's own size, colour and mono face. The score's key, time,
+  tempo and tempo word are set upright in the same ink as the notes: they are part of the heading,
+  not a caption under it.
 - The app is a fixed frame around a scrolling document: the header carries the app name and playback,
   the rail down the left carries the commands, the on-screen keyboard is docked at the bottom on
   small screens, and only the document between them scrolls. `app/score-tools.tsx` decides which
@@ -193,6 +206,7 @@ src/
 ├── components/                 # Shared UI components
 ├── domain/                     # Pure music domain model (no React/Tiptap deps)
 │   ├── accidental.ts
+│   ├── bar-division.ts          # Half-bar marks and the marks between beats
 │   ├── beat-division.ts        # Dot/comma beat subdivisions and their marks
 │   ├── duration.ts
 │   ├── fraction.ts
