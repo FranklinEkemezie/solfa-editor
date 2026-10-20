@@ -3,7 +3,13 @@ import { createEmptyScore } from '@/domain/music';
 import { domainToEditor } from '@/features/score-editor/adapters/domain-to-editor';
 import type { EditorDocument } from '@/features/score-editor/adapters/editor-document-schema';
 import { addMeasure } from '@/features/score-editor/state/score-measure-commands';
-import { SYSTEM_HEIGHT_PX, systemRoomPx } from '@/features/score-editor/layout/page-geometry';
+import {
+    PAGE_CONTENT_WIDTH_PX,
+    PART_LABEL_WIDTH_PX,
+    SYSTEM_BARLINE_PX,
+    SYSTEM_HEIGHT_PX,
+    systemRoomPx,
+} from '@/features/score-editor/layout/page-geometry';
 import { calculateScoreLayout } from '@/features/score-editor/layout/score-layout';
 
 function scoreOf(measureCount: number): EditorDocument {
@@ -41,6 +47,25 @@ describe('calculateScoreLayout', () => {
 
         expect(layout.measuresPerSystem).toBeGreaterThan(1);
         expect(layout.pages[0].systems[0].measureNumbers).toHaveLength(layout.measuresPerSystem);
+    });
+
+    it('keeps the part labels, the opening barline and the measures inside the page', () => {
+        const layout = calculateScoreLayout(scoreOf(20));
+
+        expect(
+            PART_LABEL_WIDTH_PX +
+                SYSTEM_BARLINE_PX +
+                layout.measuresPerSystem * layout.measureWidth,
+        ).toBeLessThanOrEqual(PAGE_CONTENT_WIDTH_PX);
+    });
+
+    it('never gives a measure more width than the labels leave it', () => {
+        const layout = calculateScoreLayout(scoreOf(3));
+
+        expect(layout.measureWidth).toBeLessThanOrEqual(
+            PAGE_CONTENT_WIDTH_PX - PART_LABEL_WIDTH_PX - SYSTEM_BARLINE_PX,
+        );
+        expect(layout.measuresPerSystem).toBeGreaterThanOrEqual(1);
     });
 
     it('breaks the score into systems that cover every measure once, in order', () => {

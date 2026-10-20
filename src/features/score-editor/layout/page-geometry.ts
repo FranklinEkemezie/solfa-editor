@@ -11,7 +11,13 @@ import { PARTS } from '@/domain/music';
 export const A4_WIDTH_PX = 794;
 export const A4_HEIGHT_PX = 1123;
 
-/** The margin inside the sheet, on every edge. */
+/**
+ * The margin inside the sheet, on every edge.
+ *
+ * This is the document's margin in the word-processor sense — the air the
+ * music is set in — and the printer uses the very same measurement, so what
+ * comes off the paper is the page that was on screen.
+ */
 export const PAGE_MARGIN_PX = 64;
 
 export const PAGE_CONTENT_WIDTH_PX = A4_WIDTH_PX - PAGE_MARGIN_PX * 2;
@@ -19,6 +25,9 @@ export const PAGE_CONTENT_HEIGHT_PX = A4_HEIGHT_PX - PAGE_MARGIN_PX * 2;
 
 /** The column that carries the part labels, at the head of every system. */
 export const PART_LABEL_WIDTH_PX = 44;
+
+/** The barline that closes that column on the left, from the number row down. */
+export const SYSTEM_BARLINE_PX = 1;
 
 /** One part's row of beats. */
 export const PART_ROW_HEIGHT_PX = 46;

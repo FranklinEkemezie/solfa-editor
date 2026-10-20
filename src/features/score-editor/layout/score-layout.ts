@@ -5,6 +5,8 @@ import type {
 } from '@/features/score-editor/adapters/editor-document-schema';
 import {
     PAGE_CONTENT_WIDTH_PX,
+    PART_LABEL_WIDTH_PX,
+    SYSTEM_BARLINE_PX,
     SYSTEM_GAP_PX,
     SYSTEM_HEIGHT_PX,
     systemRoomPx,
@@ -54,12 +56,24 @@ export type ScoreLayout = {
  */
 export function calculateScoreLayout(document: EditorDocument): ScoreLayout {
     const measureWidth = uniformMeasureWidth(document);
-    const perSystem = Math.max(1, Math.floor(PAGE_CONTENT_WIDTH_PX / measureWidth));
+    const perSystem = Math.max(1, Math.floor(measureRoomPx() / measureWidth));
     const systems = chunk(measureNumbers(document), perSystem).map((measureNumbers) => ({
         measureNumbers,
     }));
 
     return { measureWidth, measuresPerSystem: perSystem, pages: paginate(systems) };
+}
+
+/**
+ * The width a system has for its measures.
+ *
+ * A system carries the part labels in a column of their own at its head, with
+ * the opening barline beside it, so both come off the page before the measures
+ * are packed. Rounding them away is what lets a system grow a part of a measure
+ * too wide for the paper.
+ */
+function measureRoomPx(): number {
+    return PAGE_CONTENT_WIDTH_PX - PART_LABEL_WIDTH_PX - SYSTEM_BARLINE_PX;
 }
 
 function measureNumbers(document: EditorDocument): number[] {
@@ -81,7 +95,7 @@ function uniformMeasureWidth(document: EditorDocument): number {
         (width, measure) => Math.max(width, naturalWidth(measure)),
         MINIMUM_MEASURE_WIDTH,
     );
-    return Math.min(Math.round(widest), PAGE_CONTENT_WIDTH_PX);
+    return Math.min(Math.round(widest), measureRoomPx());
 }
 
 function naturalWidth(measure: EditorMeasure): number {
