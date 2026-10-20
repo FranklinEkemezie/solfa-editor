@@ -45,7 +45,7 @@ export type ScoreStore = {
 
 /**
  * The document the editor opens with: the active sample when one is selected,
- * otherwise the empty default of an untitled score with two silent measures.
+ * otherwise the empty default of an untitled score with four silent measures.
  */
 function initialDocument(): ScoreDocument {
     return ACTIVE_PRESET ? presetDocument(ACTIVE_PRESET) : createEmptyScoreDocument();

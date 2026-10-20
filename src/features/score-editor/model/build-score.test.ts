@@ -28,12 +28,12 @@ function sopranoMeasure(view: ReturnType<typeof viewOf>, number: number) {
 }
 
 describe('building a score from voice sources', () => {
-    it('opens with the document’s two silent measures', () => {
+    it('opens with the document’s four silent measures', () => {
         const view = buildScoreView(createEmptyScoreDocument());
 
-        expect(view.measureCount).toBe(2);
-        expect(view.measureNumbers).toEqual([1, 2]);
-        expect(view.parts.soprano.measures).toHaveLength(2);
+        expect(view.measureCount).toBe(4);
+        expect(view.measureNumbers).toEqual([1, 2, 3, 4]);
+        expect(view.parts.soprano.measures).toHaveLength(4);
         expect(view.parts.soprano.measures[0]?.beats).toHaveLength(4);
         expect(view.parts.soprano.measures[0]?.beats.every((beat) => beat.items.length === 0)).toBe(
             true,
@@ -42,10 +42,10 @@ describe('building a score from voice sources', () => {
     });
 
     it('grows to hold the music when a voice needs more measures', () => {
-        const view = viewOf(':d:d:d:d:d');
+        const view = viewOf(`:${'d'.repeat(17)}`);
 
-        expect(view.measureCount).toBe(2);
-        expect(sopranoMeasure(view, 2)?.beats[0]?.items[0]?.syllable).toBe('d');
+        expect(view.measureCount).toBe(5);
+        expect(sopranoMeasure(view, 5)?.beats[0]?.items[0]?.syllable).toBe('d');
     });
 
     it('gives every part the same measures', () => {
@@ -53,10 +53,10 @@ describe('building a score from voice sources', () => {
             withVoice(documentWith({ soprano: ':sssssssss' }), 'alto', ':d'),
         );
 
-        expect(view.measureCount).toBe(3);
-        expect(view.parts.soprano.measures).toHaveLength(3);
-        expect(view.parts.alto.measures).toHaveLength(3);
-        expect(view.parts.alto.measures[2]?.beats.every((beat) => beat.items.length === 0)).toBe(
+        expect(view.measureCount).toBe(4);
+        expect(view.parts.soprano.measures).toHaveLength(4);
+        expect(view.parts.alto.measures).toHaveLength(4);
+        expect(view.parts.alto.measures[3]?.beats.every((beat) => beat.items.length === 0)).toBe(
             true,
         );
     });
@@ -102,7 +102,7 @@ describe('building a score from voice sources', () => {
     it('splits a note that crosses the barline into tied measures', () => {
         const view = viewOf(':sss. d-');
 
-        expect(view.measureCount).toBe(2);
+        expect(view.measureCount).toBe(4);
         const second = view.score.measures.find(
             (measure) => measure.part === 'soprano' && measure.number === 2,
         );
@@ -162,7 +162,7 @@ describe('building a score from voice sources', () => {
         expect(view.diagnostics).toHaveLength(1);
         expect(view.diagnostics[0]?.part).toBe('soprano');
         expect(view.parts.soprano.voice).toBeNull();
-        expect(view.parts.soprano.measures).toHaveLength(2);
+        expect(view.parts.soprano.measures).toHaveLength(4);
         expect(view.parts.soprano.measures[0]?.beats).toHaveLength(4);
     });
 

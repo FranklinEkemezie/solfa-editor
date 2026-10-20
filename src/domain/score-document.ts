@@ -30,7 +30,7 @@ export type ScoreDocument = {
 };
 
 const DEFAULT_TIME_SIGNATURE = new TimeSignature(NoteValue.QUARTER, 4);
-const DEFAULT_MEASURE_COUNT = 2;
+const DEFAULT_MEASURE_COUNT = 4;
 
 export function emptyVoices(): Record<PartId, string> {
     const voices = {} as Record<PartId, string>;

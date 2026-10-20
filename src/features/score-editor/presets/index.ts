@@ -9,12 +9,12 @@ import {
 /**
  * The score the editor opens with.
  *
- * Swap the sample by pointing this at another preset — `gloriaJudeNnam` is
- * kept alongside the default for exactly that — and start from the empty
- * default (an untitled score with two silent measures) by commenting the line
- * out. Nothing else needs to change either way.
+ * The editor opens blank, on an untitled score with four silent measures. The
+ * samples are kept beside this switch rather than deleted: point it at
+ * `hallelujahChorus` or `gloriaJudeNnam` to open on one of them again, and
+ * nothing else needs to change.
  */
-export const ACTIVE_PRESET: ScorePreset | null = hallelujahChorus;
+export const ACTIVE_PRESET: ScorePreset | null = null;
 
 export { gloriaJudeNnam, hallelujahChorus, presetDocument, ScorePresetError };
 export type { ScorePreset };

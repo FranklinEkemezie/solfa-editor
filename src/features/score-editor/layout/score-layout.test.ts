@@ -20,7 +20,7 @@ function systems(view: ScoreView) {
 }
 
 describe('calculateScoreLayout', () => {
-    it('fits the default two measures on a single sheet', () => {
+    it('fits two measures on a single sheet', () => {
         const layout = calculateScoreLayout(viewOf(2));
 
         expect(layout.pages).toHaveLength(1);
