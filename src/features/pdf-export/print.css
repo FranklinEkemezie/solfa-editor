@@ -35,6 +35,19 @@
         display: block;
     }
 
+    /*
+     * The music is packed to the very edge of the page box, so that what prints
+     * breaks where the editor broke it. Drawing the page at 95% keeps that
+     * agreement and still leaves the music a few millimetres of air from the
+     * paper's edges, which is what makes a printed score look set rather than
+     * cropped. Scaling about the top centre keeps the heading where it is and
+     * the air even on both sides.
+     */
+    .print-page {
+        transform: scale(0.95);
+        transform-origin: top center;
+    }
+
     /* Every sheet after the first starts a fresh page of paper. */
     .print-page + .print-page {
         break-before: page;
