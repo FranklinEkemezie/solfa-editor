@@ -14,14 +14,14 @@ from editor-specific and presentation-specific concerns.
   letters, so `d` then `e` writes `de` rather than two notes. `#` and `b` set an explicit
   accidental after a note.
 - An on-screen keyboard for touch devices that mirrors the physical input keys. Every syllable is one press.
-  The duration keys sit on their own line above the notes, with the accidentals at the far end of it,
-  and the hold key beside them; the bottom line carries the octave selectors, rest, a wide space bar
-  and delete. The octave selector raises or lowers the notes being entered by one or two octaves and
-  writes the mark with the syllable, so the page shows a raised octave as a superscript and a lowered
-  one as a subscript. The three duration keys (`.` `:` `,`) choose the length of the notes that follow
-  and the one in force is lit. The dock is hidden from the `lg` breakpoint up, where the hardware
-  keyboard can already type everything, and it slides away while a field in the masthead is being typed
-  into
+  The duration keys sit on their own line above the notes, with the accidentals at the far end of it;
+  the bottom line carries the octave selectors, the continuation key, a wide space bar (a rest) and
+  delete. The octave selector raises or lowers the notes being entered by one or two octaves, moves the
+  note already at the caret, and writes the mark with the next syllable, so the page shows a raised
+  octave as a superscript and a lowered one as a subscript. The three duration keys (`.` `:` `,`)
+  choose the length of the notes that follow and the one in force is lit. The dock is hidden from the
+  `lg` breakpoint up, where the hardware keyboard can already type everything, and it slides away while
+  a field in the masthead is being typed into
 - Pinch to zoom the sheet on a touch screen. The gesture scales the page, the way
   the zoom controls do, instead of magnifying the whole app
 - Absolute rhythmic values — `:` a quarter, `.` an eighth, `,` a sixteenth, `-` to hold the note before it,
@@ -75,12 +75,13 @@ what the language would accept. Typing is token-atomic, so a two-letter syllable
 
 ## Opening score
 
-The editor opens on a blank, untitled score with four silent measures. The sample scores are kept in
-`src/features/score-editor/presets/`, not deleted; to open on one of them, point the switch in
-`presets/index.ts` at it:
+The editor opens on a blank, untitled score with four silent measures. The Gloria sample is one press
+away on the tool rail (`Open the Gloria sample`); it opens as an undoable step, so the blank score is
+one undo back. The sample scores are kept in `src/features/score-editor/presets/` and can also be made
+the opening score by pointing the switch at one of them:
 
 ```ts
-export const ACTIVE_PRESET: ScorePreset | null = hallelujahChorus;
+export const ACTIVE_PRESET: ScorePreset | null = gloriaJudeNnam;
 ```
 
 With `ACTIVE_PRESET` left `null`, the editor starts empty. `hallelujahChorus` and `gloriaJudeNnam` are

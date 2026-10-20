@@ -17,6 +17,7 @@ import { useDocumentZoom } from '@/features/score-editor/hooks/use-document-zoom
 import { usePinchZoom } from '@/features/score-editor/hooks/use-pinch-zoom';
 import { useScoreEditing } from '@/features/score-editor/hooks/use-score-editing';
 import { DOCUMENT_INSET_PX } from '@/features/score-editor/layout/document-zoom';
+import { gloriaJudeNnam } from '@/features/score-editor/presets';
 import { useScoreStore } from '@/features/score-editor/state/score-store';
 
 export function App() {
@@ -52,6 +53,7 @@ export function App() {
         onRedo: store.redo,
         onAddMeasure: store.addMeasure,
         onRemoveMeasure: removeMeasure,
+        onOpenGloria: () => store.openPreset(gloriaJudeNnam),
         onExport: printResult,
         onZoomIn: documentView.zoomIn,
         onZoomOut: documentView.zoomOut,
@@ -108,6 +110,8 @@ export function App() {
                     onInput={editing.input}
                     onBackspace={editing.backspace}
                     activeDuration={activeDurationMark(store.document, store.position)}
+                    octave={editing.octave}
+                    onOctave={editing.shiftOctave}
                 />
             </div>
             <PrintScore view={store.view} />

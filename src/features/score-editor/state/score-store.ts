@@ -9,6 +9,7 @@ import { caretAt, caretAtEnd, type EditorPosition } from '@/features/score-edito
 import { buildScoreView } from '@/features/score-editor/model/build-score';
 import type { ScoreView } from '@/features/score-editor/model/score-view';
 import { ACTIVE_PRESET, presetDocument } from '@/features/score-editor/presets';
+import type { ScorePreset } from '@/features/score-editor/presets/score-preset';
 import {
     canRedo as historyCanRedo,
     canUndo as historyCanUndo,
@@ -41,6 +42,8 @@ export type ScoreStore = {
     redo: () => void;
     addMeasure: () => void;
     removeMeasure: () => MeasureRemoval;
+    /** Open a sample score, as one undoable step. */
+    openPreset: (preset: ScorePreset) => void;
 };
 
 /**
@@ -133,6 +136,14 @@ export function useScoreStore(): ScoreStore {
         return { ok: true };
     }, [commit, document, view]);
 
+    const openPreset = useCallback(
+        (preset: ScorePreset) => {
+            const next = presetDocument(preset);
+            commit(next, caretAtEnd(next));
+        },
+        [commit],
+    );
+
     return {
         document,
         view,
@@ -145,5 +156,6 @@ export function useScoreStore(): ScoreStore {
         redo,
         addMeasure,
         removeMeasure,
+        openPreset,
     };
 }

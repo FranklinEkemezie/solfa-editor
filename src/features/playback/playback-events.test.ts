@@ -110,6 +110,12 @@ describe('buildPlaybackEvents', () => {
         expect(part(view, 'bass')[0].note).toBe('C2');
     });
 
+    it('sounds written octave marks above and below the voice', () => {
+        const view = scoreOf({ soprano: ":d':d''d1d2" });
+
+        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['C6', 'C7', 'C4', 'C3']);
+    });
+
     it('sounds doh on the key tonic, leaving the notation alone', () => {
         const view = scoreOf({ soprano: ':dr' }, { key: D_MAJOR });
 

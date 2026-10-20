@@ -43,3 +43,19 @@ export function octaveMark(step: OctaveStep): string {
             return '';
     }
 }
+
+/** What to tell the writer after the octave selector moves. */
+export function octaveStatus(step: OctaveStep): string {
+    switch (step) {
+        case 1:
+            return 'Entering notes one octave up.';
+        case 2:
+            return 'Entering notes two octaves up.';
+        case -1:
+            return 'Entering notes one octave down.';
+        case -2:
+            return 'Entering notes two octaves down.';
+        default:
+            return 'Entering notes at the voice’s own octave.';
+    }
+}

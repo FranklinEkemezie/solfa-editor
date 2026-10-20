@@ -1,6 +1,7 @@
 import {
     ArrowDownToLine,
     FileMinus2,
+    FileMusic,
     FilePlus2,
     RotateCcw,
     RotateCw,
@@ -19,6 +20,8 @@ export type ScoreToolActions = {
     onRedo: () => void;
     onAddMeasure: () => void;
     onRemoveMeasure: () => void;
+    /** Open the Gloria sample without losing the blank default. */
+    onOpenGloria: () => void;
     onExport: () => void;
     onZoomIn: () => void;
     onZoomOut: () => void;
@@ -33,8 +36,8 @@ const ICON = { size: 16, strokeWidth: 2 } as const;
 /**
  * The controls the score editor offers, in the order the rail stacks them.
  *
- * History first, then the measure commands, then how the sheet is looked at,
- * then the way out of the app and onto paper.
+ * History first, then the measure commands, then the sample, then how the sheet
+ * is looked at, then the way out of the app and onto paper.
  */
 export function buildScoreToolGroups(actions: ScoreToolActions): ToolRailGroup[] {
     return [
@@ -67,6 +70,16 @@ export function buildScoreToolGroups(actions: ScoreToolActions): ToolRailGroup[]
                     label: 'Remove last measure',
                     icon: <FileMinus2 {...ICON} />,
                     onSelect: actions.onRemoveMeasure,
+                },
+            ],
+        },
+        {
+            id: 'samples',
+            items: [
+                {
+                    label: 'Open the Gloria sample',
+                    icon: <FileMusic {...ICON} />,
+                    onSelect: actions.onOpenGloria,
                 },
             ],
         },

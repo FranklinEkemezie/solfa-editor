@@ -1,4 +1,4 @@
-import { useCallback, type KeyboardEvent } from 'react';
+import { useCallback, useState, type KeyboardEvent } from 'react';
 import { Accidental, isSolfaSyllable } from '@/domain/music';
 import type { ToastTone } from '@/components/feedback/toast-message';
 import { playErrorTone } from '@/features/score-editor/audio/play-error-tone';
@@ -12,20 +12,31 @@ import {
     insertRest,
     insertSyllable,
     moveCaret,
+    setNoteOctave,
     type CaretDirection,
     type DurationMark,
     type EditOutcome,
 } from '@/features/score-editor/editing/notation-editing';
-import { octaveMark, type OctaveStep } from '@/features/score-editor/editing/octave';
+import {
+    nextOctaveStep,
+    octaveMark,
+    octaveStatus,
+    type OctaveDirection,
+    type OctaveStep,
+} from '@/features/score-editor/editing/octave';
 import type { ScoreStore } from '@/features/score-editor/state/score-store';
 
 export type ScoreEditing = {
     /** Key handler for the physical keyboard, attached to the score section. */
     handleKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
     /** Apply one key from the on-screen keyboard. */
-    input: (token: string, octave?: OctaveStep) => void;
+    input: (token: string) => void;
     /** Remove the symbol before the caret. */
     backspace: () => void;
+    /** The octave the drawn keyboard will write with the next notes. */
+    octave: OctaveStep;
+    /** Move that selector, and the note already at the caret when there is one. */
+    shiftOctave: (direction: OctaveDirection) => void;
 };
 
 const ARROW_DIRECTIONS: Readonly<Record<string, CaretDirection>> = {
@@ -56,6 +67,15 @@ export function useScoreEditing(
     store: ScoreStore,
     onMessage: (message: string, tone?: ToastTone) => void,
 ): ScoreEditing {
+    /**
+     * The register the drawn keyboard is writing in.
+     *
+     * It lives here rather than inside the keyboard so it survives re-renders
+     * of the drawer, and so the note at the caret and the next notes are moved
+     * by the same command.
+     */
+    const [octave, setOctave] = useState<OctaveStep>(0);
+
     const apply = useCallback(
         (outcome: EditOutcome) => {
             if (outcome.rejected) {
@@ -73,7 +93,7 @@ export function useScoreEditing(
     );
 
     const input = useCallback(
-        (token: string, octave: OctaveStep = 0) => {
+        (token: string) => {
             const document = store.document;
             const position = store.position;
 
@@ -105,7 +125,31 @@ export function useScoreEditing(
             onMessage(`“${token}” is not part of the notation.`);
             void playErrorTone();
         },
-        [apply, onMessage, store.document, store.position],
+        [apply, octave, onMessage, store.document, store.position],
+    );
+
+    const shiftOctave = useCallback(
+        (direction: OctaveDirection) => {
+            const next = nextOctaveStep(octave, direction);
+            setOctave(next);
+
+            // If the writer has just entered a note, the selector acts on that
+            // note as well as on the notes that follow. With no note at the
+            // caret it only arms the next entry.
+            const outcome = setNoteOctave(store.document, store.position, octaveMark(next));
+            if (outcome?.rejected) {
+                apply(outcome);
+                return;
+            }
+            if (outcome?.changed) {
+                store.commit(outcome.document, outcome.position);
+                onMessage(`${outcome.status ?? 'Moved the note.'} ${octaveStatus(next)}`, 'info');
+                return;
+            }
+
+            onMessage(octaveStatus(next), 'info');
+        },
+        [apply, octave, onMessage, store],
     );
 
     const backspace = useCallback(() => {
@@ -155,5 +199,5 @@ export function useScoreEditing(
         [apply, store],
     );
 
-    return { handleKeyDown, input, backspace };
+    return { handleKeyDown, input, backspace, octave, shiftOctave };
 }

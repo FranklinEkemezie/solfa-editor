@@ -262,6 +262,98 @@ export function applyOctave(
     };
 }
 
+/**
+ * The note immediately before the caret, with the modifiers written after it.
+ *
+ * A note "at the caret" means a pitch and any accidentals or octave marks that
+ * follow it, with nothing else in between. A rest, a continuation or a new
+ * duration ends the run, because those are separate events rather than part of
+ * the note.
+ */
+function noteBeforeCaret(
+    tokens: readonly Token[],
+    offset: number,
+): { pitch: Token; modifiers: Token[] } | null {
+    let index = -1;
+    for (let scan = tokens.length - 1; scan >= 0; scan -= 1) {
+        if (tokens[scan].range.end === offset) {
+            index = scan;
+            break;
+        }
+    }
+    if (index === -1) return null;
+
+    const last = tokens[index];
+    if (last.kind !== 'pitch' && last.kind !== 'accidental' && last.kind !== 'octave') {
+        return null;
+    }
+
+    let pitchIndex = index;
+    while (pitchIndex >= 0 && tokens[pitchIndex].kind !== 'pitch') {
+        const kind = tokens[pitchIndex].kind;
+        if (kind !== 'accidental' && kind !== 'octave') return null;
+        pitchIndex -= 1;
+    }
+    if (pitchIndex < 0) return null;
+
+    return { pitch: tokens[pitchIndex], modifiers: tokens.slice(pitchIndex + 1, index + 1) };
+}
+
+/**
+ * Set (or clear) the octave mark on the note at the caret.
+ *
+ * The on-screen octave keys are selectors for the notes still to be written,
+ * but a writer who has just entered a note expects the key to act on that note
+ * too. This replaces any octave already there rather than stacking a second
+ * one, so pressing `+8va` twice gives two octaves up, not three marks. When
+ * there is no note at the caret the caller only stores the selector.
+ */
+export function setNoteOctave(
+    document: ScoreDocument,
+    position: EditorPosition,
+    mark: string,
+): EditOutcome | null {
+    if (mark && !/^'+$/.test(mark) && !/^[1-9]$/.test(mark)) {
+        return reject(document, position, 'An octave mark is one or two apostrophes, or a digit.');
+    }
+
+    const offset = offsetOf(document, position);
+    const note = noteBeforeCaret(tokensOf(document, position.part), offset);
+    if (!note) return null;
+
+    const existing = note.modifiers.filter((token) => token.kind === 'octave');
+    let next = textAt(document, position);
+    for (const token of [...existing].sort((a, b) => b.range.start - a.range.start)) {
+        next = splice(next, token.range, '');
+    }
+
+    const removed = existing.reduce(
+        (total, token) => total + token.range.end - token.range.start,
+        0,
+    );
+    const insertAt = offset - removed;
+    if (mark) next = next.slice(0, insertAt) + mark + next.slice(insertAt);
+
+    const caret = insertAt + mark.length;
+    const parsed = parseVoice(next, settingsFor(position.part));
+    if (!parsed.ok) return reject(document, position, firstDiagnostic(parsed.diagnostics));
+
+    if (next === textAt(document, position)) {
+        return { document, position, changed: false };
+    }
+
+    return {
+        document: withVoice(document, position.part, next),
+        position: { part: position.part, offset: caret },
+        changed: true,
+        status: !mark
+            ? 'Removed the octave mark.'
+            : mark.startsWith("'")
+              ? 'Raised the note.'
+              : 'Lowered the note.',
+    };
+}
+
 /** The token a backward deletion should remove, if any. */
 function tokenBefore(tokens: readonly Token[], offset: number): Token | null {
     // At a boundary, the token that ends at the caret is the one behind it.
