@@ -48,7 +48,9 @@ export function ScoreDocument({
             className="relative"
             aria-label="SATB score editor"
             onKeyDown={onKeyDown}
-            onClick={() => editor.commands.focus()}
+            // The editing surface sits after the sheets, so focusing it must not
+            // scroll the document down to it.
+            onClick={() => editor.commands.focus(undefined, { scrollIntoView: false })}
         >
             <div className="flex flex-col items-start gap-8">
                 {layout.pages.map((page) => (

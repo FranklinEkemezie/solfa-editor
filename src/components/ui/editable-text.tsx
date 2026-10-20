@@ -43,7 +43,14 @@ export function EditableText({
     }, [value, editing]);
 
     useEffect(() => {
-        if (editing) inputRef.current?.select();
+        if (!editing) return;
+        const input = inputRef.current;
+        if (!input) return;
+        // The field is already where the reader clicked, so taking focus must
+        // not scroll the document. Number fields cannot select their text, so
+        // they are left to the browser.
+        input.focus({ preventScroll: true });
+        if (input.type !== 'number') input.setSelectionRange(0, input.value.length);
     }, [editing]);
 
     const commit = () => {

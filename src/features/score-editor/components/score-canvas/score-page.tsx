@@ -46,7 +46,14 @@ export function ScorePage({
             style={{ width: A4_WIDTH_PX, height: A4_HEIGHT_PX, padding: PAGE_MARGIN_PX }}
         >
             {page.showsMasthead && children ? (
-                <div style={{ marginBottom: SYSTEM_GAP_PX }}>{children}</div>
+                <div
+                    style={{ marginBottom: SYSTEM_GAP_PX }}
+                    // The heading edits itself. A click here must not also put the
+                    // caret in the score, which is what would scroll the sheet.
+                    onClick={(event) => event.stopPropagation()}
+                >
+                    {children}
+                </div>
             ) : null}
             <div className="flex flex-col" style={{ gap: SYSTEM_GAP_PX }}>
                 {page.systems.map((system, index) => (

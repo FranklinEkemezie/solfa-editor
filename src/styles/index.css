@@ -82,6 +82,9 @@
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
     scroll-behavior: smooth;
+    /* The heading grows into an input under the reader's pointer, and nothing
+       above the fold may tug the page when it does. */
+    overflow-anchor: none;
     background-color: var(--color-cream);
 }
 
