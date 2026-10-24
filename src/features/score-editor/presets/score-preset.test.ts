@@ -74,8 +74,8 @@ describe('presetDocument', () => {
 
         const soprano = view.parts.soprano.voice?.events[0];
         const bass = view.parts.bass.voice?.events[0];
-        expect(soprano?.kind === 'note' ? soprano.note.pitch.octave : null).toBe(5);
-        expect(bass?.kind === 'note' ? bass.note.pitch.octave : null).toBe(2);
+        expect(soprano?.kind === 'note' ? soprano.note.pitch.octave : null).toBe(4);
+        expect(bass?.kind === 'note' ? bass.note.pitch.octave : null).toBe(3);
     });
 
     it('rejects a source it cannot read, naming the part', () => {

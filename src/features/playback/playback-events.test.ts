@@ -96,7 +96,7 @@ describe('buildPlaybackEvents', () => {
         expect(events[1].time).toBeCloseTo(quarter * 2);
     });
 
-    it('separates the parts by whole octaves', () => {
+    it('places each part at its own reference octave', () => {
         const view = scoreOf({
             soprano: ':d',
             alto: ':d',
@@ -104,16 +104,16 @@ describe('buildPlaybackEvents', () => {
             bass: ':d',
         });
 
-        expect(part(view, 'soprano')[0].note).toBe('C5');
+        expect(part(view, 'soprano')[0].note).toBe('C4');
         expect(part(view, 'alto')[0].note).toBe('C4');
         expect(part(view, 'tenor')[0].note).toBe('C3');
-        expect(part(view, 'bass')[0].note).toBe('C2');
+        expect(part(view, 'bass')[0].note).toBe('C3');
     });
 
     it('sounds written octave marks above and below the voice', () => {
         const view = scoreOf({ soprano: ":d':d''d1d2" });
 
-        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['C6', 'C7', 'C4', 'C3']);
+        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['C5', 'C6', 'C3', 'C2']);
     });
 
     it('sounds doh on the key tonic, leaving the notation alone', () => {
@@ -123,19 +123,19 @@ describe('buildPlaybackEvents', () => {
             kind: 'note',
             note: { syllable: 'd' },
         });
-        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['D5', 'E5']);
+        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['D4', 'E4']);
     });
 
     it('keys a flat score without rewriting a single syllable', () => {
         const view = scoreOf({ soprano: ':dmsl' }, { key: F_MAJOR });
 
-        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['F5', 'A5', 'C6', 'D6']);
+        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['F4', 'A4', 'C5', 'D5']);
     });
 
     it('sounds an explicit accidental over the syllable’s own degree', () => {
         const view = scoreOf({ soprano: ':d#' }, { key: D_MAJOR });
 
-        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['D#5']);
+        expect(part(view, 'soprano').map((event) => event.note)).toEqual(['D#4']);
     });
 
     it('gives every note a key the page can use to mark it', () => {

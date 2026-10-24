@@ -201,7 +201,7 @@ reopening.
 - Playback follows the score's key as moveable doh. Every syllable is written as though doh were C, so
   the sounding pitch is the written pitch shifted by the key's tonic — the shift is applied to the notes
   handed to Tone.js, never written back into the notation, which keeps it off the render path. Each
-  voice also sounds in its own reference octave (soprano at 5, alto at 4, tenor at 3, bass at 2), which
+  voice also sounds in its own reference octave (soprano and alto at 4, tenor and bass at 3), which
   is what separates the four parts.
 - The score is laid out as real sheets: one uniform measure width for the whole score (the widest
   beat anywhere in it), never justified to fill the page, so bars stay as narrow as the music needs
