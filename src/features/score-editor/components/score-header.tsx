@@ -1,7 +1,13 @@
-import { timeSignatureLabel, UNTITLED_SCORE_TITLE, type ScoreDocument } from '@/domain/music';
+import {
+    NoteValue,
+    timeSignatureLabel,
+    UNTITLED_SCORE_TITLE,
+    type ScoreDocument,
+} from '@/domain/music';
 import { EditableSelect } from '@/components/ui/editable-select';
 import { EditableText } from '@/components/ui/editable-text';
 import { metadataKeyLabel } from '@/features/score-editor/adapters/metadata-label';
+import { TempoBeatUnitSelect } from '@/features/score-editor/components/tempo-beat-unit-select';
 import {
     KEY_OPTIONS,
     keyFromOptionValue,
@@ -23,8 +29,9 @@ const TEMPO_MAX = 320;
  * carries the musical details on the left — key, time signature, tempo and its
  * description — and the composer on the right. Every detail reads as ordinary
  * sheet-music text and becomes the appropriate control when activated: text
- * becomes an input, and key and time signature open a dropdown. The header owns
- * no state of its own — it reports a whole next document through `onChange`.
+ * becomes an input, and key, time signature and the tempo's note value open a
+ * dropdown. The header owns no state of its own — it reports a whole next
+ * document through `onChange`.
  */
 export function ScoreHeader({
     document,
@@ -55,6 +62,17 @@ export function ScoreHeader({
                     document.tempo.beatUnit,
                     document.tempo.beatsPerMinute,
                     description,
+                ),
+            }),
+        );
+
+    const setTempoBeatUnit = (beatUnit: NoteValue) =>
+        onChange(
+            patchMetadata(document, {
+                tempo: makeTempo(
+                    beatUnit,
+                    document.tempo.beatsPerMinute,
+                    document.tempo.description,
                 ),
             }),
         );
@@ -115,7 +133,12 @@ export function ScoreHeader({
                     <span aria-hidden="true" className="text-ghost">
                         ·
                     </span>
-                    <span className="text-muted">♩ =</span>
+                    <TempoBeatUnitSelect
+                        variant="masthead"
+                        value={document.tempo.beatUnit}
+                        onChange={setTempoBeatUnit}
+                    />
+                    <span className="text-muted">=</span>
                     <EditableText
                         value={String(document.tempo.beatsPerMinute)}
                         onCommit={(raw) =>

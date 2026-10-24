@@ -367,7 +367,7 @@ Display:
 - Author.
 - Key.
 - Time signature.
-- Tempo.
+- Tempo, including the note value that carries the BPM.
 - Optional tempo description.
 
 Example:
@@ -388,7 +388,7 @@ This is an illustrative layout.
 - The author must be editable.
 - The key must be editable using an appropriate control.
 - The time signature must be editable.
-- The tempo must be editable.
+- The tempo must be editable, including a dropdown for the note value that carries its BPM.
 - The tempo description must be optional.
 - Metadata changes must update the score representation.
 - Invalid metadata must be handled gracefully.
@@ -755,7 +755,7 @@ It should include:
 - Author.
 - Key.
 - Time signature.
-- Tempo.
+- Tempo, including the note value that carries the BPM.
 - Optional tempo description.
 - All four SATB parts.
 - All measures and notes.
@@ -832,7 +832,7 @@ Metadata area:
 
 - Key.
 - Time signature.
-- Tempo.
+- Tempo, including the note value that carries the BPM.
 - Optional tempo description.
 
 Editor area:

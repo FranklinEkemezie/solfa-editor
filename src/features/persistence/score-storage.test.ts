@@ -77,6 +77,19 @@ describe('score storage codec', () => {
         expect(restored.document.tempo.description).toBe('Allegro');
     });
 
+    it('keeps the note value that the tempo counts', () => {
+        const document = {
+            ...sampleDocument(),
+            tempo: new Tempo(NoteValue.HALF, 72, 'Largo'),
+        };
+        const stored = encodeScore(document, { part: 'soprano', offset: 0 }, 1, 'score-2', 1);
+
+        const restored = decodeScore(stored);
+
+        expect(restored.document.tempo.beatUnit).toBe(NoteValue.HALF);
+        expect(restored.document.tempo.beatsPerMinute).toBe(72);
+    });
+
     it('writes plain data that structured clone can carry', () => {
         const stored = encodeScore(sampleDocument(), { part: 'soprano', offset: 0 }, 1, 'x', 1);
 

@@ -1,9 +1,10 @@
 import {
     createEmptyScoreDocument,
+    NoteValue,
+    Tempo,
     UNTITLED_SCORE_TITLE,
     type Key,
     type ScoreDocument,
-    type Tempo,
     type TimeSignature,
 } from '@/domain/music';
 
@@ -36,7 +37,13 @@ export function createDocumentFromDetails(details: NewDocumentDetails): ScoreDoc
     };
 }
 
-/** The starting values shown when the dialog opens. */
+/**
+ * The starting values shown when the dialog opens.
+ *
+ * The new sheet borrows the current key, time signature, speed and marking,
+ * but starts on a quarter-note beat: that is the common metronome mark, and a
+ * writer who wants a half-note or eighth-note beat can choose it explicitly.
+ */
 export function newDocumentDetails(document: ScoreDocument): NewDocumentDetails {
     return {
         title: '',
@@ -44,6 +51,10 @@ export function newDocumentDetails(document: ScoreDocument): NewDocumentDetails 
         author: '',
         key: document.key,
         timeSignature: document.timeSignature,
-        tempo: document.tempo,
+        tempo: new Tempo(
+            NoteValue.QUARTER,
+            document.tempo.beatsPerMinute,
+            document.tempo.description,
+        ),
     };
 }

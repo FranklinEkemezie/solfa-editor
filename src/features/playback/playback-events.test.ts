@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
     Accidental,
     createEmptyScoreDocument,
+    fractionToNumber,
     Key,
     KeySignature,
     Letter,
     Mode,
+    NOTE_VALUE_ORDER,
+    NOTE_VALUE_UNITS,
     NoteValue,
     Tempo,
     withVoice,
@@ -152,14 +155,27 @@ describe('buildPlaybackEvents', () => {
         expect(part(view, 'alto')).toHaveLength(1);
     });
 
-    it('times at the tempo’s beat unit', () => {
+    it('times at every note value the tempo can use', () => {
         const view = scoreOf({ soprano: ':d' });
         const bpm = view.document.tempo.beatsPerMinute;
-        const halfNoteBeat: ScoreDocument = {
-            ...view.document,
-            tempo: new Tempo(NoteValue.HALF, bpm, ''),
-        };
 
-        expect(secondsPerQuarter(halfNoteBeat)).toBeCloseTo(60 / bpm / 2);
+        for (const beatUnit of NOTE_VALUE_ORDER) {
+            const beatQuarters = fractionToNumber(NOTE_VALUE_UNITS[beatUnit]);
+            const document: ScoreDocument = {
+                ...view.document,
+                tempo: new Tempo(beatUnit, bpm, ''),
+            };
+
+            expect(secondsPerQuarter(document)).toBeCloseTo(60 / bpm / beatQuarters);
+        }
+    });
+
+    it('turns an eighth-note beat into the seconds sent to the player', () => {
+        const view = scoreOf({ soprano: ':d:d' }, { tempo: new Tempo(NoteValue.EIGHTH, 120, '') });
+        const events = part(view, 'soprano');
+
+        expect(events[0].time).toBeCloseTo(0);
+        expect(events[1].time).toBeCloseTo(1);
+        expect(events[0].durationSeconds).toBeCloseTo(1);
     });
 });

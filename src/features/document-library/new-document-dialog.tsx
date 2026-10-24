@@ -34,6 +34,7 @@ import {
     type NewDocumentDetails,
 } from '@/features/document-library/document-details';
 import type { SaveOutcome } from '@/features/persistence/use-score-persistence';
+import { TempoBeatUnitSelect } from '@/features/score-editor/components/tempo-beat-unit-select';
 
 const TEMPO_MIN = 20;
 const TEMPO_MAX = 320;
@@ -218,15 +219,19 @@ export function NewDocumentDialog({
                             />
                         </FormField>
 
-                        <FormField label="Tempo marking">
-                            <TextField
-                                aria-label="Tempo marking"
-                                value={tempoText}
-                                onChange={(event) => setTempoText(event.target.value)}
-                                placeholder="Andante"
-                            />
+                        <FormField label="Beat unit" hint="The note value that gets the BPM">
+                            <TempoBeatUnitSelect value={beatUnit} onChange={setBeatUnit} />
                         </FormField>
                     </div>
+
+                    <FormField label="Tempo marking">
+                        <TextField
+                            aria-label="Tempo marking"
+                            value={tempoText}
+                            onChange={(event) => setTempoText(event.target.value)}
+                            placeholder="Andante"
+                        />
+                    </FormField>
 
                     {error ? (
                         <p

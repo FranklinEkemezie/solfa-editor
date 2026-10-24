@@ -28,8 +28,8 @@ from editor-specific and presentation-specific concerns.
   and a space for a rest — with bars inferred from the time signature
 - Bars that read in two halves are marked at the half bar (`/`), and the score closes with a double
   barline (`||`), the way a printed score does
-- Inline editing of the title, subtitle, composer, key, time signature, and tempo straight from the score
-  masthead
+- Inline editing of the title, subtitle, composer, key, time signature, and tempo — including the note
+  value its BPM counts — straight from the score masthead
 - Automatic score growth: music that runs past the last measure adds measures; the rail can add or remove
   blank ones
 - Real A4 sheets, read the way a document is read. A score too tall for one page breaks across as
@@ -242,6 +242,10 @@ than the other way round.
   handed to Tone.js, never written back into the notation, which keeps it off the render path. Each
   voice also sounds in its own reference octave (soprano and alto at 4, tenor and bass at 3), which
   is what separates the four parts.
+- A tempo is a BPM and the note value it counts. The masthead and New document form choose that symbol
+  from the same note-value list, and `playback-events.ts` resolves the pair to seconds before any
+  event is handed to Tone.js. The transport therefore never assumes a quarter-note beat: a half note
+  at 72 is slower than a quarter note at 72, and an eighth note at 72 is faster.
 - Typing feedback is a separate, deliberately small audio path. `editing/notation-editing.ts` exposes
   the pitch ending at the caret, and `audio/note-preview.ts` sounds it through one reusable
   monophonic Web Audio voice. A new note cuts the old tone off, the envelope is short enough not to

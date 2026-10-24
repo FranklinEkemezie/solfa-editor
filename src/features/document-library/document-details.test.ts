@@ -52,6 +52,21 @@ describe('a document created from the dialog', () => {
         expect(details.title).toBe('');
         expect(details.key).toBe(current.key);
         expect(details.timeSignature).toBe(current.timeSignature);
-        expect(details.tempo).toBe(current.tempo);
+        expect(details.tempo.beatUnit).toBe(NoteValue.QUARTER);
+        expect(details.tempo.beatsPerMinute).toBe(current.tempo.beatsPerMinute);
+        expect(details.tempo.description).toBe(current.tempo.description);
+    });
+
+    it('starts a new sheet on a quarter-note beat even when the current one is different', () => {
+        const current = {
+            ...createEmptyScoreDocument(),
+            tempo: new Tempo(NoteValue.HALF, 72, 'Largo'),
+        };
+
+        const details = newDocumentDetails(current);
+
+        expect(details.tempo.beatUnit).toBe(NoteValue.QUARTER);
+        expect(details.tempo.beatsPerMinute).toBe(72);
+        expect(details.tempo.description).toBe('Largo');
     });
 });

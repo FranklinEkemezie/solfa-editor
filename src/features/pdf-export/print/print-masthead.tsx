@@ -1,5 +1,6 @@
 import { scoreDisplayTitle, timeSignatureLabel, type ScoreDocument } from '@/domain/music';
 import { metadataKeyLabel } from '@/features/score-editor/adapters/metadata-label';
+import { NoteValueGlyph } from '@/features/score-editor/components/note-value-glyph';
 
 /**
  * The title block at the head of the first printed sheet.
@@ -46,7 +47,13 @@ export function PrintMasthead({ document }: { document: ScoreDocument }) {
                     <span aria-hidden="true" className="px-[4pt] text-ink-muted">
                         ·
                     </span>
-                    <span>♩ = {document.tempo.beatsPerMinute}</span>
+                    <span className="inline-flex items-center gap-[2pt]">
+                        <NoteValueGlyph
+                            value={document.tempo.beatUnit}
+                            className="h-[10pt] w-[7pt]"
+                        />
+                        <span>= {document.tempo.beatsPerMinute}</span>
+                    </span>
                 </span>
                 <span className="italic text-ink-muted">{`By ${document.author || 'Anonymous'}`}</span>
             </div>

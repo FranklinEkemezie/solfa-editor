@@ -86,4 +86,8 @@ export {
 } from '@/domain/score-document';
 
 export { validateScore } from '@/domain/score-validation';
-export { noteValueDenominator, timeSignatureLabel } from '@/domain/notational-labels';
+export {
+    noteValueDenominator,
+    noteValueLabel,
+    timeSignatureLabel,
+} from '@/domain/notational-labels';
