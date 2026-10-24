@@ -2,6 +2,8 @@ import {
     Accidental,
     isSolfaSyllable,
     NoteValue,
+    Pitch,
+    SOLFA_TO_DEGREE,
     type PartId,
     type ScoreDocument,
     type SolfaSyllable,
@@ -297,6 +299,35 @@ function noteBeforeCaret(
     if (pitchIndex < 0) return null;
 
     return { pitch: tokens[pitchIndex], modifiers: tokens.slice(pitchIndex + 1, index + 1) };
+}
+
+/**
+ * The written pitch of the note ending at the caret, if there is one.
+ *
+ * This is what the editor sounds as a writer types: the note they just wrote
+ * or changed, in its voice's register, with any accidental or octave marks
+ * that belong to it. A caret after a rest, a continuation or a duration has no
+ * note to sound and returns null.
+ */
+export function noteAtCaret(document: ScoreDocument, position: EditorPosition): Pitch | null {
+    const offset = offsetOf(document, position);
+    const note = noteBeforeCaret(tokensOf(document, position.part), offset);
+    if (!note || note.pitch.kind !== 'pitch') return null;
+
+    const spec = SOLFA_TO_DEGREE[note.pitch.syllable];
+    let accidental = spec.accidental;
+    let octaveOffset = 0;
+
+    for (const modifier of note.modifiers) {
+        if (modifier.kind === 'accidental') accidental = modifier.accidental;
+        else if (modifier.kind === 'octave') octaveOffset += modifier.offset;
+    }
+
+    return new Pitch(
+        spec.degree,
+        accidental,
+        settingsFor(position.part).referenceOctave + octaveOffset,
+    );
 }
 
 /**

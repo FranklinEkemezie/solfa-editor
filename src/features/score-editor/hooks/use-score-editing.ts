@@ -1,6 +1,7 @@
 import { useCallback, useState, type KeyboardEvent } from 'react';
-import { Accidental, isSolfaSyllable } from '@/domain/music';
+import { Accidental, isSolfaSyllable, soundingMidi } from '@/domain/music';
 import type { ToastTone } from '@/components/feedback/toast-message';
+import { playNotePreview } from '@/features/score-editor/audio/note-preview';
 import { playErrorTone } from '@/features/score-editor/audio/play-error-tone';
 import {
     applyAccidental,
@@ -12,6 +13,7 @@ import {
     insertRest,
     insertSyllable,
     moveCaret,
+    noteAtCaret,
     setNoteOctave,
     type CaretDirection,
     type DurationMark,
@@ -20,7 +22,6 @@ import {
 import {
     nextOctaveStep,
     octaveMark,
-    octaveStatus,
     type OctaveDirection,
     type OctaveStep,
 } from '@/features/score-editor/editing/octave';
@@ -76,8 +77,16 @@ export function useScoreEditing(
      */
     const [octave, setOctave] = useState<OctaveStep>(0);
 
+    /**
+     * Apply an edit, and sound the note it leaves at the caret.
+     *
+     * Successful edits do not raise a toast: a writer typing a line should hear
+     * the notes and see them on the page, not dismiss a message for every
+     * syllable. Rejections still explain themselves, because those are the
+     * moments the language did not do what was asked.
+     */
     const apply = useCallback(
-        (outcome: EditOutcome) => {
+        (outcome: EditOutcome, preview = true) => {
             if (outcome.rejected) {
                 onMessage(outcome.rejected);
                 void playErrorTone();
@@ -87,7 +96,10 @@ export function useScoreEditing(
             if (outcome.changed) store.commit(outcome.document, outcome.position);
             else store.setPosition(outcome.position);
 
-            if (outcome.status) onMessage(outcome.status, 'info');
+            if (!preview || !outcome.changed) return;
+
+            const pitch = noteAtCaret(outcome.document, outcome.position);
+            if (pitch) playNotePreview(soundingMidi(pitch, outcome.document.key));
         },
         [onMessage, store],
     );
@@ -137,23 +149,13 @@ export function useScoreEditing(
             // note as well as on the notes that follow. With no note at the
             // caret it only arms the next entry.
             const outcome = setNoteOctave(store.document, store.position, octaveMark(next));
-            if (outcome?.rejected) {
-                apply(outcome);
-                return;
-            }
-            if (outcome?.changed) {
-                store.commit(outcome.document, outcome.position);
-                onMessage(`${outcome.status ?? 'Moved the note.'} ${octaveStatus(next)}`, 'info');
-                return;
-            }
-
-            onMessage(octaveStatus(next), 'info');
+            if (outcome) apply(outcome);
         },
-        [apply, octave, onMessage, store],
+        [apply, octave, store.document, store.position],
     );
 
     const backspace = useCallback(() => {
-        apply(deletePrevious(store.document, store.position));
+        apply(deletePrevious(store.document, store.position), false);
     }, [apply, store.document, store.position]);
 
     const handleKeyDown = useCallback(
@@ -183,12 +185,12 @@ export function useScoreEditing(
 
             if (event.key === 'Backspace') {
                 event.preventDefault();
-                apply(deletePrevious(store.document, store.position));
+                apply(deletePrevious(store.document, store.position), false);
                 return;
             }
             if (event.key === 'Delete') {
                 event.preventDefault();
-                apply(deleteNext(store.document, store.position));
+                apply(deleteNext(store.document, store.position), false);
                 return;
             }
 

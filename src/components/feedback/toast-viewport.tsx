@@ -19,7 +19,7 @@ export function ToastViewport({
 
     return (
         <div
-            className="toast-viewport fixed bottom-4 right-4 z-[100] flex w-[min(320px,calc(100vw-2rem))] flex-col gap-2"
+            className="toast-viewport fixed right-4 top-16 z-[100] flex max-h-[calc(100dvh-5rem)] w-[min(320px,calc(100vw-2rem))] flex-col gap-2 overflow-y-auto"
             aria-live="polite"
         >
             {messages.map((toast) => (

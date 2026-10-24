@@ -40,6 +40,12 @@ from editor-specific and presentation-specific concerns.
   File section of the rail creates a new score from a small form (title, subtitle, composer, key,
   time and tempo) and opens any saved score from a newest-first picker. Reopening the editor restores
   the last active score, its caret and its zoom
+- A quiet note preview while writing: entering a syllable, completing a chromatic syllable,
+  adding an accidental or changing an octave sounds the note just written, in its voice's register
+  and the score's key. The preview is one short monophonic tone, so fast typing replaces the previous
+  note instead of stacking echoes
+- Feedback that stays out of the way. Successful keystrokes are silent; only invalid input and
+  errors raise a message, and messages sit at the top right so they never cover the phone keyboard
 - A tool rail down the left for files, undo and redo, adding and removing measures, zooming, and
   printing. Every control is an icon with a tooltip, and the rail can be put away to give the score
   the whole window
@@ -236,6 +242,15 @@ than the other way round.
   handed to Tone.js, never written back into the notation, which keeps it off the render path. Each
   voice also sounds in its own reference octave (soprano and alto at 4, tenor and bass at 3), which
   is what separates the four parts.
+- Typing feedback is a separate, deliberately small audio path. `editing/notation-editing.ts` exposes
+  the pitch ending at the caret, and `audio/note-preview.ts` sounds it through one reusable
+  monophonic Web Audio voice. A new note cuts the old tone off, the envelope is short enough not to
+  echo under the next key, and the pitch already includes the voice's reference octave and the
+  score's key. The same path serves the physical and on-screen keyboards, so a whole syllable entered
+  in one press sounds once.
+- Successful edits do not raise toasts. The editing bridge reports only rejections, which also play
+  the existing error tone, while playback and storage failures use the same warning style. The toast
+  viewport sits below the header at the top right, out of the way of the on-screen keyboard.
 - The score is laid out as real sheets: one uniform measure width for the whole score (the widest
   beat anywhere in it), never justified to fill the page, so bars stay as narrow as the music needs
   and the beats of one system line up with every other. Measures per system and systems per page come
