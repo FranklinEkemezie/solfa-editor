@@ -35,6 +35,9 @@
     ::before,
     ::after {
         border-color: var(--color-line);
+        /* The score is an instrument, not a document to copy from. */
+        -webkit-user-select: none;
+        user-select: none;
     }
 
     :root {
@@ -65,6 +68,14 @@
     button:disabled {
         cursor: not-allowed;
         opacity: 0.4;
+    }
+
+    /* Text being edited still needs a caret and a normal selection. */
+    input,
+    textarea,
+    [contenteditable='true'] {
+        -webkit-user-select: text;
+        user-select: text;
     }
 }
 

@@ -21,7 +21,12 @@ let context: AudioContext | null = null;
 let active: ActiveTone | null = null;
 
 const PREVIEW_SECONDS = 0.28;
-const PREVIEW_LEVEL = 0.055;
+/**
+ * The preview is feedback, not background music, but it still has to be heard
+ * over room noise and a phone speaker. This sits around -13 dBFS: clearly
+ * present without clipping, and short enough not to fatigue a fast writer.
+ */
+const PREVIEW_LEVEL = 0.22;
 
 /** Equal-tempered frequency for a MIDI note, with A4 at 440 Hz. */
 export function midiToFrequency(midi: number): number {
