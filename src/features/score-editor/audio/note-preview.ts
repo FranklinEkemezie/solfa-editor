@@ -4,8 +4,8 @@
  * This is feedback, not playback: one short monophonic tone for the note just
  * written or changed. A new tone cuts the previous one off, so a fast writer
  * hears the latest pitch rather than a cloud of overlapping attacks. The tone
- * is deliberately shorter than a beat and has a soft attack and release, so it
- * does not echo under the next keystroke.
+ * is deliberately brief and has a soft attack and release, so it does not echo
+ * under the next keystroke.
  *
  * The module owns one AudioContext and reuses it. Browsers only allow audio to
  * start from a user gesture; every caller here is a key press, and a blocked
@@ -20,7 +20,7 @@ type ActiveTone = {
 let context: AudioContext | null = null;
 let active: ActiveTone | null = null;
 
-const PREVIEW_SECONDS = 0.28;
+const PREVIEW_SECONDS = 0.56;
 /**
  * The preview is feedback, not background music, but it still has to be heard
  * over room noise and a phone speaker. This sits around -13 dBFS: clearly
