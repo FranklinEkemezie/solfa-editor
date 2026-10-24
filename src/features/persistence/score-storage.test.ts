@@ -12,9 +12,12 @@ import {
     type ScoreDocument,
 } from '@/domain/music';
 import {
+    decodeLegacyScore,
     decodeScore,
     encodeScore,
     ScoreStorageError,
+    summarizeScore,
+    type LegacyStoredScore,
     type StoredScore,
 } from '@/features/persistence/score-storage';
 
@@ -41,12 +44,20 @@ function sampleDocument(): ScoreDocument {
 describe('score storage codec', () => {
     it('keeps every detail of the document, caret and zoom', () => {
         const document = sampleDocument();
-        const stored = encodeScore(document, { part: 'tenor', offset: 4 }, 1.25, 'score-1', 1700);
+        const stored = encodeScore(
+            document,
+            { part: 'tenor', offset: 4 },
+            1.25,
+            'score-1',
+            1700,
+            1200,
+        );
 
         const restored = decodeScore(stored);
 
         expect(restored.id).toBe('score-1');
         expect(restored.savedAt).toBe(1700);
+        expect(restored.createdAt).toBe(1200);
         expect(restored.zoom).toBe(1.25);
         expect(restored.caret).toEqual({ part: 'tenor', offset: 4 });
         expect(restored.document.title).toBe('Gloria');
@@ -79,6 +90,53 @@ describe('score storage codec', () => {
         const stored = encodeScore(sampleDocument(), { part: 'soprano', offset: 0 }, 1, 'x', 1);
 
         expect(() => decodeScore({ ...stored, version: 99 })).toThrow(ScoreStorageError);
+    });
+
+    it('reads a version 1 record during migration, dating it from its save', () => {
+        const current = encodeScore(
+            sampleDocument(),
+            { part: 'soprano', offset: 0 },
+            1,
+            'old-score',
+            1700,
+        );
+        const legacy = {
+            ...current,
+            version: 1,
+        } as unknown as LegacyStoredScore;
+
+        const restored = decodeLegacyScore(legacy);
+
+        expect(restored.id).toBe('old-score');
+        expect(restored.document.title).toBe('Gloria');
+        expect(restored.savedAt).toBe(1700);
+        expect(restored.createdAt).toBe(1700);
+    });
+
+    it('refuses a current record with no creation time', () => {
+        const stored = encodeScore(sampleDocument(), { part: 'soprano', offset: 0 }, 1, 'x', 1);
+        const { createdAt, ...withoutCreatedAt } = stored;
+        void createdAt;
+
+        expect(() => decodeScore(withoutCreatedAt)).toThrow(ScoreStorageError);
+    });
+
+    it('projects just the details the document list needs', () => {
+        const restored = decodeScore(
+            encodeScore(sampleDocument(), { part: 'soprano', offset: 0 }, 1, 'score-1', 1700, 1200),
+        );
+
+        expect(summarizeScore(restored)).toMatchObject({
+            id: 'score-1',
+            title: 'Gloria',
+            subtitle: 'Jude Nnam',
+            author: 'A. Composer',
+            measureCount: 6,
+            createdAt: 1200,
+            savedAt: 1700,
+        });
+        expect(summarizeScore(restored).key.letter).toBe(Letter.D);
+        expect(summarizeScore(restored).timeSignature.count).toBe(4);
     });
 
     it('refuses a score whose voices are missing a part', () => {

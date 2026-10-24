@@ -1,10 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ScoreDocument } from '@/domain/music';
-import { caretAt, type EditorPosition } from '@/features/score-editor/editing/caret';
+import {
+    createDocumentFromDetails,
+    type NewDocumentDetails,
+} from '@/features/document-library/document-details';
+import { caretAt, caretAtEnd, type EditorPosition } from '@/features/score-editor/editing/caret';
 import { MAX_ZOOM, MIN_ZOOM } from '@/features/score-editor/layout/document-zoom';
 import { createAutosave } from '@/features/persistence/autosave';
-import { scoreStorage, type ScoreStorage } from '@/features/persistence/indexed-db-score-store';
-import { encodeScore, type RestoredScore } from '@/features/persistence/score-storage';
+import {
+    scoreStorage,
+    type MigrationReport,
+    type ScoreStorage,
+} from '@/features/persistence/indexed-db-score-store';
+import {
+    encodeScore,
+    type RestoredScore,
+    type ScoreSummary,
+} from '@/features/persistence/score-storage';
 
 const AUTOSAVE_DELAY_MS = 800;
 
@@ -24,6 +36,12 @@ export type ScorePersistence = {
     status: PersistenceStatus;
     /** Write the current document immediately; used by the Save button. */
     saveNow: () => Promise<SaveOutcome>;
+    /** Every saved score, newest first, for the Open dialog. */
+    listDocuments: () => Promise<ScoreSummary[]>;
+    /** Save the current score and start a new one from the supplied details. */
+    createDocument: (details: NewDocumentDetails) => Promise<SaveOutcome>;
+    /** Save the current score and open another from the library. */
+    openDocument: (id: string) => Promise<SaveOutcome>;
 };
 
 type ScoreSnapshot = {
@@ -40,19 +58,26 @@ type UseScorePersistenceOptions = {
     onRestore: (score: RestoredScore) => void;
     /** Report a one-off storage failure, such as a score that cannot open. */
     onError?: (message: string) => void;
+    /** Tell the writer when work from the old database has been brought forward. */
+    onMigration?: (report: MigrationReport) => void;
     storage?: ScoreStorage;
     delayMs?: number;
 };
 
 /**
- * Keep the current score in browser storage.
+ * Keep the current score in the browser's document library.
  *
  * Loading runs once, before autosave is armed, so the blank opening document
- * can never overwrite the score that was last saved. From then on changes are
- * debounced and coalesced: a burst of typing produces one write, and a write
- * already in progress is followed by the latest snapshot rather than a queue of
- * stale ones. The caret and zoom travel with the document so reopening puts the
- * writer back where they were.
+ * can never overwrite the score that was last worked on. From then on changes
+ * are debounced and coalesced: a burst of typing produces one write, and a
+ * write already in progress is followed by the latest snapshot rather than a
+ * queue of stale ones. The caret and zoom travel with the document so reopening
+ * puts the writer back where they were.
+ *
+ * Switching scores is deliberately save-first. The current sheet is flushed
+ * before a new document is created or another one is loaded; if that write
+ * fails, the switch is refused rather than moving on with unsaved work. Undo
+ * history is not stored and starts fresh for the opened score.
  */
 export function useScorePersistence({
     document,
@@ -60,6 +85,7 @@ export function useScorePersistence({
     zoom,
     onRestore,
     onError,
+    onMigration,
     storage = scoreStorage,
     delayMs = AUTOSAVE_DELAY_MS,
 }: UseScorePersistenceOptions): ScorePersistence {
@@ -75,6 +101,9 @@ export function useScorePersistence({
     const isHydratingRef = useRef(isHydrating);
     isHydratingRef.current = isHydrating;
 
+    const isDirtyRef = useRef(isDirty);
+    isDirtyRef.current = isDirty;
+
     const storageRef = useRef(storage);
     storageRef.current = storage;
 
@@ -84,8 +113,12 @@ export function useScorePersistence({
     const onErrorRef = useRef(onError);
     onErrorRef.current = onError;
 
+    const onMigrationRef = useRef(onMigration);
+    onMigrationRef.current = onMigration;
+
     const baselineRef = useRef<ScoreSnapshot | null>(null);
     const recordIdRef = useRef<string | null>(null);
+    const createdAtRef = useRef<number | null>(null);
     const savedAtRef = useRef<number | null>(null);
     const errorRef = useRef<string | null>(null);
 
@@ -94,13 +127,22 @@ export function useScorePersistence({
     if (autosaveRef.current === null) {
         autosaveRef.current = createAutosave(async (snapshot) => {
             const id = recordIdRef.current ?? createScoreId();
+            const createdAt = createdAtRef.current ?? Date.now();
             recordIdRef.current = id;
+            createdAtRef.current = createdAt;
 
             setIsSaving(true);
             try {
                 const savedAt = Date.now();
                 await storageRef.current.save(
-                    encodeScore(snapshot.document, snapshot.position, snapshot.zoom, id, savedAt),
+                    encodeScore(
+                        snapshot.document,
+                        snapshot.position,
+                        snapshot.zoom,
+                        id,
+                        savedAt,
+                        createdAt,
+                    ),
                 );
 
                 savedAtRef.current = savedAt;
@@ -108,7 +150,10 @@ export function useScorePersistence({
                 setLastSavedAt(savedAt);
                 setError(null);
                 baselineRef.current = snapshot;
-                setIsDirty(!sameSnapshot(snapshotRef.current, snapshot));
+
+                const dirty = !sameSnapshot(snapshotRef.current, snapshot);
+                isDirtyRef.current = dirty;
+                setIsDirty(dirty);
             } catch (cause) {
                 const message = 'Could not save this score to the browser.';
                 errorRef.current = message;
@@ -125,32 +170,18 @@ export function useScorePersistence({
 
         const load = async () => {
             try {
-                const saved = await storageRef.current.loadLatest();
+                const saved = await storageRef.current.loadLastOpened();
                 if (cancelled) return;
 
                 if (saved) {
-                    const caret = caretAt(
-                        saved.caret.part,
-                        saved.document.voices[saved.caret.part],
-                        saved.caret.offset,
-                    );
-                    const restored: RestoredScore = {
-                        ...saved,
-                        caret,
-                        zoom: clampZoom(saved.zoom),
-                    };
-
-                    recordIdRef.current = saved.id;
-                    savedAtRef.current = saved.savedAt;
-                    setLastSavedAt(saved.savedAt);
-                    baselineRef.current = {
-                        document: restored.document,
-                        position: restored.caret,
-                        zoom: restored.zoom,
-                    };
-                    onRestoreRef.current(restored);
+                    applyRestored(saved);
                 } else {
                     baselineRef.current = null;
+                }
+
+                const report = storageRef.current.takeMigrationReport();
+                if (report && (report.migrated > 0 || report.skipped > 0)) {
+                    onMigrationRef.current?.(report);
                 }
             } catch {
                 if (cancelled) return;
@@ -169,6 +200,8 @@ export function useScorePersistence({
         return () => {
             cancelled = true;
         };
+        // The storage handle and callbacks are kept in refs so opening runs once.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -189,6 +222,7 @@ export function useScorePersistence({
 
         if (sameSnapshot(current, baselineRef.current)) return;
 
+        isDirtyRef.current = true;
         setIsDirty(true);
         autosaveRef.current?.schedule(current);
     }, [document, position, zoom, isHydrating]);
@@ -208,6 +242,35 @@ export function useScorePersistence({
             window.removeEventListener('pagehide', flush);
             window.document.removeEventListener('visibilitychange', onVisibilityChange);
         };
+    }, []);
+
+    /** Put a restored score into the editor and make it the save target. */
+    const applyRestored = useCallback((saved: RestoredScore) => {
+        const caret = caretAt(
+            saved.caret.part,
+            saved.document.voices[saved.caret.part],
+            saved.caret.offset,
+        );
+        const restored: RestoredScore = {
+            ...saved,
+            caret,
+            zoom: clampZoom(saved.zoom),
+        };
+
+        recordIdRef.current = restored.id;
+        createdAtRef.current = restored.createdAt;
+        savedAtRef.current = restored.savedAt;
+        errorRef.current = null;
+        baselineRef.current = {
+            document: restored.document,
+            position: restored.caret,
+            zoom: restored.zoom,
+        };
+        isDirtyRef.current = false;
+        setLastSavedAt(restored.savedAt);
+        setIsDirty(false);
+        setError(null);
+        onRestoreRef.current(restored);
     }, []);
 
     const saveNow = useCallback(async (): Promise<SaveOutcome> => {
@@ -241,6 +304,103 @@ export function useScorePersistence({
         }
     }, []);
 
+    /**
+     * The blank page the editor mounts with is not a document yet. It is not
+     * written to the library just because another score is about to be opened;
+     * only real work is saved before a switch.
+     */
+    const saveBeforeSwitch = useCallback(async (): Promise<SaveOutcome> => {
+        if (recordIdRef.current === null && !isDirtyRef.current) {
+            return { ok: true, savedAt: savedAtRef.current ?? Date.now() };
+        }
+        return saveNow();
+    }, [saveNow]);
+
+    const listDocuments = useCallback(async (): Promise<ScoreSummary[]> => {
+        return storageRef.current.list();
+    }, []);
+
+    const createDocument = useCallback(
+        async (details: NewDocumentDetails): Promise<SaveOutcome> => {
+            if (isHydratingRef.current) {
+                return { ok: false, message: 'The saved score is still opening.' };
+            }
+
+            const saved = await saveBeforeSwitch();
+            if (!saved.ok) return saved;
+
+            const next = createDocumentFromDetails(details);
+            const id = createScoreId();
+            const now = Date.now();
+            const nextPosition = caretAtEnd(next);
+            const nextZoom = clampZoom(snapshotRef.current.zoom);
+            const record = encodeScore(next, nextPosition, nextZoom, id, now, now);
+
+            setIsSaving(true);
+            try {
+                await storageRef.current.save(record);
+            } catch {
+                const message = 'The new score could not be created in this browser.';
+                errorRef.current = message;
+                setError(message);
+                return { ok: false, message };
+            } finally {
+                setIsSaving(false);
+            }
+
+            applyRestored({
+                id,
+                document: next,
+                caret: nextPosition,
+                zoom: nextZoom,
+                createdAt: now,
+                savedAt: now,
+            });
+            return { ok: true, savedAt: now };
+        },
+        [applyRestored, saveBeforeSwitch],
+    );
+
+    const openDocument = useCallback(
+        async (id: string): Promise<SaveOutcome> => {
+            if (isHydratingRef.current) {
+                return { ok: false, message: 'The saved score is still opening.' };
+            }
+
+            const saved = await saveBeforeSwitch();
+            if (!saved.ok) return saved;
+
+            if (id === recordIdRef.current) {
+                return { ok: true, savedAt: savedAtRef.current ?? Date.now() };
+            }
+
+            setIsSaving(true);
+            try {
+                const loaded = await storageRef.current.load(id);
+                if (!loaded) {
+                    return { ok: false, message: 'That saved sheet could not be found.' };
+                }
+
+                applyRestored(loaded);
+                try {
+                    await storageRef.current.rememberLastOpened(id);
+                } catch {
+                    // The score is open; remembering which one was active is
+                    // helpful but must not turn a successful open into an error.
+                }
+                return { ok: true, savedAt: loaded.savedAt };
+            } catch {
+                const message = 'That saved sheet could not be opened.';
+                errorRef.current = message;
+                setError(message);
+                return { ok: false, message };
+            } finally {
+                setIsSaving(false);
+            }
+        },
+        [applyRestored, saveBeforeSwitch],
+    );
+
     const status: PersistenceStatus = isHydrating
         ? 'opening'
         : isSaving
@@ -261,6 +421,9 @@ export function useScorePersistence({
         error,
         status,
         saveNow,
+        listDocuments,
+        createDocument,
+        openDocument,
     };
 }
 

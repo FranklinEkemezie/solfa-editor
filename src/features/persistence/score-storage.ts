@@ -20,8 +20,13 @@ import type { EditorPosition } from '@/features/score-editor/editing/caret';
  * broken down into their fields and rebuilt by the constructors on the way
  * back. That keeps IndexedDB's structured clone from having to preserve class
  * prototypes, and it gives every saved score a version to migrate from later.
+ *
+ * Version 2 adds a creation time so the library can distinguish a score's age
+ * from when it was last written. Version 1 records are still readable through
+ * `decodeLegacyScore`, which is what the database migration uses.
  */
-export const SCORE_STORAGE_VERSION = 1;
+export const SCORE_STORAGE_VERSION = 2 as const;
+export const LEGACY_SCORE_STORAGE_VERSION = 1 as const;
 
 /** A corrupt measure count must not be able to make the editor build forever. */
 const MAX_RESTORABLE_MEASURES = 10_000;
@@ -59,6 +64,19 @@ export type StoredScore = {
     readonly document: StoredScoreDocument;
     readonly caret: EditorPosition;
     readonly zoom: number;
+    /** When the score was first created. */
+    readonly createdAt: number;
+    /** When this particular write happened. */
+    readonly savedAt: number;
+};
+
+/** The previous single-document record, kept only for reading during migration. */
+export type LegacyStoredScore = {
+    readonly version: typeof LEGACY_SCORE_STORAGE_VERSION;
+    readonly id: string;
+    readonly document: StoredScoreDocument;
+    readonly caret: EditorPosition;
+    readonly zoom: number;
     readonly savedAt: number;
 };
 
@@ -68,6 +86,20 @@ export type RestoredScore = {
     readonly document: ScoreDocument;
     readonly caret: EditorPosition;
     readonly zoom: number;
+    readonly createdAt: number;
+    readonly savedAt: number;
+};
+
+/** The plain details the Open dialog needs without rebuilding a whole score. */
+export type ScoreSummary = {
+    readonly id: string;
+    readonly title: string;
+    readonly subtitle: string;
+    readonly author: string;
+    readonly measureCount: number;
+    readonly key: Key;
+    readonly timeSignature: TimeSignature;
+    readonly createdAt: number;
     readonly savedAt: number;
 };
 
@@ -84,6 +116,7 @@ export function encodeScore(
     zoom: number,
     id: string,
     savedAt: number,
+    createdAt = savedAt,
 ): StoredScore {
     return {
         version: SCORE_STORAGE_VERSION,
@@ -115,6 +148,7 @@ export function encodeScore(
         },
         caret: { part: caret.part, offset: caret.offset },
         zoom,
+        createdAt,
         savedAt,
     };
 }
@@ -128,9 +162,23 @@ export function encodeScore(
  * can show instead of silently opening a broken score.
  */
 export function decodeScore(value: unknown): RestoredScore {
+    return decodeScoreRecord(value, SCORE_STORAGE_VERSION);
+}
+
+/**
+ * Read a version 1 record on its way into the current schema.
+ *
+ * Old records had no creation time, so the time they were saved is the best
+ * date the library can show. Nothing else about them changes.
+ */
+export function decodeLegacyScore(value: unknown): RestoredScore {
+    return decodeScoreRecord(value, LEGACY_SCORE_STORAGE_VERSION);
+}
+
+function decodeScoreRecord(value: unknown, expectedVersion: number): RestoredScore {
     const record = asRecord(value, 'saved score');
 
-    if (record.version !== SCORE_STORAGE_VERSION) {
+    if (record.version !== expectedVersion) {
         throw new ScoreStorageError(
             'This score was saved by a different version of the editor and cannot be opened.',
         );
@@ -138,6 +186,10 @@ export function decodeScore(value: unknown): RestoredScore {
 
     const id = asNonEmptyString(record.id, 'score id');
     const savedAt = asFiniteNumber(record.savedAt, 'save time');
+    const createdAt =
+        expectedVersion === LEGACY_SCORE_STORAGE_VERSION
+            ? savedAt
+            : asFiniteNumber(record.createdAt, 'creation time');
     const zoom = asPositiveNumber(record.zoom, 'zoom');
     const caretRecord = asRecord(record.caret, 'caret');
     const caret = {
@@ -192,12 +244,28 @@ export function decodeScore(value: unknown): RestoredScore {
             },
             caret,
             zoom,
+            createdAt,
             savedAt,
         };
     } catch (error) {
         if (error instanceof ScoreStorageError) throw error;
         throw new ScoreStorageError('The saved score contains invalid musical details.');
     }
+}
+
+/** The list-view projection of a restored score. */
+export function summarizeScore(score: RestoredScore): ScoreSummary {
+    return {
+        id: score.id,
+        title: score.document.title,
+        subtitle: score.document.subtitle,
+        author: score.document.author,
+        measureCount: score.document.measureCount,
+        key: score.document.key,
+        timeSignature: score.document.timeSignature,
+        createdAt: score.createdAt,
+        savedAt: score.savedAt,
+    };
 }
 
 function asRecord(value: unknown, what: string): Record<string, unknown> {

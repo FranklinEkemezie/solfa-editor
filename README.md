@@ -35,12 +35,14 @@ from editor-specific and presentation-specific concerns.
 - Real A4 sheets, read the way a document is read. A score too tall for one page breaks across as
   many sheets as it needs; the sheets sit still in the window and scroll past, with a gutter and a
   shadow between them
-- A score name in the header, beside the app's mark, with a quiet save state and a Save button next to
-  playback. The score is written to IndexedDB as it changes; reopening the editor restores the
-  document, the caret and the zoom
-- A tool rail down the left for undo and redo, adding and removing measures, zooming, and printing.
-  Every control is an icon with a tooltip, and the rail can be put away to give the score the whole
-  window
+- A document library in the browser. The header names the open score, shows its save state, and keeps
+  a Save button next to playback. Each score is written separately to IndexedDB as it changes; the
+  File section of the rail creates a new score from a small form (title, subtitle, composer, key,
+  time and tempo) and opens any saved score from a newest-first picker. Reopening the editor restores
+  the last active score, its caret and its zoom
+- A tool rail down the left for files, undo and redo, adding and removing measures, zooming, and
+  printing. Every control is an icon with a tooltip, and the rail can be put away to give the score
+  the whole window
 - Playback that sounds the score in its own key and at its own tempo, with held notes sounding as one note
 - Score layout and printable PDF-style output that share the same page breaks
 - Structured domain model that mirrors the UML's concepts for notes, pitch, measure, score, and durations
@@ -78,11 +80,30 @@ what the language would accept. Typing is token-atomic, so a two-letter syllable
 
 ## Opening score
 
-The editor opens the score last saved in this browser. On a fresh browser it opens on a blank,
-untitled score with four silent measures. The Gloria sample is one press away on the tool rail
-(`Open the Gloria sample`); it opens as an undoable step, so the blank score is one undo back. The
-sample scores are kept in `src/features/score-editor/presets/` and can also be made the opening score
-by pointing the switch at one of them:
+The editor opens the score that was last active in this browser. On a fresh browser it opens on a
+blank, untitled score with four silent measures. The rail's File section creates a new document or
+opens one from the library:
+
+- **New document** saves the current sheet, then starts a blank one with the title, subtitle,
+  composer, key, time signature and tempo entered in the dialog. The new sheet is written to the
+  library immediately, so it is there to reopen even before the first note.
+- **Open document** saves the current sheet, then shows every saved score newest first. A short
+  summary under the picker shows the selected score's composer, key, time signature, length and
+  save time before it is opened.
+
+Both actions save first on purpose: autosave may still be holding the last keystrokes, and switching
+documents must never be the moment that work is lost. If that save fails, the switch is refused and
+the current score stays open.
+
+Scores written by the first persistence version are migrated automatically the first time this
+version opens the database. The old `scores` store is copied into the document library and left in
+place as a fallback; it is never deleted. A damaged old record is skipped and reported rather than
+guessed at.
+
+The Gloria sample is one press away on the tool rail (`Open the Gloria sample`); it opens as an
+undoable step, so the blank score is one undo back. The sample scores are kept in
+`src/features/score-editor/presets/` and can also be made the opening score by pointing the switch at
+one of them:
 
 ```ts
 export const ACTIVE_PRESET: ScorePreset | null = gloriaJudeNnam;
@@ -156,14 +177,26 @@ printer prints the editor's pages, system for system and measure for measure.
 ### Saving a score
 
 `features/persistence/` is its own feature. `score-storage.ts` is a versioned codec: it turns the
-document's value objects into plain data and validates every field when reading a score back.
-`indexed-db-score-store.ts` keeps those records in one `scores` store, indexed by save time, and opens
-the most recent one. `autosave.ts` is a small debounced writer that always follows an in-flight write
-with the newest snapshot instead of queueing every keystroke. `use-score-persistence.ts` hydrates the
-editor before arming autosave, so the blank opening document can never overwrite saved work, and it
-flushes when the page is hidden. The stored record contains all metadata, all four voice sources, the
-measure count, the caret and the zoom; undo history is deliberately left out and starts fresh on
-reopening.
+document's value objects into plain data and validates every field when reading a score back. Version
+2 records carry both a creation time and the time of the last write.
+
+`indexed-db-score-store.ts` keeps every score in a `documents` store keyed by id and indexed by save
+time, plus a small `preferences` store that remembers the active document. Saving a score and
+remembering it as active happen in one transaction, so the editor's default score and the library
+cannot disagree. `legacy-score-migration.ts` reads version 1 records and re-encodes them into the
+library; the database upgrade runs that migration inside its own transaction, and the old store is
+retained untouched afterwards.
+
+`autosave.ts` is a small debounced writer that always follows an in-flight write with the newest
+snapshot instead of queueing every keystroke. `use-score-persistence.ts` hydrates the editor before
+arming autosave, so the blank opening document can never overwrite saved work, and it flushes when
+the page is hidden. It also owns the save-first transition when a document is created or opened. The
+stored record contains all metadata, all four voice sources, the measure count, the caret, the zoom,
+and the creation and save times; undo history is deliberately left out and starts fresh on reopening.
+
+`features/document-library/` owns the New and Open dialogs, the small details model for a newly
+created score, and the human wording for saved times. It depends on the persistence feature rather
+than the other way round.
 
 ### Notable implementation decisions
 
@@ -301,8 +334,10 @@ src/
 │   ├── tempo.ts, time-signature.ts
 │   └── notational-labels.ts
 ├── features/
+│   ├── document-library/       # New/Open dialogs and saved-time wording
 │   ├── notation/               # The shared language: lexer, grammar, parser, IR
 │   ├── pdf-export/             # Print / PDF export
+│   ├── persistence/            # Versioned codec, IndexedDB library, migration, autosave
 │   ├── playback/               # Tone.js audio playback
 │   └── score-editor/
 │       ├── adapters/           # Key/time option encoding, masthead labels

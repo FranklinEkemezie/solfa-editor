@@ -6,6 +6,8 @@ import { AppHeader } from '@/app/components/app-header';
 import { ToolRail } from '@/app/components/tool-rail';
 import { buildScoreToolGroups } from '@/app/score-tools';
 import { scoreDisplayTitle } from '@/domain/music';
+import { NewDocumentDialog } from '@/features/document-library/new-document-dialog';
+import { OpenDocumentDialog } from '@/features/document-library/open-document-dialog';
 import { exportScoreToPdf } from '@/features/pdf-export/export-score';
 import { PrintScore } from '@/features/pdf-export/print-score';
 import { SaveButton } from '@/features/persistence/save-button';
@@ -40,6 +42,8 @@ export function App() {
     const { toasts, addToast, dismiss } = useToasts();
     const documentView = useDocumentZoom();
     const [toolsOpen, setToolsOpen] = useState(true);
+    const [newDocumentOpen, setNewDocumentOpen] = useState(false);
+    const [openDocumentOpen, setOpenDocumentOpen] = useState(false);
 
     usePinchZoom({
         surfaceRef: documentView.viewportRef,
@@ -60,6 +64,22 @@ export function App() {
             documentView.zoomTo(saved.zoom);
         },
         onError: addToast,
+        onMigration: (report) => {
+            const messages: string[] = [];
+
+            if (report.migrated > 0) {
+                const sheets = report.migrated === 1 ? 'sheet' : 'sheets';
+                messages.push(`${report.migrated} earlier ${sheets} moved into Open.`);
+            }
+            if (report.skipped > 0) {
+                const records = report.skipped === 1 ? 'record' : 'records';
+                messages.push(
+                    `${report.skipped} older ${records} could not be read and stayed in the old store.`,
+                );
+            }
+
+            addToast(messages.join(' '), report.skipped > 0 ? 'warning' : 'info');
+        },
     });
 
     const printResult = () => {
@@ -79,6 +99,8 @@ export function App() {
     };
 
     const tools = buildScoreToolGroups({
+        onNewDocument: () => setNewDocumentOpen(true),
+        onOpenDocument: () => setOpenDocumentOpen(true),
         canUndo: store.canUndo,
         canRedo: store.canRedo,
         onUndo: store.undo,
@@ -163,6 +185,18 @@ export function App() {
                 />
             </div>
             <PrintScore view={store.view} />
+            <NewDocumentDialog
+                open={newDocumentOpen}
+                onOpenChange={setNewDocumentOpen}
+                currentDocument={store.document}
+                onCreate={persistence.createDocument}
+            />
+            <OpenDocumentDialog
+                open={openDocumentOpen}
+                onOpenChange={setOpenDocumentOpen}
+                onList={persistence.listDocuments}
+                onOpen={persistence.openDocument}
+            />
             <ToastViewport messages={toasts} dismiss={dismiss} />
         </TooltipProvider>
     );

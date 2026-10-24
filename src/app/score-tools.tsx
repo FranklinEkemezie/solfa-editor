@@ -2,7 +2,9 @@ import {
     ArrowDownToLine,
     FileMinus2,
     FileMusic,
+    FilePlus,
     FilePlus2,
+    FolderOpen,
     RotateCcw,
     RotateCw,
     UnfoldHorizontal,
@@ -14,6 +16,8 @@ import { zoomLabel } from '@/features/score-editor/layout/document-zoom';
 
 /** What the editor's tools need from the app to work. */
 export type ScoreToolActions = {
+    onNewDocument: () => void;
+    onOpenDocument: () => void;
     canUndo: boolean;
     canRedo: boolean;
     onUndo: () => void;
@@ -36,11 +40,26 @@ const ICON = { size: 16, strokeWidth: 2 } as const;
 /**
  * The controls the score editor offers, in the order the rail stacks them.
  *
- * History first, then the measure commands, then the sample, then how the sheet
- * is looked at, then the way out of the app and onto paper.
+ * File first, then history, the measure commands, the sample, how the sheet is
+ * looked at, and finally the way out of the app and onto paper.
  */
 export function buildScoreToolGroups(actions: ScoreToolActions): ToolRailGroup[] {
     return [
+        {
+            id: 'file',
+            items: [
+                {
+                    label: 'New document',
+                    icon: <FilePlus {...ICON} />,
+                    onSelect: actions.onNewDocument,
+                },
+                {
+                    label: 'Open document',
+                    icon: <FolderOpen {...ICON} />,
+                    onSelect: actions.onOpenDocument,
+                },
+            ],
+        },
         {
             id: 'history',
             items: [
