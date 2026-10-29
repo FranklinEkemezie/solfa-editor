@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { Menu } from 'lucide-react';
+import { lazy, Suspense, useRef, useState, type ChangeEvent } from 'react';
 import { ToastViewport } from '@/components/feedback/toast-viewport';
 import { useToasts } from '@/components/feedback/use-toasts';
+import { IconButton } from '@/components/ui/icon-button';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppHeader } from '@/app/components/app-header';
+import { MobileToolsMenu } from '@/app/components/mobile-tools-menu';
 import { ToolRail } from '@/app/components/tool-rail';
 import { buildScoreToolGroups } from '@/app/score-tools';
 import { scoreDisplayTitle } from '@/domain/music';
+import { decodeSolfaFile } from '@/features/document-file/solfa-file';
 import { NewDocumentDialog } from '@/features/document-library/new-document-dialog';
 import { OpenDocumentDialog } from '@/features/document-library/open-document-dialog';
-import { exportScoreToPdf } from '@/features/pdf-export/export-score';
 import { PrintScore } from '@/features/pdf-export/print-score';
 import { SaveButton } from '@/features/persistence/save-button';
 import {
@@ -25,8 +28,22 @@ import { useDocumentZoom } from '@/features/score-editor/hooks/use-document-zoom
 import { usePinchZoom } from '@/features/score-editor/hooks/use-pinch-zoom';
 import { useScoreEditing } from '@/features/score-editor/hooks/use-score-editing';
 import { DOCUMENT_INSET_PX } from '@/features/score-editor/layout/document-zoom';
-import { gloriaJudeNnam } from '@/features/score-editor/presets';
+import { presetDocument } from '@/features/score-editor/presets';
+import type { ScorePreset } from '@/features/score-editor/presets/score-preset';
 import { useScoreStore } from '@/features/score-editor/state/score-store';
+import { SettingsDialog } from '@/features/settings/settings-dialog';
+import { useTheme } from '@/features/theme/use-theme';
+
+/**
+ * The export sheet is the only part of the editor that needs the PDF, image and
+ * audio encoders. Loading it on demand keeps those libraries out of the first
+ * paint, which matters most on the phones this editor is meant to work on.
+ */
+const ExportDialog = lazy(() =>
+    import('@/features/export/export-dialog').then((module) => ({
+        default: module.ExportDialog,
+    })),
+);
 
 const SAVE_STATUS_LABEL: Record<PersistenceStatus, string> = {
     opening: 'Opening…',
@@ -41,9 +58,14 @@ export function App() {
     const store = useScoreStore();
     const { toasts, addToast, dismiss } = useToasts();
     const documentView = useDocumentZoom();
+    const theme = useTheme();
     const [toolsOpen, setToolsOpen] = useState(true);
+    const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
     const [newDocumentOpen, setNewDocumentOpen] = useState(false);
     const [openDocumentOpen, setOpenDocumentOpen] = useState(false);
+    const [exportOpen, setExportOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const importInputRef = useRef<HTMLInputElement>(null);
 
     usePinchZoom({
         surfaceRef: documentView.viewportRef,
@@ -82,11 +104,6 @@ export function App() {
         },
     });
 
-    const printResult = () => {
-        const result = exportScoreToPdf(store.view);
-        if (!result.ok) addToast(result.message);
-    };
-
     const removeMeasure = () => {
         const result = store.removeMeasure();
         if (!result.ok) addToast(result.message);
@@ -98,22 +115,52 @@ export function App() {
         else addToast(result.message);
     };
 
+    const openImportPicker = () => {
+        importInputRef.current?.click();
+    };
+
+    const importSolfa = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024) {
+            addToast('That .solfa file is too large to import.');
+            return;
+        }
+
+        try {
+            const imported = decodeSolfaFile(await file.text());
+            const result = await persistence.openDocumentFromScore(imported);
+            if (result.ok) {
+                addToast(`Imported “${scoreDisplayTitle(imported)}”.`, 'info');
+            } else {
+                addToast(result.message);
+            }
+        } catch (cause) {
+            addToast(cause instanceof Error ? cause.message : 'That .solfa file could not be read.');
+        }
+    };
+
+    const openPreset = async (preset: ScorePreset) => {
+        const next = presetDocument(preset);
+        const result = await persistence.openDocumentFromScore(next);
+        if (!result.ok) addToast(result.message);
+        return result;
+    };
+
     const tools = buildScoreToolGroups({
         onNewDocument: () => setNewDocumentOpen(true),
         onOpenDocument: () => setOpenDocumentOpen(true),
+        onImportDocument: openImportPicker,
+        onExportDocument: () => setExportOpen(true),
         canUndo: store.canUndo,
         canRedo: store.canRedo,
         onUndo: store.undo,
         onRedo: store.redo,
         onAddMeasure: store.addMeasure,
         onRemoveMeasure: removeMeasure,
-        onOpenGloria: () => store.openPreset(gloriaJudeNnam),
-        onExport: printResult,
-        onZoomIn: documentView.zoomIn,
-        onZoomOut: documentView.zoomOut,
-        onFitWidth: documentView.fitWidth,
-        onActualSize: documentView.actualSize,
-        zoom: documentView.zoom,
+        onSettings: () => setSettingsOpen(true),
     });
 
     return (
@@ -124,6 +171,14 @@ export function App() {
                     documentStatus={SAVE_STATUS_LABEL[persistence.status]}
                     actions={
                         <>
+                            <IconButton
+                                label="Tools"
+                                variant="ghost"
+                                className="size-9 md:hidden"
+                                onClick={() => setMobileToolsOpen(true)}
+                            >
+                                <Menu size={17} strokeWidth={2} />
+                            </IconButton>
                             <PlaybackControls
                                 isPlaying={isPlaying}
                                 onPlayPause={toggle}
@@ -184,7 +239,24 @@ export function App() {
                     onOctave={editing.shiftOctave}
                 />
             </div>
+
+            {/* Keeps the browser's own Print command on the same light sheet
+                the PDF export uses, even when the export dialog is closed. */}
             <PrintScore view={store.view} />
+
+            <input
+                ref={importInputRef}
+                type="file"
+                accept=".solfa,application/json"
+                className="hidden"
+                onChange={(event) => void importSolfa(event)}
+            />
+
+            <MobileToolsMenu
+                groups={tools}
+                open={mobileToolsOpen}
+                onOpenChange={setMobileToolsOpen}
+            />
             <NewDocumentDialog
                 open={newDocumentOpen}
                 onOpenChange={setNewDocumentOpen}
@@ -196,6 +268,31 @@ export function App() {
                 onOpenChange={setOpenDocumentOpen}
                 onList={persistence.listDocuments}
                 onOpen={persistence.openDocument}
+                onOpenPreset={openPreset}
+                onImport={openImportPicker}
+                onNewDocument={() => setNewDocumentOpen(true)}
+            />
+            {exportOpen ? (
+                <Suspense fallback={null}>
+                    <ExportDialog
+                        open
+                        onOpenChange={setExportOpen}
+                        view={store.view}
+                        onExported={(message) => addToast(message, 'info')}
+                    />
+                </Suspense>
+            ) : null}
+            <SettingsDialog
+                open={settingsOpen}
+                onOpenChange={setSettingsOpen}
+                theme={theme.preference}
+                resolvedTheme={theme.resolved}
+                onThemeChange={theme.setPreference}
+                zoom={documentView.zoom}
+                onZoomIn={documentView.zoomIn}
+                onZoomOut={documentView.zoomOut}
+                onFitWidth={documentView.fitWidth}
+                onActualSize={documentView.actualSize}
             />
             <ToastViewport messages={toasts} dismiss={dismiss} />
         </TooltipProvider>

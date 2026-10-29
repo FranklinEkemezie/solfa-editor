@@ -16,22 +16,60 @@
     width: 100%;
 }
 
+/**
+ * A page drawn as a real sheet, for the export preview and image capture.
+ *
+ * The ordinary print path lets `@page` provide the paper and its margin. An
+ * exported image has no printer to do that, so this class supplies the A4 box
+ * and the same 70px margin the layout was measured against.
+ */
+.print-page--paper {
+    width: 794px;
+    height: 1123px;
+    padding: 70px;
+    overflow: hidden;
+    background: #ffffff;
+    color: #21352d;
+    box-sizing: border-box;
+}
+
+/*
+ * The export renderer lives off-screen but is painted, because a hidden element
+ * cannot be captured. It is removed from the layout and from interaction, and
+ * is only mounted while an export dialog needs a page image.
+ */
+.export-render-root {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    z-index: -1;
+    width: 794px;
+    pointer-events: none;
+}
+
+.export-render-root .print-sheet {
+    display: block;
+}
+
 @media print {
     @page {
         size: A4 portrait;
         margin: 70px;
     }
 
-    body.print-mode {
+    body {
         background: #fff;
     }
 
-    body.print-mode .app-shell,
-    body.print-mode .toast-viewport {
+    .app-shell,
+    .toast-viewport,
+    .export-render-root,
+    [role='dialog'],
+    [data-radix-popper-content-wrapper] {
         display: none !important;
     }
 
-    body.print-mode .print-sheet {
+    .print-sheet {
         display: block;
     }
 

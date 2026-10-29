@@ -1,38 +1,29 @@
 import {
-    ArrowDownToLine,
+    Download,
     FileMinus2,
-    FileMusic,
     FilePlus,
     FilePlus2,
     FolderOpen,
     RotateCcw,
     RotateCw,
-    UnfoldHorizontal,
-    ZoomIn,
-    ZoomOut,
+    Settings2,
+    Upload,
 } from 'lucide-react';
 import type { ToolRailGroup } from '@/app/components/tool-rail';
-import { zoomLabel } from '@/features/score-editor/layout/document-zoom';
 
 /** What the editor's tools need from the app to work. */
 export type ScoreToolActions = {
     onNewDocument: () => void;
     onOpenDocument: () => void;
+    onImportDocument: () => void;
+    onExportDocument: () => void;
     canUndo: boolean;
     canRedo: boolean;
     onUndo: () => void;
     onRedo: () => void;
     onAddMeasure: () => void;
     onRemoveMeasure: () => void;
-    /** Open the Gloria sample without losing the blank default. */
-    onOpenGloria: () => void;
-    onExport: () => void;
-    onZoomIn: () => void;
-    onZoomOut: () => void;
-    onFitWidth: () => void;
-    onActualSize: () => void;
-    /** The zoom the document is being read at, shown on the rail. */
-    zoom: number;
+    onSettings: () => void;
 };
 
 const ICON = { size: 16, strokeWidth: 2 } as const;
@@ -40,13 +31,16 @@ const ICON = { size: 16, strokeWidth: 2 } as const;
 /**
  * The controls the score editor offers, in the order the rail stacks them.
  *
- * File first, then history, the measure commands, the sample, how the sheet is
- * looked at, and finally the way out of the app and onto paper.
+ * File first, then history, the measure commands, and the editor's settings.
+ * Zoom and theme live inside Settings rather than beside the document, so the
+ * rail stays about the score and the shell keeps its few device preferences in
+ * one place.
  */
 export function buildScoreToolGroups(actions: ScoreToolActions): ToolRailGroup[] {
     return [
         {
             id: 'file',
+            label: 'File',
             items: [
                 {
                     label: 'New document',
@@ -58,10 +52,21 @@ export function buildScoreToolGroups(actions: ScoreToolActions): ToolRailGroup[]
                     icon: <FolderOpen {...ICON} />,
                     onSelect: actions.onOpenDocument,
                 },
+                {
+                    label: 'Import .solfa file',
+                    icon: <Upload {...ICON} />,
+                    onSelect: actions.onImportDocument,
+                },
+                {
+                    label: 'Export score',
+                    icon: <Download {...ICON} />,
+                    onSelect: actions.onExportDocument,
+                },
             ],
         },
         {
             id: 'history',
+            label: 'History',
             items: [
                 {
                     label: 'Undo',
@@ -79,6 +84,7 @@ export function buildScoreToolGroups(actions: ScoreToolActions): ToolRailGroup[]
         },
         {
             id: 'measures',
+            label: 'Measures',
             items: [
                 {
                     label: 'Add measure',
@@ -93,51 +99,13 @@ export function buildScoreToolGroups(actions: ScoreToolActions): ToolRailGroup[]
             ],
         },
         {
-            id: 'samples',
+            id: 'settings',
+            label: 'Settings',
             items: [
                 {
-                    label: 'Open the Gloria sample',
-                    icon: <FileMusic {...ICON} />,
-                    onSelect: actions.onOpenGloria,
-                },
-            ],
-        },
-        {
-            id: 'view',
-            items: [
-                {
-                    label: 'Zoom in',
-                    icon: <ZoomIn {...ICON} />,
-                    onSelect: actions.onZoomIn,
-                },
-                {
-                    label: 'Zoom out',
-                    icon: <ZoomOut {...ICON} />,
-                    onSelect: actions.onZoomOut,
-                },
-                {
-                    label: 'Fit the page width',
-                    icon: <UnfoldHorizontal {...ICON} />,
-                    onSelect: actions.onFitWidth,
-                },
-                {
-                    label: 'Actual size',
-                    icon: (
-                        <span className="text-[0.6875rem] font-semibold tabular-nums">
-                            {zoomLabel(actions.zoom)}
-                        </span>
-                    ),
-                    onSelect: actions.onActualSize,
-                },
-            ],
-        },
-        {
-            id: 'output',
-            items: [
-                {
-                    label: 'Print / PDF',
-                    icon: <ArrowDownToLine {...ICON} />,
-                    onSelect: actions.onExport,
+                    label: 'Settings',
+                    icon: <Settings2 {...ICON} />,
+                    onSelect: actions.onSettings,
                 },
             ],
         },

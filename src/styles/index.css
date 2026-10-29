@@ -15,6 +15,8 @@
     --color-green-dark: #3d6250;
     --color-green-wash: #e5eee6;
     --color-amber: #b98345;
+    --color-primary: #3d6250;
+    --color-on-primary: #ffffff;
 
     --font-sans:
         Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -28,6 +30,61 @@
     --shadow-sheet:
         0 0 0 1px var(--color-line-soft), 0 1px 2px rgba(48, 70, 55, 0.08),
         0 16px 38px rgba(48, 70, 55, 0.16);
+}
+
+/**
+ * The dark editing surface.
+ *
+ * The paper stays paper. Dark mode changes the desk, the chrome and the tools,
+ * but the sheet, its ink and the printed output keep the light palette. This is
+ * why the sheet tokens are scoped below rather than inherited from the root.
+ */
+:root[data-theme='dark'] {
+    --color-ink: #e5eee8;
+    --color-ink-muted: #a9b9ae;
+    --color-muted: #87988d;
+    --color-faint: #6d7f73;
+    --color-ghost: #4a5d52;
+    --color-line: #31443a;
+    --color-line-soft: #26372d;
+    --color-paper: #17211c;
+    --color-cream: #101712;
+    --color-green: #8fbea1;
+    --color-green-dark: #b7dcc4;
+    --color-green-wash: #22352b;
+    --color-amber: #d6a66a;
+    --color-primary: #9cc7ab;
+    --color-on-primary: #102018;
+
+    --shadow-panel: 0 8px 18px rgba(0, 0, 0, 0.32);
+    --shadow-toast: 0 8px 18px rgba(0, 0, 0, 0.4);
+    --shadow-key: 0 1px 1px rgba(0, 0, 0, 0.35), 0 2px 0 rgba(0, 0, 0, 0.25);
+    --shadow-key-pressed: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-sheet:
+        0 0 0 1px var(--color-line-soft), 0 1px 2px rgba(0, 0, 0, 0.3),
+        0 16px 38px rgba(0, 0, 0, 0.35);
+}
+
+/* The document and anything printed from it are always read as paper. */
+.sheet,
+.print-sheet {
+    --color-ink: #21352d;
+    --color-ink-muted: #4d685d;
+    --color-muted: #7b897e;
+    --color-faint: #9aa69c;
+    --color-ghost: #c0c8c1;
+    --color-line: #d9ded8;
+    --color-line-soft: #e8ebe6;
+    --color-paper: #fffefa;
+    --color-cream: #f7f5ef;
+    --color-green: #5d826d;
+    --color-green-dark: #3d6250;
+    --color-green-wash: #e5eee6;
+    --color-amber: #b98345;
+    --color-primary: #3d6250;
+    --color-on-primary: #ffffff;
+    color: var(--color-ink);
+    color-scheme: light;
 }
 
 @layer base {
@@ -125,30 +182,11 @@
  * drawn keys would only sit beneath it. The rule asks the shell whether a field
  * has focus rather than keeping that in state, so it cannot fall out of step —
  * a field removed while it holds focus closes the drawer by ceasing to exist.
- *
- * The row collapses to give the document its height back while the keys slide
- * down out of it, and `visibility` follows the slide so the shut drawer is
- * neither painted nor reachable.
  */
 .score-keyboard-dock {
-    grid-template-rows: 1fr;
-    transition: grid-template-rows 200ms ease-out;
+    transition: opacity 150ms ease-out;
 }
 
 .app-shell:has(input:focus, textarea:focus) .score-keyboard-dock {
-    grid-template-rows: 0fr;
-}
-
-.score-keyboard {
-    transition:
-        transform 200ms ease-out,
-        visibility 0s;
-}
-
-.app-shell:has(input:focus, textarea:focus) .score-keyboard {
-    transform: translateY(100%);
-    visibility: hidden;
-    transition:
-        transform 200ms ease-out,
-        visibility 0s 200ms;
+    display: none;
 }

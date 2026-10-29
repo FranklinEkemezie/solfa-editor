@@ -42,6 +42,11 @@ export type ScorePersistence = {
     createDocument: (details: NewDocumentDetails) => Promise<SaveOutcome>;
     /** Save the current score and open another from the library. */
     openDocument: (id: string) => Promise<SaveOutcome>;
+    /**
+     * Save the current score and add a document from outside the library.
+     * Used by `.solfa` import and by opening a sample.
+     */
+    openDocumentFromScore: (document: ScoreDocument) => Promise<SaveOutcome>;
 };
 
 type ScoreSnapshot = {
@@ -320,8 +325,8 @@ export function useScorePersistence({
         return storageRef.current.list();
     }, []);
 
-    const createDocument = useCallback(
-        async (details: NewDocumentDetails): Promise<SaveOutcome> => {
+    const adoptDocument = useCallback(
+        async (next: ScoreDocument, failureMessage: string): Promise<SaveOutcome> => {
             if (isHydratingRef.current) {
                 return { ok: false, message: 'The saved score is still opening.' };
             }
@@ -329,7 +334,6 @@ export function useScorePersistence({
             const saved = await saveBeforeSwitch();
             if (!saved.ok) return saved;
 
-            const next = createDocumentFromDetails(details);
             const id = createScoreId();
             const now = Date.now();
             const nextPosition = caretAtEnd(next);
@@ -340,10 +344,9 @@ export function useScorePersistence({
             try {
                 await storageRef.current.save(record);
             } catch {
-                const message = 'The new score could not be created in this browser.';
-                errorRef.current = message;
-                setError(message);
-                return { ok: false, message };
+                errorRef.current = failureMessage;
+                setError(failureMessage);
+                return { ok: false, message: failureMessage };
             } finally {
                 setIsSaving(false);
             }
@@ -356,9 +359,34 @@ export function useScorePersistence({
                 createdAt: now,
                 savedAt: now,
             });
+
+            try {
+                await storageRef.current.rememberLastOpened(id);
+            } catch {
+                // The score is open and saved; remembering the active record is
+                // a convenience, not a reason to fail the open.
+            }
+
             return { ok: true, savedAt: now };
         },
         [applyRestored, saveBeforeSwitch],
+    );
+
+    const createDocument = useCallback(
+        async (details: NewDocumentDetails): Promise<SaveOutcome> => {
+            return adoptDocument(
+                createDocumentFromDetails(details),
+                'The new score could not be created in this browser.',
+            );
+        },
+        [adoptDocument],
+    );
+
+    const openDocumentFromScore = useCallback(
+        async (next: ScoreDocument): Promise<SaveOutcome> => {
+            return adoptDocument(next, 'That score could not be added to this browser.');
+        },
+        [adoptDocument],
     );
 
     const openDocument = useCallback(
@@ -424,6 +452,7 @@ export function useScorePersistence({
         listDocuments,
         createDocument,
         openDocument,
+        openDocumentFromScore,
     };
 }
 

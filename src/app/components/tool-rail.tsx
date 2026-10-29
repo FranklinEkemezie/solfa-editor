@@ -13,8 +13,10 @@ export type ToolRailItem = {
 
 /** A run of related controls, divided from the run below it. */
 export type ToolRailGroup = {
-    /** Distinguishes the group's items; never shown. */
+    /** Distinguishes the group's items. */
     id: string;
+    /** Human name used by the compact mobile menu. */
+    label: string;
     items: ToolRailItem[];
 };
 
@@ -38,7 +40,7 @@ export function ToolRail({
 }) {
     if (!open) {
         return (
-            <div className="absolute left-3 top-3 z-20">
+            <div className="absolute left-3 top-3 z-20 hidden md:block">
                 <IconButton
                     label="Show tools"
                     variant="secondary"
@@ -54,7 +56,7 @@ export function ToolRail({
     return (
         <aside
             aria-label="Score tools"
-            className="z-20 flex w-14 flex-none flex-col items-center gap-0.5 overflow-y-auto border-r border-line bg-paper py-2"
+            className="z-20 hidden w-14 flex-none flex-col items-center gap-0.5 overflow-y-auto border-r border-line bg-paper py-2 md:flex"
         >
             <IconButton
                 label="Hide tools"

@@ -110,6 +110,40 @@ export class ScoreStorageError extends Error {
     }
 }
 
+/**
+ * The document as plain data.
+ *
+ * This is the shared boundary between browser storage and an exported
+ * `.solfa` file: both carry exactly the score, never the caret, zoom or theme.
+ */
+export function encodeDocument(document: ScoreDocument): StoredScoreDocument {
+    return {
+        title: document.title,
+        subtitle: document.subtitle,
+        author: document.author,
+        lyrics: document.lyrics,
+        timeSignature: {
+            note: document.timeSignature.note,
+            count: document.timeSignature.count,
+        },
+        key: {
+            letter: document.key.letter,
+            mode: document.key.mode,
+            signature: {
+                accidental: document.key.signature.accidental,
+                count: document.key.signature.count,
+            },
+        },
+        tempo: {
+            beatUnit: document.tempo.beatUnit,
+            beatsPerMinute: document.tempo.beatsPerMinute,
+            description: document.tempo.description,
+        },
+        voices: { ...document.voices },
+        measureCount: document.measureCount,
+    };
+}
+
 export function encodeScore(
     document: ScoreDocument,
     caret: EditorPosition,
@@ -121,31 +155,7 @@ export function encodeScore(
     return {
         version: SCORE_STORAGE_VERSION,
         id,
-        document: {
-            title: document.title,
-            subtitle: document.subtitle,
-            author: document.author,
-            lyrics: document.lyrics,
-            timeSignature: {
-                note: document.timeSignature.note,
-                count: document.timeSignature.count,
-            },
-            key: {
-                letter: document.key.letter,
-                mode: document.key.mode,
-                signature: {
-                    accidental: document.key.signature.accidental,
-                    count: document.key.signature.count,
-                },
-            },
-            tempo: {
-                beatUnit: document.tempo.beatUnit,
-                beatsPerMinute: document.tempo.beatsPerMinute,
-                description: document.tempo.description,
-            },
-            voices: { ...document.voices },
-            measureCount: document.measureCount,
-        },
+        document: encodeDocument(document),
         caret: { part: caret.part, offset: caret.offset },
         zoom,
         createdAt,
@@ -196,8 +206,24 @@ function decodeScoreRecord(value: unknown, expectedVersion: number): RestoredSco
         part: asPartId(caretRecord.part, 'caret voice'),
         offset: asNonNegativeInteger(caretRecord.offset, 'caret position'),
     };
-    const documentRecord = asRecord(record.document, 'score document');
+    return {
+        id,
+        document: decodeDocument(record.document),
+        caret,
+        zoom,
+        createdAt,
+        savedAt,
+    };
+}
 
+/**
+ * Validate a plain document and rebuild the editor's value types.
+ *
+ * Storage and `.solfa` files use the same shape, so this is also the import
+ * boundary: a file is only as trustworthy as the fields it actually contains.
+ */
+export function decodeDocument(value: unknown): ScoreDocument {
+    const documentRecord = asRecord(value, 'score document');
     const timeRecord = asRecord(documentRecord.timeSignature, 'time signature');
     const keyRecord = asRecord(documentRecord.key, 'key');
     const signatureRecord = asRecord(keyRecord.signature, 'key signature');
@@ -211,41 +237,34 @@ function decodeScoreRecord(value: unknown, expectedVersion: number): RestoredSco
 
     try {
         return {
-            id,
-            document: {
-                title: asString(documentRecord.title, 'title'),
-                subtitle: asString(documentRecord.subtitle, 'subtitle'),
-                author: asString(documentRecord.author, 'composer'),
-                lyrics: asString(documentRecord.lyrics, 'lyrics'),
-                timeSignature: new TimeSignature(
-                    asNoteValue(timeRecord.note, 'time signature note value'),
-                    asRangeInteger(timeRecord.count, 'time signature count', 1, 32),
+            title: asString(documentRecord.title, 'title'),
+            subtitle: asString(documentRecord.subtitle, 'subtitle'),
+            author: asString(documentRecord.author, 'composer'),
+            lyrics: asString(documentRecord.lyrics, 'lyrics'),
+            timeSignature: new TimeSignature(
+                asNoteValue(timeRecord.note, 'time signature note value'),
+                asRangeInteger(timeRecord.count, 'time signature count', 1, 32),
+            ),
+            key: new Key(
+                asLetter(keyRecord.letter, 'key letter'),
+                new KeySignature(
+                    asAccidental(signatureRecord.accidental, 'key signature accidental'),
+                    asRangeInteger(signatureRecord.count, 'key signature count', 0, 7),
                 ),
-                key: new Key(
-                    asLetter(keyRecord.letter, 'key letter'),
-                    new KeySignature(
-                        asAccidental(signatureRecord.accidental, 'key signature accidental'),
-                        asRangeInteger(signatureRecord.count, 'key signature count', 0, 7),
-                    ),
-                    asMode(keyRecord.mode, 'key mode'),
-                ),
-                tempo: new Tempo(
-                    asNoteValue(tempoRecord.beatUnit, 'tempo beat unit'),
-                    asRangeInteger(tempoRecord.beatsPerMinute, 'tempo', 20, 320),
-                    asString(tempoRecord.description, 'tempo description'),
-                ),
-                voices,
-                measureCount: asRangeInteger(
-                    documentRecord.measureCount,
-                    'measure count',
-                    1,
-                    MAX_RESTORABLE_MEASURES,
-                ),
-            },
-            caret,
-            zoom,
-            createdAt,
-            savedAt,
+                asMode(keyRecord.mode, 'key mode'),
+            ),
+            tempo: new Tempo(
+                asNoteValue(tempoRecord.beatUnit, 'tempo beat unit'),
+                asRangeInteger(tempoRecord.beatsPerMinute, 'tempo', 20, 320),
+                asString(tempoRecord.description, 'tempo description'),
+            ),
+            voices,
+            measureCount: asRangeInteger(
+                documentRecord.measureCount,
+                'measure count',
+                1,
+                MAX_RESTORABLE_MEASURES,
+            ),
         };
     } catch (error) {
         if (error instanceof ScoreStorageError) throw error;

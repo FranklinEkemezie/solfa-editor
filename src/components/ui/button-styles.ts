@@ -1,9 +1,9 @@
 export const BUTTON_VARIANTS = {
-    primary: 'bg-green-dark text-white hover:bg-green-dark/90',
-    secondary: 'bg-white border border-line text-ink hover:bg-gray-50',
-    ghost: 'bg-transparent text-ink hover:bg-gray-100',
+    primary: 'bg-primary text-on-primary hover:bg-primary/90',
+    secondary: 'border border-line bg-paper text-ink hover:bg-green-wash/60',
+    ghost: 'bg-transparent text-ink hover:bg-green-wash/60',
     danger: 'bg-red-600 text-white hover:bg-red-700',
-    icon: 'bg-transparent p-1 text-ink hover:bg-gray-100',
+    icon: 'bg-transparent p-1 text-ink hover:bg-green-wash/60',
 } as const;
 
 export const BUTTON_SIZES = {

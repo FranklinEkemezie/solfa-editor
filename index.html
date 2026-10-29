@@ -3,8 +3,32 @@
     <head>
         <meta charset="UTF-8" />
         <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-        <meta content="#f7f4ed" name="theme-color" />
+        <meta content="#f7f5ef" name="theme-color" />
         <title>Solfa — SATB editor</title>
+        <script>
+            (function () {
+                try {
+                    var preference = localStorage.getItem('solfa-theme');
+                    if (
+                        preference !== 'light' &&
+                        preference !== 'dark' &&
+                        preference !== 'system'
+                    ) {
+                        preference = 'system';
+                    }
+                    var dark =
+                        preference === 'dark' ||
+                        (preference === 'system' &&
+                            window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+                    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+                    var themeColor = document.querySelector('meta[name="theme-color"]');
+                    if (themeColor) themeColor.content = dark ? '#111914' : '#f7f5ef';
+                } catch (error) {
+                    document.documentElement.dataset.theme = 'light';
+                }
+            })();
+        </script>
     </head>
     <body>
         <div id="root"></div>
