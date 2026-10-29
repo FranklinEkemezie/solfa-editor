@@ -1,6 +1,12 @@
 import {
     Accidental,
+    addFractions,
+    ceilFraction,
+    compareFractions,
+    divideFractions,
+    fraction,
     isSolfaSyllable,
+    multiplyFractions,
     NoteValue,
     Pitch,
     SOLFA_TO_DEGREE,
@@ -9,6 +15,7 @@ import {
     type SolfaSyllable,
     VOICE_SETTINGS,
     voiceSource,
+    withMeasureCount,
     withVoice,
 } from '@/domain/music';
 import {
@@ -19,6 +26,7 @@ import {
     type EditorPosition,
 } from '@/features/score-editor/editing/caret';
 import type { Diagnostic } from '@/features/notation/diagnostics';
+import type { VoiceNotation } from '@/features/notation/musical-ir';
 import { parseVoice } from '@/features/notation/notation-engine';
 import { clampOffset, containsOffset, type SourceRange } from '@/features/notation/source-position';
 import type { Token } from '@/features/notation/tokens';
@@ -64,6 +72,42 @@ function firstDiagnostic(diagnostics: readonly Diagnostic[]): string {
 }
 
 /**
+ * Keep one empty measure after music that ends exactly on a barline.
+ *
+ * The page already grows when a voice overflows, but a writer who has just
+ * filled the last beat has nowhere to click for the next note until they type
+ * one. Adding the trailing measure at the moment the previous one is filled
+ * gives them that slot, and keeps the score one measure ahead of the music.
+ *
+ * This only applies to an edit at the end of the voice. Editing a note in the
+ * middle must not append a measure, and deleting a note must not either: the
+ * measure that is already there has room again.
+ */
+function withRoomForNextMeasure(
+    document: ScoreDocument,
+    source: string,
+    offset: number,
+    notation: VoiceNotation,
+): ScoreDocument {
+    if (offset !== source.length) return document;
+
+    const last = notation.events[notation.events.length - 1];
+    if (!last) return document;
+
+    const end = addFractions(
+        last.start,
+        last.kind === 'note' ? last.note.duration : last.rest.duration,
+    );
+    const capacity = document.timeSignature.capacity();
+    const measures = ceilFraction(divideFractions(end, capacity));
+    const boundary = multiplyFractions(capacity, fraction(measures));
+
+    if (compareFractions(end, boundary) !== 0) return document;
+
+    return withMeasureCount(document, Math.max(document.measureCount, measures + 1));
+}
+
+/**
  * Accept a candidate source only when the engine can read it.
  *
  * Invalid edits are never left in the document: the writer keeps the score
@@ -80,8 +124,9 @@ function accept(
     if (!parsed.ok) {
         return reject(document, position, firstDiagnostic(parsed.diagnostics));
     }
+    const next = withVoice(document, position.part, source);
     return {
-        document: withVoice(document, position.part, source),
+        document: withRoomForNextMeasure(next, source, offset, parsed.notation),
         position: { part: position.part, offset },
         changed: true,
         status,
@@ -212,7 +257,12 @@ export function insertContinuation(document: ScoreDocument, position: EditorPosi
         );
     }
     return {
-        document: withVoice(document, position.part, next),
+        document: withRoomForNextMeasure(
+            withVoice(document, position.part, next),
+            next,
+            offset + 1,
+            parsed.notation,
+        ),
         position: { part: position.part, offset: offset + 1 },
         changed: true,
         status: 'Held the note on.',
@@ -233,7 +283,12 @@ export function applyAccidental(
         return reject(document, position, 'An accidental can only follow a note.');
     }
     return {
-        document: withVoice(document, position.part, next),
+        document: withRoomForNextMeasure(
+            withVoice(document, position.part, next),
+            next,
+            offset + 1,
+            parsed.notation,
+        ),
         position: { part: position.part, offset: offset + 1 },
         changed: true,
         status: accidental === Accidental.SHARP ? 'Raised the note.' : 'Lowered the note.',
@@ -257,7 +312,12 @@ export function applyOctave(
         return reject(document, position, 'An octave mark can only follow a note.');
     }
     return {
-        document: withVoice(document, position.part, next),
+        document: withRoomForNextMeasure(
+            withVoice(document, position.part, next),
+            next,
+            offset + mark.length,
+            parsed.notation,
+        ),
         position: { part: position.part, offset: offset + mark.length },
         changed: true,
         status: mark.startsWith("'") ? 'Moved the note up.' : 'Moved the note down.',

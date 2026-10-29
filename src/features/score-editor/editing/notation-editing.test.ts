@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     Accidental,
     createEmptyScoreDocument,
+    withMeasureCount,
     withVoice,
     type ScoreDocument,
 } from '@/domain/music';
@@ -277,5 +278,62 @@ describe('editing a voice source', () => {
     it('makes the caret from a click and keeps it inside the source', () => {
         expect(caretAt('soprano', ':d', 99)).toEqual(caret(2));
         expect(caretAt('soprano', ':d', -1)).toEqual(caret(0));
+    });
+});
+
+describe('a score that grows at the end', () => {
+    const fullFourMeasures = ':' + 'd'.repeat(15);
+
+    it('adds a trailing measure when the last beat is filled', () => {
+        const document = withVoice(
+            createEmptyScoreDocument(),
+            'soprano',
+            ':' + 'd'.repeat(15),
+        );
+
+        const outcome = insertSyllable(document, caret(document.voices.soprano.length), 'd');
+
+        expect(source(outcome)).toHaveLength(17);
+        expect(outcome.document.measureCount).toBe(5);
+    });
+
+    it('does not add a measure before the last one is full', () => {
+        const document = withVoice(
+            createEmptyScoreDocument(),
+            'soprano',
+            ':' + 'd'.repeat(13),
+        );
+
+        const outcome = insertSyllable(document, caret(document.voices.soprano.length), 'd');
+
+        expect(source(outcome)).toHaveLength(15);
+        expect(outcome.document.measureCount).toBe(4);
+    });
+
+    it('does not add a measure for an edit in the middle', () => {
+        const document = withVoice(createEmptyScoreDocument(), 'soprano', fullFourMeasures);
+
+        const outcome = insertSyllable(document, caret(2), 'r');
+
+        expect(outcome.document.measureCount).toBe(4);
+    });
+
+    it('does not add a measure when deleting the last note', () => {
+        const document = withVoice(createEmptyScoreDocument(), 'soprano', fullFourMeasures);
+
+        const outcome = deletePrevious(document, caret(fullFourMeasures.length));
+
+        expect(outcome.document.measureCount).toBe(4);
+    });
+
+    it('leaves an existing trailing measure alone', () => {
+        const document = withMeasureCount(
+            withVoice(createEmptyScoreDocument(), 'soprano', ':' + 'd'.repeat(15)),
+            5,
+        );
+
+        const outcome = insertSyllable(document, caret(document.voices.soprano.length), 'd');
+
+        expect(outcome.document.measureCount).toBe(5);
     });
 });
