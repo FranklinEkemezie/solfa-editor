@@ -70,7 +70,7 @@ export function systemPrefersDark(
 
 const THEME_COLOUR: Record<ResolvedTheme, string> = {
     light: '#f7f5ef',
-    dark: '#111914',
+    dark: '#0b0c0e',
 };
 
 /**

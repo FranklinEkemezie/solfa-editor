@@ -35,38 +35,79 @@
 /**
  * The dark editing surface.
  *
- * The paper stays paper. Dark mode changes the desk, the chrome and the tools,
- * but the sheet, its ink and the printed output keep the light palette. This is
- * why the sheet tokens are scoped below rather than inherited from the root.
+ * Dark mode is neutral rather than green: near-black chrome, grey lines and
+ * light text, with the brand colour kept for the light theme. The sheet has its
+ * own, slightly lifted black so it still reads as paper on the desk. Printed
+ * pages and exported images never inherit any of this.
  */
 :root[data-theme='dark'] {
-    --color-ink: #e5eee8;
-    --color-ink-muted: #a9b9ae;
-    --color-muted: #87988d;
-    --color-faint: #6d7f73;
-    --color-ghost: #4a5d52;
-    --color-line: #31443a;
-    --color-line-soft: #26372d;
-    --color-paper: #17211c;
-    --color-cream: #101712;
-    --color-green: #8fbea1;
-    --color-green-dark: #b7dcc4;
-    --color-green-wash: #22352b;
-    --color-amber: #d6a66a;
-    --color-primary: #9cc7ab;
-    --color-on-primary: #102018;
+    --color-ink: #f1f2f4;
+    --color-ink-muted: #b8bcc3;
+    --color-muted: #8f949c;
+    --color-faint: #727780;
+    --color-ghost: #50555d;
+    --color-line: #34373d;
+    --color-line-soft: #272a2f;
+    --color-paper: #15171a;
+    --color-cream: #0b0c0e;
+    --color-green: #aeb6bf;
+    --color-green-dark: #e3e6ea;
+    --color-green-wash: #24272c;
+    --color-amber: #d1a46a;
+    --color-primary: #e5e7eb;
+    --color-on-primary: #141518;
 
-    --shadow-panel: 0 8px 18px rgba(0, 0, 0, 0.32);
-    --shadow-toast: 0 8px 18px rgba(0, 0, 0, 0.4);
-    --shadow-key: 0 1px 1px rgba(0, 0, 0, 0.35), 0 2px 0 rgba(0, 0, 0, 0.25);
-    --shadow-key-pressed: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-panel: 0 8px 18px rgba(0, 0, 0, 0.4);
+    --shadow-toast: 0 8px 18px rgba(0, 0, 0, 0.5);
+    --shadow-key: 0 1px 1px rgba(0, 0, 0, 0.45), 0 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-key-pressed: inset 0 1px 3px rgba(0, 0, 0, 0.5);
     --shadow-sheet:
-        0 0 0 1px var(--color-line-soft), 0 1px 2px rgba(0, 0, 0, 0.3),
-        0 16px 38px rgba(0, 0, 0, 0.35);
+        0 0 0 1px var(--color-line-soft), 0 1px 2px rgba(0, 0, 0, 0.45),
+        0 16px 38px rgba(0, 0, 0, 0.5);
 }
 
-/* The document and anything printed from it are always read as paper. */
-.sheet,
+/* The editor's sheet, read as light paper unless the editor is dark. */
+.sheet {
+    --color-ink: #21352d;
+    --color-ink-muted: #4d685d;
+    --color-muted: #7b897e;
+    --color-faint: #9aa69c;
+    --color-ghost: #c0c8c1;
+    --color-line: #d9ded8;
+    --color-line-soft: #e8ebe6;
+    --color-paper: #fffefa;
+    --color-cream: #f7f5ef;
+    --color-green: #5d826d;
+    --color-green-dark: #3d6250;
+    --color-green-wash: #e5eee6;
+    --color-amber: #b98345;
+    --color-primary: #3d6250;
+    --color-on-primary: #ffffff;
+    color: var(--color-ink);
+    color-scheme: light;
+}
+
+:root[data-theme='dark'] .sheet {
+    --color-ink: #eef0f3;
+    --color-ink-muted: #b8bcc3;
+    --color-muted: #8f949c;
+    --color-faint: #727780;
+    --color-ghost: #52575f;
+    --color-line: #3a3e45;
+    --color-line-soft: #2b2f35;
+    --color-paper: #1b1e22;
+    --color-cream: #14161a;
+    --color-green: #a7b0b9;
+    --color-green-dark: #e2e5e9;
+    --color-green-wash: #292d33;
+    --color-amber: #d1a46a;
+    --color-primary: #e5e7eb;
+    --color-on-primary: #141518;
+    color: var(--color-ink);
+    color-scheme: dark;
+}
+
+/* Anything printed from the score is always read as light paper. */
 .print-sheet {
     --color-ink: #21352d;
     --color-ink-muted: #4d685d;

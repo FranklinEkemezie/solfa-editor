@@ -57,7 +57,7 @@ describe('theme preference', () => {
         applyThemeToDocument('dark', document.documentElement, document);
         expect(document.documentElement.dataset.theme).toBe('dark');
         expect(document.documentElement.style.colorScheme).toBe('dark');
-        expect(meta?.content).toBe('#111914');
+        expect(meta?.content).toBe('#0b0c0e');
 
         applyThemeToDocument('light', document.documentElement, document);
         expect(document.documentElement.dataset.theme).toBe('light');

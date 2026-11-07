@@ -92,7 +92,7 @@ export function SettingsDialog({
                         })}
                     </div>
                     <p className="text-xs leading-relaxed text-muted">
-                        The sheet and exports stay light.
+                        Exports and printing always use the light sheet.
                     </p>
                 </section>
 
