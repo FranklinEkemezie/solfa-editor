@@ -1,7 +1,6 @@
-import { beatMarkBetween, markAfterBeat } from '@/domain/music';
-import { ACCIDENTAL_MARKS } from '@/features/score-editor/components/score-canvas/accidental-mark';
+import { markAfterBeat } from '@/domain/music';
+import { BeatGlyphs } from '@/features/score-editor/components/score-canvas/beat-glyphs';
 import { FinalBarline } from '@/features/score-editor/components/score-canvas/final-barline';
-import { OctaveMark } from '@/features/score-editor/components/score-canvas/octave-mark';
 import type { MeasureView } from '@/features/score-editor/model/score-view';
 import { cn } from '@/lib/utils';
 
@@ -39,42 +38,10 @@ export function PrintMeasure({
                     key={beat.number}
                     className="relative flex h-full flex-1 items-center justify-center font-mono text-[10pt] leading-none text-ink"
                 >
-                    <span className="flex items-baseline">
-                        {beat.items.map((item, itemIndex) => (
-                            <span
-                                key={`${item.noteKey}-${itemIndex}`}
-                                className="flex items-baseline"
-                            >
-                                {itemIndex > 0 ? (
-                                    <span aria-hidden="true" className="px-[1px]">
-                                        {beatMarkBetween(beat.division, itemIndex - 1) ?? ' '}
-                                    </span>
-                                ) : null}
-                                <span className="relative flex flex-col items-center">
-                                    <span>
-                                        {item.kind === 'continuation' ? (
-                                            '—'
-                                        ) : (
-                                            <>
-                                                {item.syllable}
-                                                {item.accidental ? (
-                                                    <span className="align-super text-[0.7em]">
-                                                        {ACCIDENTAL_MARKS[item.accidental] ?? ''}
-                                                    </span>
-                                                ) : null}
-                                                <OctaveMark offset={item.octaveOffset} />
-                                            </>
-                                        )}
-                                    </span>
-                                    {item.lyric ? (
-                                        <span className="absolute -bottom-3 text-[7pt] font-bold uppercase tracking-[0.08em] text-ink-muted">
-                                            {item.lyric}
-                                        </span>
-                                    ) : null}
-                                </span>
-                            </span>
-                        ))}
-                    </span>
+                    <BeatGlyphs
+                        beat={beat}
+                        lyricClassName="text-[7pt] font-bold uppercase tracking-[0.08em] text-ink-muted"
+                    />
                     {beatIndex < beats.length - 1 ? (
                         <span
                             aria-hidden="true"

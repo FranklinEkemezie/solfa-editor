@@ -1,5 +1,6 @@
 import type { Accidental } from '@/domain/accidental';
 import type { BeatDivision } from '@/domain/beat-division';
+import type { Fraction } from '@/domain/fraction';
 import type { PartId } from '@/domain/parts';
 import type { Score } from '@/domain/score';
 import type { ScoreDocument } from '@/domain/score-document';
@@ -8,10 +9,10 @@ import type { Diagnostic } from '@/features/notation/diagnostics';
 import type { VoiceNotation } from '@/features/notation/musical-ir';
 
 /** A note as it appears in one beat of the page. */
-export type BeatItemView = {
+export type BeatNoteItemView = {
     /**
      * `note` starts in this beat; `continuation` is the same note still
-     * sounding from an earlier beat or measure and is drawn as a dash.
+     * sounding from an earlier beat or measure.
      */
     readonly kind: 'note' | 'continuation';
     /** Stable identity across the score, used to highlight the note being played. */
@@ -21,12 +22,28 @@ export type BeatItemView = {
     readonly accidental: Accidental | null;
     readonly octaveOffset: number;
     readonly lyric: string;
+    /** Where the note begins inside its beat, in quarter-note units. */
+    readonly start: Fraction;
+    /** The note's full written duration, including any continuations. */
+    readonly duration: Fraction;
 };
+
+/** Silence as it appears in one beat. It occupies time but draws no glyph. */
+export type BeatRestItemView = {
+    readonly kind: 'rest';
+    /** Where the rest begins inside its beat, in quarter-note units. */
+    readonly start: Fraction;
+    readonly duration: Fraction;
+};
+
+export type BeatItemView = BeatNoteItemView | BeatRestItemView;
 
 export type BeatView = {
     readonly number: number;
-    /** How the beat is divided, which decides the marks between its notes. */
+    /** How the beat is divided, which decides the marks between its events. */
     readonly division: BeatDivision;
+    /** The beat's own length, in quarter-note units. */
+    readonly duration: Fraction;
     readonly items: readonly BeatItemView[];
     /** Where the caret goes when this beat is clicked. */
     readonly sourceOffset: number;

@@ -27,6 +27,12 @@ function sopranoMeasure(view: ReturnType<typeof viewOf>, number: number) {
     return view.parts.soprano.measures[number - 1];
 }
 
+function syllables(
+    beat: NonNullable<ReturnType<typeof sopranoMeasure>>['beats'][number] | undefined,
+) {
+    return beat?.items.flatMap((item) => (item.kind === 'rest' ? [] : [item.syllable])) ?? [];
+}
+
 describe('building a score from voice sources', () => {
     it('opens with the document’s four silent measures', () => {
         const view = buildScoreView(createEmptyScoreDocument());
@@ -45,7 +51,10 @@ describe('building a score from voice sources', () => {
         const view = viewOf(`:${'d'.repeat(17)}`);
 
         expect(view.measureCount).toBe(5);
-        expect(sopranoMeasure(view, 5)?.beats[0]?.items[0]?.syllable).toBe('d');
+        expect(sopranoMeasure(view, 5)?.beats[0]?.items[0]).toMatchObject({
+            kind: 'note',
+            syllable: 'd',
+        });
     });
 
     it('gives every part the same measures', () => {
@@ -65,12 +74,7 @@ describe('building a score from voice sources', () => {
         const view = viewOf(':drs');
         const beats = sopranoMeasure(view, 1)?.beats ?? [];
 
-        expect(beats.map((beat) => beat.items.map((item) => item.syllable))).toEqual([
-            ['d'],
-            ['r'],
-            ['s'],
-            [],
-        ]);
+        expect(beats.map(syllables)).toEqual([['d'], ['r'], ['s'], []]);
     });
 
     it('keeps two eighth notes in one divided beat', () => {
@@ -78,9 +82,9 @@ describe('building a score from voice sources', () => {
         const beats = sopranoMeasure(view, 1)?.beats ?? [];
 
         expect(beats[0]?.division).toBe(2);
-        expect(beats[0]?.items.map((item) => item.syllable)).toEqual(['d', 'r']);
+        expect(syllables(beats[0])).toEqual(['d', 'r']);
         expect(beats[1]?.division).toBe(2);
-        expect(beats[1]?.items.map((item) => item.syllable)).toEqual(['s', 'f']);
+        expect(syllables(beats[1])).toEqual(['s', 'f']);
     });
 
     it('quarters a beat that holds four sixteenths', () => {
@@ -121,7 +125,7 @@ describe('building a score from voice sources', () => {
         expect(validateScore(view.score)).toEqual([]);
     });
 
-    it('keeps rests in the score without drawing them as notes', () => {
+    it('keeps rests in the score as silence in their own beat', () => {
         const view = viewOf(':d ');
         const measure = view.score.measures.find(
             (candidate) => candidate.part === 'soprano' && candidate.number === 1,
@@ -130,7 +134,20 @@ describe('building a score from voice sources', () => {
         expect(measure?.events[0]).toBeInstanceOf(Note);
         expect(measure?.events[1]).toBeInstanceOf(Rest);
         expect(sopranoMeasure(view, 1)?.beats[0]?.items).toHaveLength(1);
-        expect(sopranoMeasure(view, 1)?.beats[1]?.items).toHaveLength(0);
+        expect(sopranoMeasure(view, 1)?.beats[1]?.items).toEqual([
+            expect.objectContaining({ kind: 'rest' }),
+        ]);
+    });
+
+    it('keeps an eighth rest in the beat it divides', () => {
+        const view = viewOf('. d');
+        const beat = sopranoMeasure(view, 1)?.beats[0];
+
+        expect(beat?.division).toBe(2);
+        expect(beat?.items).toEqual([
+            expect.objectContaining({ kind: 'rest', start: fraction(0) }),
+            expect.objectContaining({ kind: 'note', syllable: 'd', start: fraction(1, 2) }),
+        ]);
     });
 
     it('carries an explicit accidental into the page', () => {
@@ -171,8 +188,14 @@ describe('building a score from voice sources', () => {
 
         expect(view.parts.soprano.source).toBe(':d');
         expect(view.parts.bass.source).toBe(':s');
-        expect(sopranoMeasure(view, 1)?.beats[0]?.items[0]?.syllable).toBe('d');
-        expect(view.parts.bass.measures[0]?.beats[0]?.items[0]?.syllable).toBe('s');
+        expect(sopranoMeasure(view, 1)?.beats[0]?.items[0]).toMatchObject({
+            kind: 'note',
+            syllable: 'd',
+        });
+        expect(view.parts.bass.measures[0]?.beats[0]?.items[0]).toMatchObject({
+            kind: 'note',
+            syllable: 's',
+        });
     });
 });
 

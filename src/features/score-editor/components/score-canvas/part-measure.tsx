@@ -6,6 +6,7 @@ import type { BeatView, MeasureView, PartView } from '@/features/score-editor/mo
 import type { EditorPosition } from '@/features/score-editor/editing/caret';
 
 function writtenItem(item: BeatView['items'][number]): string {
+    if (item.kind === 'rest') return 'rest';
     if (item.kind === 'continuation') return 'continuation';
 
     const octave =
@@ -50,7 +51,9 @@ export function PartMeasure({
                             : null
                     }
                     isActive={activeBeatNumber === beat.number}
-                    isPlaying={beat.items.some((item) => item.noteKey === activeNoteKey)}
+                    isPlaying={beat.items.some(
+                        (item) => item.kind !== 'rest' && item.noteKey === activeNoteKey,
+                    )}
                     ariaLabel={`${part.label}, measure ${measure.number}, beat ${beat.number}${beatSummary(beat)}`}
                     onSelect={() => onPositionChange({ part: part.id, offset: beat.sourceOffset })}
                 />

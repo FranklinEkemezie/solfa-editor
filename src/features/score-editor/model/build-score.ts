@@ -16,6 +16,7 @@ import {
     TimeSignature,
     VOICE_SETTINGS,
     ZERO_FRACTION,
+    type BeatDivision,
     type Fraction,
     type MusicalEvent,
     type PartId,
@@ -100,12 +101,28 @@ function sourceOffsetAt(voice: VoiceNotation, time: Fraction, fallback: number):
     return fallback;
 }
 
-function divisionFor(items: readonly BeatItemView[]): 1 | 2 | 4 {
-    if (items.length <= 1) return 1;
-    // A held note and a new one in the same beat are two events, not a divided
-    // beat, so they are set apart by space rather than by a subdivision mark.
-    if (items.some((item) => item.kind === 'continuation')) return 1;
-    return items.length === 2 ? 2 : 4;
+/**
+ * The finest division any event in the beat begins on.
+ *
+ * The mark between two events belongs to the moment the second one starts, so
+ * the beat's division comes from the events' positions rather than from how
+ * many of them there are. That keeps `d,r.m` from being read as a run of four
+ * equal notes, and lets a rest hold the first half of a beat.
+ */
+function divisionFor(items: readonly BeatItemView[], beatDuration: Fraction): BeatDivision {
+    let division: BeatDivision = 1;
+
+    for (const item of items) {
+        if (item.start.numerator === 0) continue;
+        const ratio = divideFractions(item.start, beatDuration);
+        if (ratio.denominator % 4 === 0) {
+            division = 4;
+        } else if (ratio.denominator % 2 === 0 && division < 2) {
+            division = 2;
+        }
+    }
+
+    return division;
 }
 
 function measureView(
@@ -125,24 +142,36 @@ function measureView(
 
         for (let eventIndex = 0; eventIndex < voice.events.length; eventIndex += 1) {
             const event = voice.events[eventIndex];
-            if (event.kind !== 'note') continue;
             if (compareFractions(eventEnd(event), beatStart) <= 0) continue;
             if (compareFractions(event.start, beatEnd) >= 0) break;
 
             const startsHere = compareFractions(event.start, beatStart) >= 0;
-            items.push({
-                kind: startsHere ? 'note' : 'continuation',
-                noteKey: `${part}:${eventIndex}`,
-                syllable: event.note.syllable,
-                accidental: event.accidentalModifier,
-                octaveOffset: event.octaveOffset,
-                lyric: event.note.lyric,
-            });
+            const eventStart = startsHere ? subtractFractions(event.start, beatStart) : ZERO_FRACTION;
+
+            if (event.kind === 'note') {
+                items.push({
+                    kind: startsHere ? 'note' : 'continuation',
+                    noteKey: `${part}:${eventIndex}`,
+                    syllable: event.note.syllable,
+                    accidental: event.accidentalModifier,
+                    octaveOffset: event.octaveOffset,
+                    lyric: event.note.lyric,
+                    start: eventStart,
+                    duration: event.note.duration,
+                });
+            } else {
+                items.push({
+                    kind: 'rest',
+                    start: eventStart,
+                    duration: event.rest.duration,
+                });
+            }
         }
 
         beats.push({
             number: index + 1,
-            division: divisionFor(items),
+            division: divisionFor(items, beatUnit),
+            duration: beatUnit,
             items,
             sourceOffset: sourceOffsetAt(voice, beatStart, voice.source.length),
         });
@@ -151,12 +180,15 @@ function measureView(
     return { number, beats };
 }
 
-function silentMeasureView(number: number, beatCount: number): MeasureView {
+function silentMeasureView(number: number, timeSignature: TimeSignature): MeasureView {
+    const duration = NOTE_VALUE_UNITS[timeSignature.note];
+
     return {
         number,
-        beats: Array.from({ length: beatCount }, (_, index) => ({
+        beats: Array.from({ length: timeSignature.count }, (_, index) => ({
             number: index + 1,
             division: 1,
+            duration,
             items: [],
             sourceOffset: 0,
         })),
@@ -223,7 +255,7 @@ export function buildScoreView(document: ScoreDocument): ScoreView {
             measures.push(
                 entry.voice
                     ? measureView(entry.part, entry.voice, number, start, signature)
-                    : silentMeasureView(number, signature.count),
+                    : silentMeasureView(number, signature),
             );
         }
 

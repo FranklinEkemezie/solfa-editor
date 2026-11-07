@@ -50,7 +50,9 @@ describe('presetDocument', () => {
 
         expect(view.measureCount).toBe(3);
         expect(
-            view.parts.soprano.measures[0]?.beats.map((beat) => beat.items[0]?.syllable),
+            view.parts.soprano.measures[0]?.beats.map((beat) =>
+                beat.items[0]?.kind === 'note' ? beat.items[0].syllable : undefined,
+            ),
         ).toEqual(['d', 'm', 's', 'l']);
         expect(view.parts.soprano.measures[2]?.beats.every((beat) => beat.items.length === 0)).toBe(
             true,
@@ -109,7 +111,9 @@ describe('the samples', () => {
 
         expect(beats[0]?.items[0]).toMatchObject({ kind: 'note', syllable: 'd' });
         expect(beats[1]?.items[0]).toMatchObject({ kind: 'continuation', syllable: 'd' });
-        expect(beats[2]?.items.map((item) => item.syllable)).toEqual(['s', 'l']);
+        expect(
+            beats[2]?.items.flatMap((item) => (item.kind === 'note' ? [item.syllable] : [])),
+        ).toEqual(['s', 'l']);
         expect(beats[3]?.items[0]).toMatchObject({ kind: 'note', syllable: 's' });
     });
 
