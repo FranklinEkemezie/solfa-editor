@@ -1,6 +1,7 @@
 import {
     Download,
     FileJson,
+    FileMusic,
     FileText,
     Image as ImageIcon,
     Loader2,
@@ -39,11 +40,12 @@ import {
     scoreDurationSeconds,
     type AudioFormat,
 } from '@/features/export/score-audio';
+import { createScoreMidi } from '@/features/export/score-midi';
 import { PrintScore } from '@/features/pdf-export/print-score';
 import { calculateScoreLayout } from '@/features/score-editor/layout/score-layout';
 import type { ScoreView } from '@/features/score-editor/model/score-view';
 
-type ExportType = 'pdf' | 'images' | 'audio' | 'solfa';
+type ExportType = 'pdf' | 'images' | 'audio' | 'midi' | 'solfa';
 
 const EXPORT_TYPES: readonly {
     value: ExportType;
@@ -68,6 +70,12 @@ const EXPORT_TYPES: readonly {
         label: 'Audio',
         description: 'MP3 or WAV',
         icon: Music,
+    },
+    {
+        value: 'midi',
+        label: 'MIDI',
+        description: 'Four editable parts',
+        icon: FileMusic,
     },
     {
         value: 'solfa',
@@ -185,7 +193,7 @@ export function ExportDialog({
         !exporting &&
         (type === 'solfa' ||
             (!hasDiagnostics &&
-                (type === 'audio'
+                (type === 'audio' || type === 'midi'
                     ? audioEvents.length > 0
                     : preview.status === 'ready' && preview.images.length > 0)));
 
@@ -220,6 +228,12 @@ export function ExportDialog({
                 const zip = await createPagesZip(await exportImages());
                 downloadBlob(zip, `${stem}-pages.zip`);
                 onExported?.('Page images exported.');
+            } else if (type === 'midi') {
+                downloadBlob(
+                    new Blob([createScoreMidi(view).slice().buffer], { type: 'audio/midi' }),
+                    `${stem}.mid`,
+                );
+                onExported?.('MIDI exported.');
             } else {
                 const buffer = await renderScoreAudio(view);
                 if (audioFormat === 'mp3') {
@@ -319,6 +333,22 @@ export function ExportDialog({
                                         </div>
                                         <p className="text-ink-muted">
                                             {formatDuration(audioDuration)} · 44.1 kHz
+                                        </p>
+                                        {audioEvents.length === 0 ? (
+                                            <p className="text-amber">There are no notes to export.</p>
+                                        ) : null}
+                                    </div>
+                                ) : null}
+                                {type === 'midi' ? (
+                                    <div className="grid gap-2">
+                                        <p className="text-ink-muted">
+                                            Standard MIDI file - four parts, tempo and key
+                                            signature.
+                                        </p>
+                                        <p className="text-ink-muted">
+                                            {audioEvents.length}{' '}
+                                            {audioEvents.length === 1 ? 'note' : 'notes'} -{' '}
+                                            {formatDuration(audioDuration)}
                                         </p>
                                         {audioEvents.length === 0 ? (
                                             <p className="text-amber">There are no notes to export.</p>
