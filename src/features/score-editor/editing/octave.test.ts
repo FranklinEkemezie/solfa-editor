@@ -5,6 +5,7 @@ import {
     nextOctaveStep,
     octaveMark,
     octaveStatus,
+    octaveStepFor,
     type OctaveStep,
 } from '@/features/score-editor/editing/octave';
 
@@ -48,6 +49,25 @@ describe('the on-screen octave selector', () => {
         expect(nextOctaveStep(2, 'down')).toBe(-1);
         expect(nextOctaveStep(-1, 'up')).toBe(1);
         expect(nextOctaveStep(-2, 'up')).toBe(1);
+    });
+});
+
+describe('octaveStepFor', () => {
+    it('shows the step a note in the voice’s own register sits at', () => {
+        expect(octaveStepFor(4, 4)).toBe(0);
+        expect(octaveStepFor(3, 3)).toBe(0);
+    });
+
+    it('shows the step a note written above or below the reference sits at', () => {
+        expect(octaveStepFor(5, 4)).toBe(1);
+        expect(octaveStepFor(6, 4)).toBe(2);
+        expect(octaveStepFor(3, 4)).toBe(-1);
+        expect(octaveStepFor(2, 4)).toBe(-2);
+    });
+
+    it('leaves the selector alone for a note beyond the drawn range', () => {
+        expect(octaveStepFor(7, 4)).toBeNull();
+        expect(octaveStepFor(1, 4)).toBeNull();
     });
 });
 

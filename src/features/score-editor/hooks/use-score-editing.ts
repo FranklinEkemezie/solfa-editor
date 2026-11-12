@@ -1,5 +1,5 @@
 import { useCallback, useState, type KeyboardEvent } from 'react';
-import { Accidental, isSolfaSyllable, soundingMidi } from '@/domain/music';
+import { Accidental, isSolfaSyllable, soundingMidi, VOICE_SETTINGS } from '@/domain/music';
 import type { ToastTone } from '@/components/feedback/toast-message';
 import { playNotePreview } from '@/features/score-editor/audio/note-preview';
 import { playErrorTone } from '@/features/score-editor/audio/play-error-tone';
@@ -22,6 +22,7 @@ import {
 import {
     nextOctaveStep,
     octaveMark,
+    octaveStepFor,
     type OctaveDirection,
     type OctaveStep,
 } from '@/features/score-editor/editing/octave';
@@ -39,6 +40,11 @@ export type ScoreEditing = {
     octave: OctaveStep;
     /** Move that selector, and the note already at the caret when there is one. */
     shiftOctave: (direction: OctaveDirection) => void;
+    /**
+     * The last key the editor acted on, so the drawn keyboard can echo it.
+     * `at` makes a repeated key a fresh press rather than a no-op.
+     */
+    lastKey: { readonly key: string; readonly at: number } | null;
 };
 
 const ARROW_DIRECTIONS: Readonly<Record<string, CaretDirection>> = {
@@ -70,6 +76,34 @@ export function useScoreEditing(
      * by the same command.
      */
     const [octave, setOctave] = useState<OctaveStep>(0);
+    const [lastKey, setLastKey] = useState<{ key: string; at: number } | null>(null);
+
+    /** Echo a key on the drawn keyboard, with a fresh stamp for repeats. */
+    const echoKey = useCallback((key: string) => {
+        // Shift gives `D`, but the notation is case-blind and the drawn key is
+        // labelled in lower case, so echo the letter the score actually wrote.
+        const drawn = key.length === 1 ? key.toLowerCase() : key;
+        setLastKey({ key: drawn, at: Date.now() });
+    }, []);
+
+    /**
+     * Let a written octave mark move the drawn selector too.
+     *
+     * A physical writer marks each note with `'` or a digit; the on-screen
+     * keyboard has a single armed octave. Showing the octave of the note just
+     * written keeps the two ways of working pointing at the same register.
+     */
+    const syncOctave = useCallback((outcome: EditOutcome) => {
+        if (outcome.rejected) return;
+        const pitch = noteAtCaret(outcome.document, outcome.position);
+        if (!pitch) return;
+
+        const step = octaveStepFor(
+            pitch.octave,
+            VOICE_SETTINGS[outcome.position.part].referenceOctave,
+        );
+        if (step !== null) setOctave(step);
+    }, []);
 
     /**
      * Apply an edit, and sound the note it leaves at the caret.
@@ -104,26 +138,32 @@ export function useScoreEditing(
             const position = store.position;
 
             if (DURATION_MARKS.has(token)) {
+                echoKey(token);
                 apply(insertDuration(document, position, token as DurationMark));
                 return;
             }
             if (token === ' ' || token === 'rest') {
+                echoKey('rest');
                 apply(insertRest(document, position));
                 return;
             }
             if (token === '-') {
+                echoKey(token);
                 apply(insertContinuation(document, position));
                 return;
             }
             if (token === '#') {
+                echoKey(token);
                 apply(applyAccidental(document, position, Accidental.SHARP));
                 return;
             }
             if (token === 'b') {
+                echoKey(token);
                 apply(applyAccidental(document, position, Accidental.FLAT));
                 return;
             }
             if (isSolfaSyllable(token)) {
+                echoKey(token);
                 apply(insertSyllable(document, position, token, octaveMark(octave)));
                 return;
             }
@@ -131,7 +171,7 @@ export function useScoreEditing(
             onMessage(`“${token}” is not part of the notation.`);
             void playErrorTone();
         },
-        [apply, octave, onMessage, store.document, store.position],
+        [apply, echoKey, octave, onMessage, store.document, store.position],
     );
 
     const shiftOctave = useCallback(
@@ -179,21 +219,26 @@ export function useScoreEditing(
 
             if (event.key === 'Backspace') {
                 event.preventDefault();
+                echoKey('Backspace');
                 apply(deletePrevious(store.document, store.position), false);
                 return;
             }
             if (event.key === 'Delete') {
                 event.preventDefault();
+                echoKey('Backspace');
                 apply(deleteNext(store.document, store.position), false);
                 return;
             }
 
             if (event.key.length !== 1) return;
             event.preventDefault();
-            apply(composeKey(store.document, store.position, event.key));
+            echoKey(event.key);
+            const outcome = composeKey(store.document, store.position, event.key);
+            apply(outcome);
+            if (event.key === "'" || /^[1-9]$/.test(event.key)) syncOctave(outcome);
         },
-        [apply, store],
+        [apply, echoKey, store, syncOctave],
     );
 
-    return { handleKeyDown, input, backspace, octave, shiftOctave };
+    return { handleKeyDown, input, backspace, octave, shiftOctave, lastKey };
 }

@@ -1,5 +1,5 @@
 import { ChevronDown, Delete } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
     Accidental,
     CHROMATIC_SOLFA_SYLLABLES,
@@ -8,6 +8,7 @@ import {
     type SolfaSyllable,
 } from '@/domain/music';
 import type { OctaveDirection, OctaveStep } from '@/features/score-editor/editing/octave';
+import { echoTarget } from '@/features/score-editor/editing/key-echo';
 import { cn } from '@/lib/utils';
 
 const ACCIDENTAL_SYMBOLS: Record<Accidental, string> = {
@@ -17,6 +18,9 @@ const ACCIDENTAL_SYMBOLS: Record<Accidental, string> = {
     [Accidental.SHARP]: '♯',
     [Accidental.DOUBLE_SHARP]: '𝄪',
 };
+
+/** The lit style shared by a key in force and a key just pressed. */
+const LIT_KEY = 'border-green bg-green-wash text-green-dark ring-1 ring-green';
 
 function degreeLabel(syllable: SolfaSyllable): string {
     const spec = SOLFA_TO_DEGREE[syllable];
@@ -61,16 +65,19 @@ function KeyboardKey({
 function SyllableKey({
     syllable,
     onPress,
+    active,
 }: {
     syllable: SolfaSyllable;
     onPress: () => void;
+    /** True for the key just pressed on either keyboard. */
+    active?: boolean;
 }) {
     return (
         <KeyboardKey
             label={`${syllable} (${degreeLabel(syllable)})`}
             tooltip={`${syllable} — degree ${degreeLabel(syllable)}`}
             onPress={onPress}
-            className="h-11 gap-0.5 font-mono"
+            className={cn('h-11 gap-0.5 font-mono', active && LIT_KEY)}
         >
             <span className="text-base font-medium leading-none lowercase">{syllable}</span>
             <span className="text-[8px] leading-none text-muted">{degreeLabel(syllable)}</span>
@@ -84,9 +91,10 @@ function SyllableKey({
  * It carries the full syllable vocabulary (diatonic and chromatic) plus the
  * rhythmic and editing keys that the physical keyboard otherwise provides, so
  * the whole editor is usable on a device without a hardware keyboard. Every
- * syllable is one press: `fe` and `ba` are whole notes, not two letters. On a
- * desktop the physical keyboard types every syllable, so the dock is hidden
- * from the `lg` breakpoint up.
+ * syllable is one press: `fe` and `ba` are whole notes, not two letters. The
+ * dock is shown on every screen size; on a desktop it mirrors the physical
+ * keyboard, lighting the key that was just used and the octave and duration in
+ * force.
  *
  * The layout is a writer's rather than a piano's: duration keys sit on the top
  * line with the accidentals, the syllables occupy the two middle lines, and the
@@ -101,6 +109,7 @@ export function OnScreenKeyboard({
     activeDuration = ':',
     octave,
     onOctave,
+    activeKey,
 }: {
     onInput: (token: string) => void;
     onBackspace: () => void;
@@ -110,8 +119,20 @@ export function OnScreenKeyboard({
     octave: OctaveStep;
     /** Move that register, and the note already at the caret. */
     onOctave: (direction: OctaveDirection) => void;
+    /** The last key either keyboard used, so the dock can echo it. */
+    activeKey?: { readonly key: string; readonly at: number } | null;
 }) {
     const [expanded, setExpanded] = useState(true);
+    const [flash, setFlash] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!activeKey) return;
+        const target = echoTarget(activeKey.key);
+
+        setFlash(target);
+        const timer = window.setTimeout(() => setFlash(null), 160);
+        return () => window.clearTimeout(timer);
+    }, [activeKey]);
 
     const durationKeys = [
         { mark: ':' as const, name: 'Quarter', tooltip: 'Quarter note (:)' },
@@ -120,7 +141,7 @@ export function OnScreenKeyboard({
     ];
 
     return (
-        <div className="score-keyboard-dock flex-none border-t border-line bg-paper/95 backdrop-blur lg:hidden">
+        <div className="score-keyboard-dock mx-auto w-full max-w-4xl flex-none border-t border-line bg-paper/95 backdrop-blur">
             <button
                 type="button"
                 aria-expanded={expanded}
@@ -153,8 +174,7 @@ export function OnScreenKeyboard({
                                 onPress={() => onInput(key.mark)}
                                 className={cn(
                                     'h-9 font-mono text-base font-semibold',
-                                    activeDuration === key.mark &&
-                                        'border-green bg-green-wash text-green-dark ring-1 ring-green',
+                                    (activeDuration === key.mark || flash === key.mark) && LIT_KEY,
                                 )}
                             >
                                 {key.mark}
@@ -164,7 +184,7 @@ export function OnScreenKeyboard({
                             label="Sharp"
                             tooltip="Raise the note (#)"
                             onPress={() => onInput('#')}
-                            className="h-9 text-base"
+                            className={cn('h-9 text-base', flash === '#' && LIT_KEY)}
                         >
                             ♯
                         </KeyboardKey>
@@ -172,7 +192,7 @@ export function OnScreenKeyboard({
                             label="Flat"
                             tooltip="Lower the note (b)"
                             onPress={() => onInput('b')}
-                            className="h-9 text-base"
+                            className={cn('h-9 text-base', flash === 'b' && LIT_KEY)}
                         >
                             ♭
                         </KeyboardKey>
@@ -184,6 +204,7 @@ export function OnScreenKeyboard({
                                 key={syllable}
                                 syllable={syllable}
                                 onPress={() => onInput(syllable)}
+                                active={flash === syllable}
                             />
                         ))}
                     </div>
@@ -194,6 +215,7 @@ export function OnScreenKeyboard({
                                 key={syllable}
                                 syllable={syllable}
                                 onPress={() => onInput(syllable)}
+                                active={flash === syllable}
                             />
                         ))}
                     </div>
@@ -218,8 +240,7 @@ export function OnScreenKeyboard({
                             pressed={octave > 0}
                             className={cn(
                                 'h-10 w-full px-0 font-mono text-[10px] font-semibold leading-none',
-                                octave > 0 &&
-                                    'border-green bg-green-wash text-green-dark ring-1 ring-green',
+                                (octave > 0 || flash === 'octave-up') && LIT_KEY,
                             )}
                         >
                             {octave === 2 ? '+16va' : '+8va'}
@@ -243,8 +264,7 @@ export function OnScreenKeyboard({
                             pressed={octave < 0}
                             className={cn(
                                 'h-10 w-full px-0 font-mono text-[10px] font-semibold leading-none',
-                                octave < 0 &&
-                                    'border-green bg-green-wash text-green-dark ring-1 ring-green',
+                                (octave < 0 || flash === 'octave-down') && LIT_KEY,
                             )}
                         >
                             {octave === -2 ? '-16va' : '-8va'}
@@ -253,7 +273,10 @@ export function OnScreenKeyboard({
                             label="Hold the previous note"
                             tooltip="Hold the previous note (-)"
                             onPress={() => onInput('-')}
-                            className="h-10 w-full font-mono text-lg text-ink-muted"
+                            className={cn(
+                                'h-10 w-full font-mono text-lg',
+                                flash === '-' ? LIT_KEY : 'text-ink-muted',
+                            )}
                         >
                             —
                         </KeyboardKey>
@@ -261,7 +284,10 @@ export function OnScreenKeyboard({
                             label="Space (rest)"
                             tooltip="Rest for the current duration (Space)"
                             onPress={() => onInput(' ')}
-                            className="h-10 w-full text-[10px] font-medium uppercase tracking-[0.16em] text-muted"
+                            className={cn(
+                                'h-10 w-full text-[10px] font-medium uppercase tracking-[0.16em]',
+                                flash === 'rest' ? LIT_KEY : 'text-muted',
+                            )}
                         >
                             rest
                         </KeyboardKey>
@@ -269,7 +295,10 @@ export function OnScreenKeyboard({
                             label="Backspace"
                             tooltip="Delete the symbol before the caret (Backspace)"
                             onPress={onBackspace}
-                            className="h-10 w-full border-red-300/60 bg-red-500/10 text-red-500 hover:bg-red-500/15 active:bg-red-500/20 focus-visible:ring-red-300/50"
+                            className={cn(
+                                'h-10 w-full border-red-300/60 bg-red-500/10 text-red-500 hover:bg-red-500/15 active:bg-red-500/20 focus-visible:ring-red-300/50',
+                                flash === 'Backspace' && 'ring-2 ring-red-400/70',
+                            )}
                         >
                             <Delete size={17} strokeWidth={2} />
                         </KeyboardKey>

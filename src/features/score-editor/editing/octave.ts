@@ -44,6 +44,19 @@ export function octaveMark(step: OctaveStep): string {
     }
 }
 
+/**
+ * The selector step that shows the register a written note sits in.
+ *
+ * The drawn keyboard reaches two octaves either way. A note written beyond
+ * that range — the physical keyboard can spell any digit the language accepts —
+ * leaves the selector where it was, because no drawn key can honestly show it.
+ */
+export function octaveStepFor(octave: number, reference: number): OctaveStep | null {
+    const offset = octave - reference;
+    if (offset < -2 || offset > 2) return null;
+    return offset as OctaveStep;
+}
+
 /** What to tell the writer after the octave selector moves. */
 export function octaveStatus(step: OctaveStep): string {
     switch (step) {

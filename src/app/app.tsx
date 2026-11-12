@@ -256,6 +256,7 @@ export function App() {
                     activeDuration={activeDurationMark(store.document, store.position)}
                     octave={editing.octave}
                     onOctave={editing.shiftOctave}
+                    activeKey={editing.lastKey}
                 />
             </div>
 
