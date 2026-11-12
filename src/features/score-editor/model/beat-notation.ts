@@ -34,6 +34,8 @@ export type BeatToken =
       }
     | {
           readonly kind: 'continuation';
+          /** The held note this dash stands for, so its lyric can be drawn. */
+          readonly item: BeatNoteItemView;
           readonly markBefore: null;
       };
 
@@ -87,15 +89,16 @@ function isVisible(item: BeatItemView): item is BeatNoteItemView | BeatRestItemV
  */
 export function beatNotationTokens(beat: BeatView): BeatToken[] {
     const visible = beat.items.filter(isVisible);
-    const startsWithContinuation = beat.items[0]?.kind === 'continuation';
+    const firstItem = beat.items[0];
+    const continuation = firstItem?.kind === 'continuation' ? firstItem : null;
 
     if (visible.length === 0) {
-        return startsWithContinuation ? [{ kind: 'continuation', markBefore: null }] : [];
+        return continuation ? [{ kind: 'continuation', item: continuation, markBefore: null }] : [];
     }
 
     const tokens: BeatToken[] = [];
-    if (startsWithContinuation) {
-        tokens.push({ kind: 'continuation', markBefore: null });
+    if (continuation) {
+        tokens.push({ kind: 'continuation', item: continuation, markBefore: null });
     }
 
     for (const item of visible) {

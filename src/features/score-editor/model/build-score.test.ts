@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     createEmptyScoreDocument,
+    emptyLyricsByPart,
     fraction,
     Note,
     Rest,
@@ -196,6 +197,59 @@ describe('building a score from voice sources', () => {
             kind: 'note',
             syllable: 's',
         });
+    });
+});
+
+describe('part lyrics', () => {
+    function viewWithLyrics(source: string, syllables: readonly string[]) {
+        return buildScoreView({
+            ...documentWith({ soprano: source }),
+            lyricsByPart: { ...emptyLyricsByPart(), soprano: syllables },
+        });
+    }
+
+    it('puts one syllable under each note that begins', () => {
+        const view = viewWithLyrics(':drmf', ['Glo', 'ri', 'a', 'Deo']);
+        const beats = sopranoMeasure(view, 1)?.beats ?? [];
+
+        expect(beats.map((beat) => (beat.items[0] as { lyric?: string }).lyric)).toEqual([
+            'Glo',
+            'ri',
+            'a',
+            'Deo',
+        ]);
+    });
+
+    it('does not spend a syllable on a rest', () => {
+        const view = viewWithLyrics(':d r', ['Glo', 'ri']);
+        const beats = sopranoMeasure(view, 1)?.beats ?? [];
+
+        expect(beats[0]?.items[0]).toMatchObject({ kind: 'note', lyric: 'Glo' });
+        expect(beats[1]?.items[0]).toMatchObject({ kind: 'rest' });
+        expect(beats[2]?.items[0]).toMatchObject({ kind: 'note', lyric: 'ri' });
+    });
+
+    it('draws an em dash under a held note once a line exists', () => {
+        const view = viewWithLyrics(':d-', ['Glo']);
+        const beats = sopranoMeasure(view, 1)?.beats ?? [];
+
+        expect(beats[0]?.items[0]).toMatchObject({ kind: 'note', lyric: 'Glo' });
+        expect(beats[1]?.items[0]).toMatchObject({ kind: 'continuation', lyric: '\u2014' });
+    });
+
+    it('draws no dash when the part has no lyric line', () => {
+        const view = viewWithLyrics(':d-', []);
+        const beats = sopranoMeasure(view, 1)?.beats ?? [];
+
+        expect(beats[1]?.items[0]).toMatchObject({ kind: 'continuation', lyric: '' });
+        expect(view.parts.soprano.hasLyrics).toBe(false);
+    });
+
+    it('reads a syllable from the part line, not from the note', () => {
+        const view = viewWithLyrics(':d', ['Glo']);
+
+        expect(view.parts.soprano.lyrics).toEqual(['Glo']);
+        expect(view.parts.soprano.hasLyrics).toBe(true);
     });
 });
 

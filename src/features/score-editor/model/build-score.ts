@@ -33,6 +33,30 @@ import type {
     ScoreView,
 } from '@/features/score-editor/model/score-view';
 
+/** A held note shows an em dash in the lyric line instead of a syllable. */
+const HELD_LYRIC = '\u2014';
+
+/** One part's lyric line, and where each written note falls in it. */
+type PartLyrics = {
+    readonly line: readonly string[];
+    readonly ordinals: ReadonlyMap<number, number>;
+    readonly hasLine: boolean;
+};
+
+function lyricLayout(voice: VoiceNotation | null, line: readonly string[]): PartLyrics {
+    const ordinals = new Map<number, number>();
+    if (voice) {
+        let ordinal = 0;
+        voice.events.forEach((event, index) => {
+            if (event.kind === 'note') {
+                ordinals.set(index, ordinal);
+                ordinal += 1;
+            }
+        });
+    }
+    return { line, ordinals, hasLine: line.length > 0 };
+}
+
 function eventEnd(event: NotationEvent): Fraction {
     return addFractions(
         event.start,
@@ -131,6 +155,7 @@ function measureView(
     number: number,
     start: Fraction,
     timeSignature: TimeSignature,
+    lyrics: PartLyrics,
 ): MeasureView {
     const beatUnit = NOTE_VALUE_UNITS[timeSignature.note];
     const beats: BeatView[] = [];
@@ -146,16 +171,23 @@ function measureView(
             if (compareFractions(event.start, beatEnd) >= 0) break;
 
             const startsHere = compareFractions(event.start, beatStart) >= 0;
-            const eventStart = startsHere ? subtractFractions(event.start, beatStart) : ZERO_FRACTION;
+            const eventStart = startsHere
+                ? subtractFractions(event.start, beatStart)
+                : ZERO_FRACTION;
 
             if (event.kind === 'note') {
+                const ordinal = lyrics.ordinals.get(eventIndex) ?? 0;
                 items.push({
                     kind: startsHere ? 'note' : 'continuation',
                     noteKey: `${part}:${eventIndex}`,
                     syllable: event.note.syllable,
                     accidental: event.accidentalModifier,
                     octaveOffset: event.octaveOffset,
-                    lyric: event.note.lyric,
+                    lyric: startsHere
+                        ? (lyrics.line[ordinal] ?? '')
+                        : lyrics.hasLine
+                          ? HELD_LYRIC
+                          : '',
                     start: eventStart,
                     duration: event.note.duration,
                 });
@@ -245,6 +277,8 @@ export function buildScoreView(document: ScoreDocument): ScoreView {
     for (const entry of parsed) {
         const definition = PARTS.find((part) => part.id === entry.part);
         const measures: MeasureView[] = [];
+        const line = document.lyricsByPart[entry.part] ?? [];
+        const lyrics = lyricLayout(entry.voice, line);
 
         for (let number = 1; number <= measureCount; number += 1) {
             const start = measureStart(number, capacity);
@@ -254,7 +288,7 @@ export function buildScoreView(document: ScoreDocument): ScoreView {
 
             measures.push(
                 entry.voice
-                    ? measureView(entry.part, entry.voice, number, start, signature)
+                    ? measureView(entry.part, entry.voice, number, start, signature, lyrics)
                     : silentMeasureView(number, signature),
             );
         }
@@ -266,6 +300,8 @@ export function buildScoreView(document: ScoreDocument): ScoreView {
             source: document.voices[entry.part],
             voice: entry.voice,
             measures,
+            lyrics: line,
+            hasLyrics: lyrics.hasLine,
             diagnostics: entry.diagnostics,
         };
     }

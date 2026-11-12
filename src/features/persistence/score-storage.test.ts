@@ -9,6 +9,7 @@ import {
     Tempo,
     TimeSignature,
     createEmptyScoreDocument,
+    emptyLyricsByPart,
     type ScoreDocument,
 } from '@/domain/music';
 import {
@@ -37,6 +38,11 @@ function sampleDocument(): ScoreDocument {
             tenor: ':d,f,m',
             bass: ':d,',
         },
+        lyricsByPart: {
+            ...emptyLyricsByPart(),
+            soprano: ['Glo', 'ri', 'a'],
+            alto: ['in', 'ex', 'cel', 'sis'],
+        },
         measureCount: 6,
     };
 }
@@ -64,6 +70,9 @@ describe('score storage codec', () => {
         expect(restored.document.subtitle).toBe('Jude Nnam');
         expect(restored.document.author).toBe('A. Composer');
         expect(restored.document.lyrics).toBe('Gloria in excelsis Deo');
+        expect(restored.document.lyricsByPart.soprano).toEqual(['Glo', 'ri', 'a']);
+        expect(restored.document.lyricsByPart.alto).toEqual(['in', 'ex', 'cel', 'sis']);
+        expect(restored.document.lyricsByPart.tenor).toEqual([]);
         expect(restored.document.measureCount).toBe(6);
         expect(restored.document.voices).toEqual(document.voices);
         expect(restored.document.key.letter).toBe(Letter.D);
@@ -97,6 +106,32 @@ describe('score storage codec', () => {
         expect(stored.document.key).not.toBeInstanceOf(Key);
         expect(stored.document.tempo).not.toBeInstanceOf(Tempo);
         expect(stored.document.timeSignature).not.toBeInstanceOf(TimeSignature);
+    });
+
+    it('opens a score saved before part lyrics, with empty lines', () => {
+        const stored = encodeScore(sampleDocument(), { part: 'soprano', offset: 0 }, 1, 'x', 1);
+        const { lyricsByPart, ...legacyDocument } = stored.document;
+        void lyricsByPart;
+
+        const restored = decodeScore({ ...stored, document: legacyDocument });
+
+        expect(restored.document.lyricsByPart).toEqual(emptyLyricsByPart());
+        expect(restored.document.voices).toEqual(stored.document.voices);
+    });
+
+    it('reads a damaged lyric cell as an empty syllable', () => {
+        const stored = encodeScore(sampleDocument(), { part: 'soprano', offset: 0 }, 1, 'x', 1);
+
+        const restored = decodeScore({
+            ...stored,
+            document: {
+                ...stored.document,
+                lyricsByPart: { soprano: ['Glo', 7, null], alto: 'not a line' },
+            },
+        });
+
+        expect(restored.document.lyricsByPart.soprano).toEqual(['Glo', '', '']);
+        expect(restored.document.lyricsByPart.alto).toEqual([]);
     });
 
     it('refuses a score written by another version', () => {

@@ -1,5 +1,7 @@
-import { useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { ScorePage } from '@/features/score-editor/components/score-canvas/score-page';
+import { ScoreInteractionsProvider } from '@/features/score-editor/components/score-canvas/score-interactions';
+import type { ScoreInteractions } from '@/features/score-editor/components/score-canvas/score-interactions-context';
 import type { EditorPosition } from '@/features/score-editor/editing/caret';
 import { calculateScoreLayout } from '@/features/score-editor/layout/score-layout';
 import type { ScoreView } from '@/features/score-editor/model/score-view';
@@ -24,6 +26,7 @@ export function ScoreDocument({
     onPositionChange,
     onKeyDown,
     activeNoteKey,
+    interactions,
 }: {
     view: ScoreView;
     position: EditorPosition;
@@ -32,34 +35,45 @@ export function ScoreDocument({
     onPositionChange: (position: EditorPosition) => void;
     onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
     activeNoteKey?: string | null;
+    /** Part actions offered by the music, such as writing a lyric line. */
+    interactions?: ScoreInteractions;
 }) {
     const sectionRef = useRef<HTMLElement>(null);
     const layout = calculateScoreLayout(view);
+    const lyricNoteKey = interactions?.lyricTarget?.noteKey;
+
+    // Beginning or moving along a lyric line puts the writer's hand back on the
+    // score, so the next physical key is a syllable rather than a lost keystroke.
+    useEffect(() => {
+        if (lyricNoteKey) sectionRef.current?.focus({ preventScroll: true });
+    }, [lyricNoteKey]);
 
     return (
-        <section
-            ref={sectionRef}
-            tabIndex={0}
-            className="relative outline-none"
-            aria-label="SATB score editor"
-            onKeyDown={onKeyDown}
-            onClick={() => sectionRef.current?.focus({ preventScroll: true })}
-        >
-            <div className="flex flex-col items-start gap-8">
-                {layout.pages.map((page) => (
-                    <ScorePage
-                        key={page.number}
-                        page={page}
-                        layout={layout}
-                        view={view}
-                        position={position}
-                        onPositionChange={onPositionChange}
-                        activeNoteKey={activeNoteKey}
-                    >
-                        {masthead}
-                    </ScorePage>
-                ))}
-            </div>
-        </section>
+        <ScoreInteractionsProvider value={interactions}>
+            <section
+                ref={sectionRef}
+                tabIndex={0}
+                className="relative outline-none"
+                aria-label="SATB score editor"
+                onKeyDown={onKeyDown}
+                onClick={() => sectionRef.current?.focus({ preventScroll: true })}
+            >
+                <div className="flex flex-col items-start gap-8">
+                    {layout.pages.map((page) => (
+                        <ScorePage
+                            key={page.number}
+                            page={page}
+                            layout={layout}
+                            view={view}
+                            position={position}
+                            onPositionChange={onPositionChange}
+                            activeNoteKey={activeNoteKey}
+                        >
+                            {masthead}
+                        </ScorePage>
+                    ))}
+                </div>
+            </section>
+        </ScoreInteractionsProvider>
     );
 }

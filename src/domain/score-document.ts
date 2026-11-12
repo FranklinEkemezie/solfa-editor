@@ -21,7 +21,14 @@ export type ScoreDocument = {
     readonly title: string;
     readonly subtitle: string;
     readonly author: string;
+    /** A whole-score lyric text, kept for documents written before part lyrics. */
     readonly lyrics: string;
+    /**
+     * One lyric line per part: a syllable for each note that begins, in the
+     * order the notes appear. Rests and held notes do not take a syllable —
+     * the score draws an em dash under a held note instead.
+     */
+    readonly lyricsByPart: Readonly<Record<PartId, readonly string[]>>;
     readonly timeSignature: TimeSignature;
     readonly key: Key;
     readonly tempo: Tempo;
@@ -46,6 +53,13 @@ export function emptyVoices(): Record<PartId, string> {
     return voices;
 }
 
+/** No part has a lyric line yet. */
+export function emptyLyricsByPart(): Record<PartId, string[]> {
+    const lyrics = {} as Record<PartId, string[]>;
+    for (const part of PARTS) lyrics[part.id] = [];
+    return lyrics;
+}
+
 /** The document the editor opens with when no sample is selected. */
 export function createEmptyScoreDocument(): ScoreDocument {
     return {
@@ -53,6 +67,7 @@ export function createEmptyScoreDocument(): ScoreDocument {
         subtitle: '',
         author: 'Composer',
         lyrics: '',
+        lyricsByPart: emptyLyricsByPart(),
         timeSignature: DEFAULT_TIME_SIGNATURE,
         key: new Key(Letter.C, new KeySignature(Accidental.NATURAL, 0), Mode.MAJOR),
         tempo: new Tempo(NoteValue.QUARTER, 100, 'Andante'),
@@ -68,6 +83,27 @@ export function voiceSource(document: ScoreDocument, part: PartId): string {
 export function withVoice(document: ScoreDocument, part: PartId, source: string): ScoreDocument {
     if (document.voices[part] === source) return document;
     return { ...document, voices: { ...document.voices, [part]: source } };
+}
+
+/** The syllable line written under one part. */
+export function lyricLine(document: ScoreDocument, part: PartId): readonly string[] {
+    return document.lyricsByPart[part];
+}
+
+/** Replace one part's lyric line; the rest of the document is untouched. */
+export function withLyricLine(
+    document: ScoreDocument,
+    part: PartId,
+    line: readonly string[],
+): ScoreDocument {
+    const current = document.lyricsByPart[part];
+    if (current.length === line.length && current.every((value, index) => value === line[index])) {
+        return document;
+    }
+    return {
+        ...document,
+        lyricsByPart: { ...document.lyricsByPart, [part]: [...line] },
+    };
 }
 
 export function withMeasureCount(document: ScoreDocument, measureCount: number): ScoreDocument {

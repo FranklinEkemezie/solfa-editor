@@ -21,12 +21,13 @@ import {
 import { usePlayback } from '@/features/playback/hooks/use-playback';
 import { PlaybackControls } from '@/features/playback/playback-controls';
 import { OnScreenKeyboard } from '@/features/score-editor/components/on-screen-keyboard';
+import { LyricModeBanner } from '@/features/score-editor/components/lyric-mode-banner';
 import { ScoreDocument } from '@/features/score-editor/components/score-document';
 import { ScoreHeader } from '@/features/score-editor/components/score-header';
 import { activeDurationMark } from '@/features/score-editor/editing/notation-editing';
 import { useDocumentZoom } from '@/features/score-editor/hooks/use-document-zoom';
 import { usePinchZoom } from '@/features/score-editor/hooks/use-pinch-zoom';
-import { useScoreEditing } from '@/features/score-editor/hooks/use-score-editing';
+import { useScoreEditor } from '@/features/score-editor/hooks/use-score-editor';
 import { DOCUMENT_INSET_PX } from '@/features/score-editor/layout/document-zoom';
 import { presetDocument } from '@/features/score-editor/presets';
 import type { ScorePreset } from '@/features/score-editor/presets/score-preset';
@@ -74,7 +75,7 @@ export function App() {
         onZoom: documentView.zoomTo,
     });
 
-    const editing = useScoreEditing(store, addToast);
+    const editing = useScoreEditor(store, addToast);
     const { isPlaying, activeNoteKey, toggle, stop } = usePlayback(store.view, addToast);
 
     const persistence = useScorePersistence({
@@ -138,7 +139,9 @@ export function App() {
                 addToast(result.message);
             }
         } catch (cause) {
-            addToast(cause instanceof Error ? cause.message : 'That .solfa file could not be read.');
+            addToast(
+                cause instanceof Error ? cause.message : 'That .solfa file could not be read.',
+            );
         }
     };
 
@@ -193,6 +196,12 @@ export function App() {
                         </>
                     }
                 />
+                <LyricModeBanner
+                    target={editing.target}
+                    onPrevious={editing.retreat}
+                    onNext={editing.advance}
+                    onDone={editing.exit}
+                />
                 <div className="relative flex min-h-0 flex-1">
                     <ToolRail
                         groups={tools}
@@ -222,6 +231,16 @@ export function App() {
                                 onPositionChange={store.setPosition}
                                 onKeyDown={editing.handleKeyDown}
                                 activeNoteKey={activeNoteKey}
+                                interactions={{
+                                    lyricTarget: editing.target
+                                        ? {
+                                              part: editing.target.part,
+                                              noteKey: editing.target.noteKey,
+                                          }
+                                        : null,
+                                    onBeginLyrics: editing.begin,
+                                    onRemoveLyrics: editing.remove,
+                                }}
                             />
                         </div>
                     </main>

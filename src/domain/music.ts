@@ -78,9 +78,12 @@ export {
     type ScoreDocument,
     UNTITLED_SCORE_TITLE,
     createEmptyScoreDocument,
+    emptyLyricsByPart,
     emptyVoices,
+    lyricLine,
     scoreDisplayTitle,
     voiceSource,
+    withLyricLine,
     withVoice,
     withMeasureCount,
 } from '@/domain/score-document';

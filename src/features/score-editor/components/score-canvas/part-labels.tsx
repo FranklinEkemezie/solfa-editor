@@ -1,27 +1,24 @@
 import { PARTS } from '@/domain/music';
-import {
-    PART_LABEL_WIDTH_PX,
-    PART_ROW_HEIGHT_PX,
-} from '@/features/score-editor/layout/page-geometry';
+import { PartLabelMenu } from '@/features/score-editor/components/score-canvas/part-label-menu';
+import { PART_LABEL_WIDTH_PX } from '@/features/score-editor/layout/page-geometry';
+import type { ScoreView } from '@/features/score-editor/model/score-view';
 
 /**
  * The part names at the head of a system.
  *
  * The same abbreviations the score uses are set against every system, in one
- * fixed column, so the four rows can be read at a glance from any system.
+ * fixed column, so the four rows can be read at a glance from any system. Each
+ * name is also the way into that part's own actions, such as its lyric line.
  */
-export function PartLabels() {
+export function PartLabels({ view }: { view: ScoreView }) {
     return (
         <div className="shrink-0" style={{ width: PART_LABEL_WIDTH_PX }}>
             {PARTS.map((part) => (
-                <div
+                <PartLabelMenu
                     key={part.id}
-                    className="flex items-center font-serif text-[10px] font-bold text-green-dark"
-                    style={{ height: PART_ROW_HEIGHT_PX }}
-                    title={part.label}
-                >
-                    {part.shortLabel}
-                </div>
+                    part={part}
+                    hasLyrics={view.parts[part.id].hasLyrics}
+                />
             ))}
         </div>
     );

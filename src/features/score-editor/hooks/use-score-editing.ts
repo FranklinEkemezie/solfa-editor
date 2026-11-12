@@ -26,6 +26,7 @@ import {
     type OctaveStep,
 } from '@/features/score-editor/editing/octave';
 import type { ScoreStore } from '@/features/score-editor/state/score-store';
+import { isTypingInAField } from '@/features/score-editor/editing/keyboard-target';
 
 export type ScoreEditing = {
     /** Key handler for the physical keyboard, attached to the score section. */
@@ -48,13 +49,6 @@ const ARROW_DIRECTIONS: Readonly<Record<string, CaretDirection>> = {
 };
 
 const DURATION_MARKS: ReadonlySet<string> = new Set<DurationMark>([':', '.', ',']);
-
-function isTypingInAField(target: EventTarget | null): boolean {
-    return (
-        target instanceof HTMLElement &&
-        target.closest('input, textarea, select, [contenteditable="true"]') !== null
-    );
-}
 
 /**
  * The bridge between keys and the notation source.

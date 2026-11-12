@@ -62,6 +62,10 @@ export type PartView = {
     /** Null when the source could not be read; `diagnostics` says why. */
     readonly voice: VoiceNotation | null;
     readonly measures: readonly MeasureView[];
+    /** The lyric line written under this part, one syllable per note. */
+    readonly lyrics: readonly string[];
+    /** True once the writer has added a lyric line, even before it has words. */
+    readonly hasLyrics: boolean;
     readonly diagnostics: readonly ScoreDiagnostic[];
 };
 

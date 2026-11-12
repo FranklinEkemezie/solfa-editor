@@ -34,7 +34,7 @@ export function ScoreSystem({
                 <SystemNumbers measures={measures} />
             </div>
             <div className="flex">
-                <PartLabels />
+                <PartLabels view={view} />
                 <div className="flex border-l border-ink-muted/60">
                     {measures.map((measure, index) => (
                         <MeasureColumn

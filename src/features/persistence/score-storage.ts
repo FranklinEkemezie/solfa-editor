@@ -36,6 +36,8 @@ export type StoredScoreDocument = {
     readonly subtitle: string;
     readonly author: string;
     readonly lyrics: string;
+    /** Optional so documents written before part lyrics still open. */
+    readonly lyricsByPart?: Readonly<Record<PartId, readonly string[]>>;
     readonly timeSignature: {
         readonly note: NoteValue;
         readonly count: number;
@@ -117,11 +119,15 @@ export class ScoreStorageError extends Error {
  * `.solfa` file: both carry exactly the score, never the caret, zoom or theme.
  */
 export function encodeDocument(document: ScoreDocument): StoredScoreDocument {
+    const lyricsByPart = {} as Record<PartId, string[]>;
+    for (const part of PARTS) lyricsByPart[part.id] = [...document.lyricsByPart[part.id]];
+
     return {
         title: document.title,
         subtitle: document.subtitle,
         author: document.author,
         lyrics: document.lyrics,
+        lyricsByPart,
         timeSignature: {
             note: document.timeSignature.note,
             count: document.timeSignature.count,
@@ -241,6 +247,7 @@ export function decodeDocument(value: unknown): ScoreDocument {
             subtitle: asString(documentRecord.subtitle, 'subtitle'),
             author: asString(documentRecord.author, 'composer'),
             lyrics: asString(documentRecord.lyrics, 'lyrics'),
+            lyricsByPart: decodeLyricsByPart(documentRecord.lyricsByPart),
             timeSignature: new TimeSignature(
                 asNoteValue(timeRecord.note, 'time signature note value'),
                 asRangeInteger(timeRecord.count, 'time signature count', 1, 32),
@@ -292,6 +299,30 @@ function asRecord(value: unknown, what: string): Record<string, unknown> {
         throw new ScoreStorageError(`The saved ${what} is not readable.`);
     }
     return value as Record<string, unknown>;
+}
+
+/**
+ * Read the per-part lyric lines.
+ *
+ * A score saved before part lyrics existed simply has no field, and a damaged
+ * cell is read as an empty syllable rather than making the whole score fail to
+ * open: lyrics are a second layer and must never cost the writer the music.
+ */
+function decodeLyricsByPart(value: unknown): Record<PartId, string[]> {
+    const record =
+        typeof value === 'object' && value !== null && !Array.isArray(value)
+            ? (value as Record<string, unknown>)
+            : {};
+    const lyrics = {} as Record<PartId, string[]>;
+
+    for (const part of PARTS) {
+        const line = record[part.id];
+        lyrics[part.id] = Array.isArray(line)
+            ? line.map((syllable) => (typeof syllable === 'string' ? syllable : ''))
+            : [];
+    }
+
+    return lyrics;
 }
 
 function asString(value: unknown, what: string): string {

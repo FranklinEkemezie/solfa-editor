@@ -40,7 +40,7 @@ export function PrintMeasure({
                 >
                     <BeatGlyphs
                         beat={beat}
-                        lyricClassName="text-[5.5pt] font-bold uppercase tracking-[0.06em] text-ink-muted"
+                        lyricClassName="text-[7.5pt] font-normal leading-none text-ink-muted"
                     />
                     {beatIndex < beats.length - 1 ? (
                         <span

@@ -1,6 +1,6 @@
 import { NoteValue } from '@/domain/note-value';
 import { PARTS, type PartId } from '@/domain/parts';
-import { emptyVoices, type ScoreDocument } from '@/domain/score-document';
+import { emptyLyricsByPart, emptyVoices, type ScoreDocument } from '@/domain/score-document';
 import { Tempo } from '@/domain/tempo';
 import { VOICE_SETTINGS } from '@/domain/voice';
 import { parseVoice } from '@/features/notation/notation-engine';
@@ -59,6 +59,7 @@ export function presetDocument(preset: ScorePreset): ScoreDocument {
         subtitle: preset.subtitle ?? '',
         author: preset.author ?? '',
         lyrics: '',
+        lyricsByPart: emptyLyricsByPart(),
         timeSignature: timeSignatureFromOptionValue(preset.timeSignature),
         key: keyFromOptionValue(preset.key),
         tempo: new Tempo(
