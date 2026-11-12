@@ -58,9 +58,8 @@ export function ScorePage({
             <div className="flex flex-col" style={{ gap: SYSTEM_GAP_PX }}>
                 {page.systems.map((system, index) => (
                     <ScoreSystem
-                        key={system.measureNumbers[0]}
+                        key={system.measures[0]?.number}
                         system={system}
-                        measureWidth={layout.measureWidth}
                         isFinalSystem={finalPage && index === page.systems.length - 1}
                         view={view}
                         position={position}

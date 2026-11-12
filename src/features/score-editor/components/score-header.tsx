@@ -80,7 +80,7 @@ export function ScoreHeader({
     return (
         <header className="w-full">
             <div className="flex flex-col items-center gap-0.5">
-                <h1 className="w-full text-center font-serif text-3xl font-semibold leading-tight text-ink md:text-4xl">
+                <h1 className="w-full text-center font-serif text-2xl font-semibold leading-tight text-ink md:text-3xl">
                     <EditableText
                         value={document.title}
                         onCommit={(title) => onChange(patchMetadata(document, { title }))}
@@ -90,7 +90,7 @@ export function ScoreHeader({
                         inputClassName="w-full max-w-md text-center"
                     />
                 </h1>
-                <p className="text-base italic text-ink-muted">
+                <p className="text-sm italic text-ink-muted">
                     <EditableText
                         value={document.subtitle}
                         onCommit={(subtitle) => onChange(patchMetadata(document, { subtitle }))}
@@ -102,7 +102,7 @@ export function ScoreHeader({
                 </p>
             </div>
 
-            <div className="mt-4 flex flex-col gap-1.5 text-sm sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+            <div className="mt-2.5 flex flex-col gap-1 text-xs sm:flex-row sm:items-baseline sm:justify-between sm:gap-5">
                 <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-green-dark">
                     <EditableSelect
                         value={keyValue}

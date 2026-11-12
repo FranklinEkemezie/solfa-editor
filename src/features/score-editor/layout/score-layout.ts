@@ -10,12 +10,18 @@ import {
 } from '@/features/score-editor/layout/page-geometry';
 
 /** Room one written note needs inside its beat. */
-const SLOT_WIDTH = 40;
+const SLOT_WIDTH = 28;
 /** Extra room each subdivision mark needs between two notes of a beat. */
-const SUBDIVISION_MARK_WIDTH = 7;
+const SUBDIVISION_MARK_WIDTH = 5;
 /** The barline and breathing space around the beats of a measure. */
-const MEASURE_PADDING = 14;
-const MINIMUM_MEASURE_WIDTH = 156;
+const MEASURE_PADDING = 8;
+const MINIMUM_MEASURE_WIDTH = 96;
+/**
+ * The last line of a score is left ragged unless it is already mostly full.
+ * Stretching three bars across a whole page is what makes a short score look
+ * sparse; a printed score leaves the final line as wide as its music.
+ */
+const LAST_SYSTEM_FILL_THRESHOLD = 0.6;
 
 /** One measure's column in a system. */
 export type MeasureLayout = {
@@ -25,7 +31,7 @@ export type MeasureLayout = {
 
 /** A line of measures, as many as the page is wide. */
 export type ScoreSystem = {
-    measureNumbers: number[];
+    measures: MeasureLayout[];
 };
 
 /** One A4 page of systems. Only the first carries the title block. */
@@ -36,57 +42,87 @@ export type ScorePage = {
 };
 
 export type ScoreLayout = {
-    /** Every measure is this wide, so the beats line up across the page. */
-    measureWidth: number;
-    /** How many measures fit on one line, before the sheet runs out of width. */
-    measuresPerSystem: number;
     pages: ScorePage[];
 };
 
 /**
  * Lay the score out as sheets of paper.
  *
- * Measures are packed into systems of equal width and the systems are then
- * stacked into pages, the first of which gives up room to the title block. What
- * comes out is a page count the editor can draw and the printer can repeat, so
- * neither has to guess where the music breaks.
+ * Each measure is measured from its own music, then the measures are packed
+ * into lines. The spare width on a line is shared between that line's measures,
+ * so a wide measure only makes its own neighbours a little wider; it no longer
+ * sets the width of every measure on every page.
  */
 export function calculateScoreLayout(view: ScoreView): ScoreLayout {
-    const measureWidth = uniformMeasureWidth(view);
-    const perSystem = Math.max(1, Math.floor(measureRoomPx() / measureWidth));
-    const systems = chunk(view.measureNumbers, perSystem).map((measureNumbers) => ({
-        measureNumbers,
+    const measures = view.measureNumbers.map((number) => ({
+        number,
+        width: naturalWidth(view, number),
     }));
 
-    return { measureWidth, measuresPerSystem: perSystem, pages: paginate(systems) };
+    return { pages: paginate(packSystems(measures)) };
 }
 
-/**
- * The width a system has for its measures.
- *
- * A system carries the part labels in a column of their own at its head, with
- * the opening barline beside it, so both come off the page before the measures
- * are packed. Rounding them away is what lets a system grow a part of a measure
- * too wide for the paper.
- */
+/** The width a system has for its measures. */
 function measureRoomPx(): number {
     return PAGE_CONTENT_WIDTH_PX - PART_LABEL_WIDTH_PX - SYSTEM_BARLINE_PX;
 }
 
 /**
- * The width every measure is given.
- *
- * One width across the whole score keeps the beats of the four parts aligned
- * from the first system to the last, and it comes from the fullest beat any
- * part writes anywhere — not from each measure's own needs — so a page never
- * mixes wide and narrow bars.
+ * Pack measures into systems, keeping each measure close to the width its own
+ * notes need. The line is then justified, but only within itself.
  */
-function uniformMeasureWidth(view: ScoreView): number {
-    const widest = view.measureNumbers.reduce(
-        (width, number) => Math.max(width, naturalWidth(view, number)),
-        MINIMUM_MEASURE_WIDTH,
-    );
-    return Math.min(Math.round(widest), measureRoomPx());
+function packSystems(measures: readonly MeasureLayout[]): ScoreSystem[] {
+    const room = measureRoomPx();
+    const systems: ScoreSystem[] = [];
+    let current: MeasureLayout[] = [];
+    let used = 0;
+
+    for (const measure of measures) {
+        const width = Math.min(room, Math.max(MINIMUM_MEASURE_WIDTH, Math.round(measure.width)));
+
+        if (current.length > 0 && used + width > room) {
+            systems.push({ measures: justify(current, room) });
+            current = [];
+            used = 0;
+        }
+
+        current.push({ number: measure.number, width });
+        used += width;
+    }
+
+    if (current.length > 0) {
+        systems.push({
+            measures:
+                used >= room * LAST_SYSTEM_FILL_THRESHOLD
+                    ? justify(current, room)
+                    : current.map((measure) => ({ ...measure })),
+        });
+    }
+
+    return systems;
+}
+
+/**
+ * Share a line's spare width between its measures in proportion to what each
+ * one already needs. Rounding stays integral, with the last measure taking the
+ * remainder, so the barlines land on whole pixels.
+ */
+function justify(measures: readonly MeasureLayout[], room: number): MeasureLayout[] {
+    const total = measures.reduce((sum, measure) => sum + measure.width, 0);
+    if (total <= 0 || total >= room) return measures.map((measure) => ({ ...measure }));
+
+    const extra = room - total;
+    let shared = 0;
+
+    return measures.map((measure, index) => {
+        if (index === measures.length - 1) {
+            return { number: measure.number, width: measure.width + extra - shared };
+        }
+
+        const addition = Math.floor(extra * (measure.width / total));
+        shared += addition;
+        return { number: measure.number, width: measure.width + addition };
+    });
 }
 
 function naturalWidth(view: ScoreView, number: number): number {
@@ -132,12 +168,4 @@ function paginate(systems: ScoreSystem[]): ScorePage[] {
 
     pages.push({ number, systems: current, showsMasthead: number === 1 });
     return pages;
-}
-
-function chunk<T>(items: readonly T[], size: number): T[][] {
-    const chunks: T[][] = [];
-    for (let index = 0; index < items.length; index += size) {
-        chunks.push(items.slice(index, index + size));
-    }
-    return chunks;
 }

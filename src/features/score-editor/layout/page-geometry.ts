@@ -18,28 +18,28 @@ export const A4_HEIGHT_PX = 1123;
  * music is set in — and the printer uses the very same measurement, so what
  * comes off the paper is the page that was on screen.
  */
-export const PAGE_MARGIN_PX = 70;
+export const PAGE_MARGIN_PX = 54;
 
 export const PAGE_CONTENT_WIDTH_PX = A4_WIDTH_PX - PAGE_MARGIN_PX * 2;
 export const PAGE_CONTENT_HEIGHT_PX = A4_HEIGHT_PX - PAGE_MARGIN_PX * 2;
 
 /** The column that carries the part labels, at the head of every system. */
-export const PART_LABEL_WIDTH_PX = 44;
+export const PART_LABEL_WIDTH_PX = 32;
 
 /** The barline that closes that column on the left, from the number row down. */
 export const SYSTEM_BARLINE_PX = 1;
 
 /** One part's row of beats. */
-export const PART_ROW_HEIGHT_PX = 46;
+export const PART_ROW_HEIGHT_PX = 38;
 
 /** The measure numbers written above the first measure of a system. */
-export const SYSTEM_NUMBER_ROW_PX = 15;
+export const SYSTEM_NUMBER_ROW_PX = 12;
 
 /** Clear air between one system and the next. */
-export const SYSTEM_GAP_PX = 26;
+export const SYSTEM_GAP_PX = 16;
 
 /** The title block, which only the first page carries. */
-export const MASTHEAD_HEIGHT_PX = 119;
+export const MASTHEAD_HEIGHT_PX = 96;
 
 export const SYSTEM_HEIGHT_PX = SYSTEM_NUMBER_ROW_PX + PART_ROW_HEIGHT_PX * PARTS.length;
 

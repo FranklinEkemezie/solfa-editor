@@ -26,7 +26,7 @@ export function BeatGlyphs({
             {tokens.map((token, index) => (
                 <span key={`${token.kind}-${index}`} className="flex items-baseline">
                     {token.markBefore ? (
-                        <span aria-hidden="true" className="px-[1px]">
+                        <span aria-hidden="true" className="px-px">
                             {token.markBefore}
                         </span>
                     ) : null}
@@ -43,7 +43,7 @@ export function BeatGlyphs({
                                 ) : null}
                                 <OctaveMark offset={token.item.octaveOffset} />
                                 {token.dotted ? (
-                                    <span aria-hidden="true" className="px-[1px]">
+                                    <span aria-hidden="true" className="px-px">
                                         .
                                     </span>
                                 ) : null}
@@ -51,7 +51,7 @@ export function BeatGlyphs({
                             {token.item.lyric ? (
                                 <span
                                     className={cn(
-                                        'absolute -bottom-3 text-[9px] font-bold uppercase tracking-[0.08em] text-ink-muted',
+                                        'absolute -bottom-2.5 text-[7px] font-bold uppercase tracking-[0.06em] text-ink-muted',
                                         lyricClassName,
                                     )}
                                 >

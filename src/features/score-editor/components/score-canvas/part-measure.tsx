@@ -40,7 +40,7 @@ export function PartMeasure({
     activeNoteKey?: string | null;
 }) {
     return (
-        <div className="flex items-stretch px-1" style={{ height: PART_ROW_HEIGHT_PX }}>
+        <div className="flex items-stretch px-0.5" style={{ height: PART_ROW_HEIGHT_PX }}>
             {measure.beats.map((beat, index) => (
                 <BeatButton
                     key={beat.number}

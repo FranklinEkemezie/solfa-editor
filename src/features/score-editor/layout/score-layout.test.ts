@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { createEmptyScoreDocument, withMeasureCount } from '@/domain/music';
+import {
+    createEmptyScoreDocument,
+    withMeasureCount,
+    withVoice,
+} from '@/domain/music';
 import {
     PAGE_CONTENT_WIDTH_PX,
     PART_LABEL_WIDTH_PX,
@@ -15,8 +19,22 @@ function viewOf(measureCount: number): ScoreView {
     return buildScoreView(withMeasureCount(createEmptyScoreDocument(), measureCount));
 }
 
+function denseView(): ScoreView {
+    return buildScoreView(
+        withVoice(
+            createEmptyScoreDocument(),
+            'soprano',
+            ':d---:drmf:d---:drmf:d---:drmf:d---:drmf',
+        ),
+    );
+}
+
 function systems(view: ScoreView) {
     return calculateScoreLayout(view).pages.flatMap((page) => page.systems);
+}
+
+function measureRoom(): number {
+    return PAGE_CONTENT_WIDTH_PX - PART_LABEL_WIDTH_PX - SYSTEM_BARLINE_PX;
 }
 
 describe('calculateScoreLayout', () => {
@@ -25,45 +43,64 @@ describe('calculateScoreLayout', () => {
 
         expect(layout.pages).toHaveLength(1);
         expect(layout.pages[0].showsMasthead).toBe(true);
-        expect(layout.pages[0].systems).toEqual([{ measureNumbers: [1, 2] }]);
+        expect(layout.pages[0].systems[0]?.measures.map((measure) => measure.number)).toEqual([
+            1, 2,
+        ]);
     });
 
-    it('gives every measure the same width', () => {
-        const layout = calculateScoreLayout(viewOf(5));
-
-        expect(layout.measureWidth).toBeGreaterThan(0);
-        expect(layout.measuresPerSystem).toBeGreaterThan(0);
-    });
-
-    it('works out how many measures a line holds from the page width', () => {
-        const layout = calculateScoreLayout(viewOf(20));
-
-        expect(layout.measuresPerSystem).toBeGreaterThan(1);
-        expect(layout.pages[0].systems[0].measureNumbers).toHaveLength(layout.measuresPerSystem);
-    });
-
-    it('keeps the part labels, the opening barline and the measures inside the page', () => {
-        const layout = calculateScoreLayout(viewOf(20));
-
-        expect(
-            PART_LABEL_WIDTH_PX +
-                SYSTEM_BARLINE_PX +
-                layout.measuresPerSystem * layout.measureWidth,
-        ).toBeLessThanOrEqual(PAGE_CONTENT_WIDTH_PX);
-    });
-
-    it('never gives a measure more width than the labels leave it', () => {
-        const layout = calculateScoreLayout(viewOf(3));
-
-        expect(layout.measureWidth).toBeLessThanOrEqual(
-            PAGE_CONTENT_WIDTH_PX - PART_LABEL_WIDTH_PX - SYSTEM_BARLINE_PX,
+    it('measures each measure from its own music instead of one global width', () => {
+        const widths = systems(denseView()).flatMap((system) =>
+            system.measures.map((measure) => measure.width),
         );
-        expect(layout.measuresPerSystem).toBeGreaterThanOrEqual(1);
+
+        expect(new Set(widths).size).toBeGreaterThan(1);
+        expect(Math.max(...widths)).toBeGreaterThan(Math.min(...widths));
+    });
+
+    it('fills every line but leaves a sparse last line as wide as its music', () => {
+        const laid = systems(denseView());
+
+        for (const system of laid.slice(0, -1)) {
+            const total = system.measures.reduce((sum, measure) => sum + measure.width, 0);
+            expect(total).toBe(measureRoom());
+        }
+
+        const last = laid[laid.length - 1];
+        const lastTotal = last.measures.reduce((sum, measure) => sum + measure.width, 0);
+        expect(lastTotal).toBeLessThanOrEqual(measureRoom());
+    });
+
+    it('does not stretch a short last line across the page', () => {
+        const laid = systems(viewOf(3));
+
+        expect(laid).toHaveLength(1);
+        const total = laid[0].measures.reduce((sum, measure) => sum + measure.width, 0);
+        expect(total).toBeLessThan(measureRoom());
+    });
+
+    it('still stretches a last line that is already mostly full', () => {
+        const laid = systems(viewOf(9));
+        const last = laid[laid.length - 1];
+        const total = last.measures.reduce((sum, measure) => sum + measure.width, 0);
+
+        expect(laid.length).toBeGreaterThan(1);
+        expect(total).toBe(measureRoom());
+    });
+
+    it('keeps every measure and the opening barline inside the page', () => {
+        for (const system of systems(denseView())) {
+            const total = system.measures.reduce((sum, measure) => sum + measure.width, 0);
+            expect(PART_LABEL_WIDTH_PX + SYSTEM_BARLINE_PX + total).toBeLessThanOrEqual(
+                PAGE_CONTENT_WIDTH_PX,
+            );
+        }
     });
 
     it('breaks the score into systems that cover every measure once, in order', () => {
         const view = viewOf(13);
-        const laid = systems(view).flatMap((system) => system.measureNumbers);
+        const laid = systems(view).flatMap((system) =>
+            system.measures.map((measure) => measure.number),
+        );
 
         expect(laid).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
     });

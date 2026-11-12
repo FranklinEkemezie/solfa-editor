@@ -20,16 +20,16 @@ import { NoteValueGlyph } from '@/features/score-editor/components/note-value-gl
  */
 export function PrintMasthead({ document }: { document: ScoreDocument }) {
     return (
-        <header className="mb-[42px] pt-[8px] text-center">
-            <h1 className="m-0 font-serif text-[20pt] font-semibold leading-[1.15] text-ink">
+        <header className="mb-[30px] pt-[4px] text-center">
+            <h1 className="m-0 font-serif text-[16pt] font-semibold leading-[1.15] text-ink">
                 {scoreDisplayTitle(document)}
             </h1>
             {document.subtitle ? (
-                <p className="m-0 mt-[6px] font-serif text-[10pt] italic leading-snug text-ink-muted">
+                <p className="m-0 mt-[4px] font-serif text-[8pt] italic leading-snug text-ink-muted">
                     {document.subtitle}
                 </p>
             ) : null}
-            <div className="mt-[18px] flex items-baseline justify-between text-[9pt] leading-snug text-ink">
+            <div className="mt-[12px] flex items-baseline justify-between text-[7.5pt] leading-snug text-ink">
                 <span className="flex items-baseline">
                     <span>{metadataKeyLabel(document)}</span>
                     <span aria-hidden="true" className="px-[4pt] text-ink-muted">
@@ -50,7 +50,7 @@ export function PrintMasthead({ document }: { document: ScoreDocument }) {
                     <span className="inline-flex items-center gap-[2pt]">
                         <NoteValueGlyph
                             value={document.tempo.beatUnit}
-                            className="h-[10pt] w-[7pt]"
+                            className="h-[8pt] w-[5.5pt]"
                         />
                         <span>= {document.tempo.beatsPerMinute}</span>
                     </span>

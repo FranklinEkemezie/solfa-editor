@@ -16,7 +16,7 @@ export function PartLabels() {
             {PARTS.map((part) => (
                 <div
                     key={part.id}
-                    className="flex items-center font-serif text-[13px] font-bold text-green-dark"
+                    className="flex items-center font-serif text-[10px] font-bold text-green-dark"
                     style={{ height: PART_ROW_HEIGHT_PX }}
                     title={part.label}
                 >

@@ -36,11 +36,11 @@ export function PrintMeasure({
             {beats.map((beat, beatIndex) => (
                 <span
                     key={beat.number}
-                    className="relative flex h-full flex-1 items-center justify-center font-mono text-[10pt] leading-none text-ink"
+                    className="relative flex h-full flex-1 items-center justify-center font-mono text-[8pt] leading-none text-ink"
                 >
                     <BeatGlyphs
                         beat={beat}
-                        lyricClassName="text-[7pt] font-bold uppercase tracking-[0.08em] text-ink-muted"
+                        lyricClassName="text-[5.5pt] font-bold uppercase tracking-[0.06em] text-ink-muted"
                     />
                     {beatIndex < beats.length - 1 ? (
                         <span

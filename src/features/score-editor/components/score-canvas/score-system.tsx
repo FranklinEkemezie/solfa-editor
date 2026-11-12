@@ -12,7 +12,6 @@ import type { EditorPosition } from '@/features/score-editor/editing/caret';
 /** One line of the score: a numbered row of measures, read across four parts. */
 export function ScoreSystem({
     system,
-    measureWidth,
     isFinalSystem,
     view,
     position,
@@ -20,34 +19,29 @@ export function ScoreSystem({
     activeNoteKey,
 }: {
     system: SystemLayout;
-    measureWidth: number;
     isFinalSystem: boolean;
     view: ScoreView;
     position: EditorPosition;
     onPositionChange: (position: EditorPosition) => void;
     activeNoteKey?: string | null;
 }) {
-    const numbers = system.measureNumbers;
+    const measures = system.measures;
 
     return (
         <div style={{ height: SYSTEM_HEIGHT_PX }}>
             <div className="flex">
                 <PartLabelSpacer />
-                <SystemNumbers
-                    firstMeasureNumber={numbers[0]}
-                    measureWidth={measureWidth}
-                    measureCount={numbers.length}
-                />
+                <SystemNumbers measures={measures} />
             </div>
             <div className="flex">
                 <PartLabels />
                 <div className="flex border-l border-ink-muted/60">
-                    {numbers.map((number, index) => (
+                    {measures.map((measure, index) => (
                         <MeasureColumn
-                            key={number}
-                            number={number}
-                            width={measureWidth}
-                            isFinal={isFinalSystem && index === numbers.length - 1}
+                            key={measure.number}
+                            number={measure.number}
+                            width={measure.width}
+                            isFinal={isFinalSystem && index === measures.length - 1}
                             view={view}
                             position={position}
                             onPositionChange={onPositionChange}

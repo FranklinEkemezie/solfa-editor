@@ -31,13 +31,13 @@ export function BeatButton({
     return (
         <button
             type="button"
-            className={`group relative flex h-full flex-1 items-center justify-center rounded-md border-0 bg-transparent font-mono text-[0.8125rem] leading-none transition-colors hover:bg-green-wash/50 focus:outline-none focus-visible:ring-1 focus-visible:ring-green ${
+            className={`group relative flex h-full flex-1 items-center justify-center rounded-md border-0 bg-transparent font-mono text-[0.65rem] leading-none transition-colors hover:bg-green-wash/50 focus:outline-none focus-visible:ring-1 focus-visible:ring-green ${
                 isEmpty ? 'text-ghost' : 'text-ink'
             }`}
             onClick={onSelect}
             aria-label={ariaLabel}
         >
-            <span className="flex items-baseline pr-[2px]">
+            <span className="flex items-baseline pr-px">
                 <BeatGlyphs beat={beat} />
             </span>
             {closingMark ? (

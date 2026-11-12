@@ -22,17 +22,15 @@ import type { ScoreView } from '@/features/score-editor/model/score-view';
  */
 export function PrintSystem({
     system,
-    measureWidth,
     isFinalSystem,
     view,
 }: {
     system: ScoreSystem;
-    measureWidth: number;
     isFinalSystem: boolean;
     view: ScoreView;
 }) {
-    const numbers = system.measureNumbers;
-    const lastMeasure = numbers.length - 1;
+    const measures = system.measures;
+    const lastMeasure = measures.length - 1;
 
     return (
         <div
@@ -42,13 +40,13 @@ export function PrintSystem({
             <div className="flex" style={{ height: SYSTEM_NUMBER_ROW_PX }}>
                 <div className="shrink-0" style={{ width: PART_LABEL_WIDTH_PX }} />
                 <div className="flex border-l border-ink-muted/60">
-                    {numbers.map((number, index) => (
+                    {measures.map((measure, index) => (
                         <span
-                            key={number}
-                            className="shrink-0 pl-[3px] font-mono text-[7.5pt] leading-none text-ink-muted"
-                            style={{ width: measureWidth }}
+                            key={measure.number}
+                            className="shrink-0 pl-[2px] font-mono text-[6pt] leading-none text-ink-muted"
+                            style={{ width: measure.width }}
                         >
-                            {index === 0 ? number : ''}
+                            {index === 0 ? measure.number : ''}
                         </span>
                     ))}
                 </div>
@@ -60,18 +58,18 @@ export function PrintSystem({
                     style={{ height: PART_ROW_HEIGHT_PX }}
                 >
                     <div
-                        className="flex shrink-0 items-center font-serif text-[10pt] font-bold text-ink"
+                        className="flex shrink-0 items-center font-serif text-[8pt] font-bold text-ink"
                         style={{ width: PART_LABEL_WIDTH_PX }}
                         title={part.label}
                     >
                         {part.shortLabel}
                     </div>
                     <div className="flex border-l border-ink-muted/60">
-                        {numbers.map((number, index) => (
+                        {measures.map((measure, index) => (
                             <PrintMeasure
-                                key={number}
-                                measure={view.parts[part.id].measures[number - 1]}
-                                width={measureWidth}
+                                key={measure.number}
+                                measure={view.parts[part.id].measures[measure.number - 1]}
+                                width={measure.width}
                                 isFinal={isFinalSystem && index === lastMeasure}
                             />
                         ))}

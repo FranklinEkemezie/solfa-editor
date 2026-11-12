@@ -2,6 +2,7 @@ import {
     PART_LABEL_WIDTH_PX,
     SYSTEM_NUMBER_ROW_PX,
 } from '@/features/score-editor/layout/page-geometry';
+import type { MeasureLayout } from '@/features/score-editor/layout/score-layout';
 
 /**
  * The measure number above the first measure of a system.
@@ -10,24 +11,16 @@ import {
  * read — and the opening barline is carried up through this row so the system
  * is closed on its left from top to bottom.
  */
-export function SystemNumbers({
-    firstMeasureNumber,
-    measureWidth,
-    measureCount,
-}: {
-    firstMeasureNumber: number;
-    measureWidth: number;
-    measureCount: number;
-}) {
+export function SystemNumbers({ measures }: { measures: readonly MeasureLayout[] }) {
     return (
         <div className="flex border-l border-ink-muted/60" style={{ height: SYSTEM_NUMBER_ROW_PX }}>
-            {Array.from({ length: measureCount }, (_, index) => (
+            {measures.map((measure, index) => (
                 <span
-                    key={index}
-                    className="shrink-0 pl-1 font-mono text-[10px] leading-none text-muted"
-                    style={{ width: measureWidth }}
+                    key={measure.number}
+                    className="shrink-0 pl-0.5 font-mono text-[8px] leading-none text-muted"
+                    style={{ width: measure.width }}
                 >
-                    {index === 0 ? firstMeasureNumber : ''}
+                    {index === 0 ? measure.number : ''}
                 </span>
             ))}
         </div>

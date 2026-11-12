@@ -41,9 +41,8 @@ export function PrintScore({
                     {page.showsMasthead ? <PrintMasthead document={view.document} /> : null}
                     {page.systems.map((system, index) => (
                         <PrintSystem
-                            key={system.measureNumbers[0]}
+                            key={system.measures[0]?.number}
                             system={system}
-                            measureWidth={layout.measureWidth}
                             isFinalSystem={
                                 page.number === finalPage && index === page.systems.length - 1
                             }
